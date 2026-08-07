@@ -17,7 +17,7 @@ export function canConnect(source: DiagramElement, target: DiagramElement): bool
 
   switch (source.type) {
     case 'entity':
-      return target.type === 'relationship' || target.type === 'attribute';
+      return target.type === 'relationship' || target.type === 'attribute' || target.type === 'isa';
 
     case 'relationship':
       return target.type === 'entity' || target.type === 'attribute';
@@ -73,7 +73,7 @@ export function validateDiagram(diagram: Diagram): ValidationIssue[] {
   }
 
   for (const relationship of diagram.relationships) {
-    if (!relationship.identifying) {
+    if (relationship.kind !== 'identifying') {
       continue;
     }
 
@@ -87,7 +87,7 @@ export function validateDiagram(diagram: Diagram): ValidationIssue[] {
 
       const element = findElementById(diagram, otherId);
 
-      return element?.type === 'entity' && element.weak;
+      return element?.type === 'entity' && element.kind === 'weak';
     });
 
     if (!connectedToWeakEntity) {

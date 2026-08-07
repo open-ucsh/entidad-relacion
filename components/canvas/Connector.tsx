@@ -1,22 +1,14 @@
 import type { Connection, Diagram } from '@/domain/models';
+import { getElementPosition } from '@/domain/queries';
 
 interface ConnectorProps {
   connection: Connection;
   diagram: Diagram;
+  selected: boolean;
+  onClick: () => void;
 }
 
-function getElementPosition(diagram: Diagram, id: string) {
-  const elements = [
-    ...diagram.entities,
-    ...diagram.relationships,
-    ...diagram.attributes,
-    ...diagram.isas,
-  ];
-
-  return elements.find((element) => element.id === id)?.position ?? null;
-}
-
-export function Connector({ connection, diagram }: ConnectorProps) {
+export function Connector({ connection, diagram, selected, onClick }: ConnectorProps) {
   const source = getElementPosition(diagram, connection.sourceId);
 
   const target = getElementPosition(diagram, connection.targetId);
@@ -31,9 +23,12 @@ export function Connector({ connection, diagram }: ConnectorProps) {
       y1={source.y}
       x2={target.x}
       y2={target.y}
-      className="stroke-border"
-      strokeWidth={1.5}
-      pointerEvents="none"
+      className={selected ? 'cursor-pointer stroke-brand-primary' : 'cursor-pointer stroke-border'}
+      strokeWidth={selected ? 3 : 1.5}
+      onClick={(event) => {
+        event.stopPropagation();
+        onClick();
+      }}
     />
   );
 }

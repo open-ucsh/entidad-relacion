@@ -9,14 +9,18 @@ import { Connector } from './Connector';
 interface CanvasLayersProps {
   diagram: Diagram;
   selectedElementId: string | null;
+  selectedConnectionId: string | null;
   onSelectElement: (id: string) => void;
+  onSelectConnection: (id: string) => void;
   onElementPointerDown: (event: React.PointerEvent<SVGGElement>, id: string) => void;
 }
 
 export function CanvasLayers({
   diagram,
   selectedElementId,
+  selectedConnectionId,
   onSelectElement,
+  onSelectConnection,
   onElementPointerDown,
 }: CanvasLayersProps) {
   return (
@@ -24,9 +28,17 @@ export function CanvasLayers({
       {/* Grid */}
       <rect width="100%" height="100%" fill="url(#canvas-grid)" />
 
-      <g id="connections-layer" pointerEvents="none">
+      <g id="connections-layer">
         {diagram.connections.map((connection) => (
-          <Connector key={connection.id} connection={connection} diagram={diagram} />
+          <Connector
+            key={connection.id}
+            connection={connection}
+            diagram={diagram}
+            selected={selectedConnectionId === connection.id}
+            onClick={() => {
+              onSelectConnection(connection.id);
+            }}
+          />
         ))}
       </g>
 

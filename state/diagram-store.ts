@@ -1,54 +1,18 @@
 import { create } from 'zustand';
-import type { Attribute, Connection, Diagram, Entity, Isa, Relationship } from '@/domain/models';
-import type { Tool } from '@/domain/models';
 
-interface DiagramState {
-  diagram: Diagram;
-  selectedElementId: string | null;
-
-  setDiagram: (diagram: Diagram) => void;
-  setSelectedElement: (id: string | null) => void;
-
-  addEntity: (entity: Entity) => void;
-  addRelationship: (relationship: Relationship) => void;
-  addAttribute: (attribute: Attribute) => void;
-  addIsa: (isa: Isa) => void;
-  addConnection: (connection: Connection) => void;
-
-  updateElementPosition: (id: string, x: number, y: number) => void;
-
-  activeTool: Tool;
-  setActiveTool: (tool: Tool) => void;
-  connectionSourceId: string | null;
-
-  setConnectionSourceId: (id: string | null) => void;
-}
-
-const initialDiagram: Diagram = {
-  entities: [],
-  relationships: [],
-  attributes: [],
-  isas: [],
-  connections: [],
-};
+import type { DiagramState } from './diagram-state';
+import { initialDiagram } from './diagram-state';
+import { updateConnections, updateDiagram } from './diagram-utils';
 
 export const useDiagramStore = create<DiagramState>((set) => ({
-  connectionSourceId: null,
-
-  setConnectionSourceId: (connectionSourceId) => {
-    set({ connectionSourceId });
-  },
   diagram: initialDiagram,
 
   selectedElementId: null,
+  selectedConnectionId: null,
+
   activeTool: 'select',
 
-  setActiveTool: (activeTool) => {
-    set({
-      activeTool,
-      connectionSourceId: null,
-    });
-  },
+  connectionSourceId: null,
 
   setDiagram: (diagram) => {
     set({
@@ -59,6 +23,28 @@ export const useDiagramStore = create<DiagramState>((set) => ({
   setSelectedElement: (selectedElementId) => {
     set({
       selectedElementId,
+      selectedConnectionId: null,
+    });
+  },
+
+  setSelectedConnection: (selectedConnectionId) => {
+    set({
+      selectedConnectionId,
+      selectedElementId: null,
+    });
+  },
+
+  setActiveTool: (activeTool) => {
+    set({
+      activeTool,
+      connectionSourceId: null,
+      selectedConnectionId: null,
+    });
+  },
+
+  setConnectionSourceId: (connectionSourceId) => {
+    set({
+      connectionSourceId,
     });
   },
 
@@ -107,27 +93,15 @@ export const useDiagramStore = create<DiagramState>((set) => ({
     }));
   },
 
-  updateElementPosition: (id, x, y) => {
-    set((state) => {
-      const update = <T extends { id: string; position: { x: number; y: number } }>(items: T[]) =>
-        items.map((item) =>
-          item.id === id
-            ? {
-                ...item,
-                position: { x, y },
-              }
-            : item,
-        );
+  updateElement: (id, updates) => {
+    set((state) => ({
+      diagram: updateDiagram(state.diagram, id, updates),
+    }));
+  },
 
-      return {
-        diagram: {
-          ...state.diagram,
-          entities: update(state.diagram.entities),
-          relationships: update(state.diagram.relationships),
-          attributes: update(state.diagram.attributes),
-          isas: update(state.diagram.isas),
-        },
-      };
-    });
+  updateConnection: (id, updates) => {
+    set((state) => ({
+      diagram: updateConnections(state.diagram, id, updates),
+    }));
   },
 }));

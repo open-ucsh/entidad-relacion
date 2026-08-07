@@ -1,8 +1,13 @@
 import type { BaseElement } from './base';
 
-export type AttributeKind = 'normal' | 'key' | 'partial-key' | 'multivalued' | 'derived';
+export type AttributeKeyType = 'normal' | 'primary' | 'partial';
 
 export interface Attribute extends BaseElement {
   type: 'attribute';
-  kind: AttributeKind;
+  keyType: AttributeKeyType;
+  unique: boolean;
+  multivalued: boolean;
+  optional: boolean;
+  composite: boolean;
+  derived: boolean;
 }
