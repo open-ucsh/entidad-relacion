@@ -1,7 +1,13 @@
+import { Panel, PanelHeader } from '@/components/ui';
+
 export function Inspector() {
   return (
-    <aside className="border-l border-border bg-surface p-4">
-      <h2 className="text-sm font-semibold text-text">Inspector</h2>
+    <aside className="border-l border-border">
+      <Panel>
+        <PanelHeader title="Propiedades" />
+
+        <div className="flex-1 p-4" />
+      </Panel>
     </aside>
   );
 }
