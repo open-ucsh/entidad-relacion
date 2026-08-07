@@ -11,7 +11,7 @@ export function Toolbar() {
   const activeTool = useDiagramStore((state) => state.activeTool);
 
   return (
-    <aside className="w-72">
+    <aside className="h-full border-r border-border bg-surface">
       <Panel>
         <PanelHeader title="Herramientas" />
 
@@ -34,7 +34,7 @@ export function Toolbar() {
           </div>
         </div>
 
-        <footer className="border-t border-border px-5 py-4">
+        <footer className="shrink-0 border-t border-border px-5 py-4">
           <p className="text-xs leading-relaxed text-text-muted">
             Selecciona una herramienta para comenzar.
           </p>

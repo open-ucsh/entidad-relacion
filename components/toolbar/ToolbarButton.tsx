@@ -29,7 +29,7 @@ export function ToolbarButton({ icon: Icon, label, active = false, onClick }: To
       />
 
       <span
-        className={`px-1 text-center text-[11px] font-medium leading-tight ${
+        className={`px-1 text-center text-xs font-medium leading-tight ${
           active ? 'text-brand-primary' : 'text-text'
         }`}
       >
