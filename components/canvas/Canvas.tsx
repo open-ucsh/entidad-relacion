@@ -8,39 +8,45 @@ import { findElementById, getElementPosition } from '@/domain/queries';
 import { createId } from '@/lib/id';
 import { useDiagramStore } from '@/state/diagram-store';
 
-import { CanvasLayers } from './CanvasLayers';
 import { CanvasInteraction } from './CanvasInteraction';
+import { CanvasLayers } from './CanvasLayers';
 
 interface CanvasProps {
   diagram: Diagram;
 }
 
+interface DragOffset {
+  x: number;
+  y: number;
+}
+
 export function Canvas({ diagram }: CanvasProps) {
-  const svgRef = useRef<SVGSVGElement>(null);
+  const svgRef = useRef<SVGSVGElement | null>(null);
 
   const selectedElementId = useDiagramStore((state) => state.selectedElementId);
   const selectedConnectionId = useDiagramStore((state) => state.selectedConnectionId);
-  const setSelectedElement = useDiagramStore((state) => state.setSelectedElement);
-  const setSelectedConnection = useDiagramStore((state) => state.setSelectedConnection);
-  const updateElement = useDiagramStore((state) => state.updateElement);
-  const addConnection = useDiagramStore((state) => state.addConnection);
   const activeTool = useDiagramStore((state) => state.activeTool);
-
-  const [draggingId, setDraggingId] = useState<string | null>(null);
-
   const connectionSourceId = useDiagramStore((state) => state.connectionSourceId);
 
+  const setSelectedElement = useDiagramStore((state) => state.setSelectedElement);
+  const setSelectedConnection = useDiagramStore((state) => state.setSelectedConnection);
   const setConnectionSourceId = useDiagramStore((state) => state.setConnectionSourceId);
+  const updateElement = useDiagramStore((state) => state.updateElement);
+  const addConnection = useDiagramStore((state) => state.addConnection);
 
-  const [dragOffset, setDragOffset] = useState<{
-    x: number;
-    y: number;
-  } | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dragOffset, setDragOffset] = useState<DragOffset | null>(null);
 
-  const getSvgPoint = (event: PointerEvent<SVGSVGElement>) => {
+  function getSvgPoint(event: PointerEvent<SVGSVGElement>) {
     const svg = svgRef.current;
 
     if (!svg) {
+      return null;
+    }
+
+    const matrix = svg.getScreenCTM();
+
+    if (!matrix) {
       return null;
     }
 
@@ -49,15 +55,15 @@ export function Canvas({ diagram }: CanvasProps) {
     point.x = event.clientX;
     point.y = event.clientY;
 
-    const svgPoint = point.matrixTransform(svg.getScreenCTM()?.inverse());
+    const svgPoint = point.matrixTransform(matrix.inverse());
 
     return {
       x: svgPoint.x,
       y: svgPoint.y,
     };
-  };
+  }
 
-  const handleElementPointerDown = (event: React.PointerEvent, id: string) => {
+  function handleElementPointerDown(event: PointerEvent<SVGGElement>, id: string) {
     if (activeTool !== 'select') {
       return;
     }
@@ -77,7 +83,6 @@ export function Canvas({ diagram }: CanvasProps) {
     }
 
     setSelectedElement(id);
-
     setDraggingId(id);
 
     setDragOffset({
@@ -86,9 +91,9 @@ export function Canvas({ diagram }: CanvasProps) {
     });
 
     event.currentTarget.setPointerCapture(event.pointerId);
-  };
+  }
 
-  const handlePointerMove = (event: PointerEvent<SVGSVGElement>) => {
+  function handlePointerMove(event: PointerEvent<SVGSVGElement>) {
     if (!draggingId || !dragOffset) {
       return;
     }
@@ -100,79 +105,91 @@ export function Canvas({ diagram }: CanvasProps) {
     }
 
     updateElement(draggingId, {
-      position: { x: point.x - dragOffset.x, y: point.y - dragOffset.y },
+      position: {
+        x: point.x - dragOffset.x,
+        y: point.y - dragOffset.y,
+      },
     });
-  };
+  }
 
-  const stopDragging = () => {
+  function stopDragging() {
     setDraggingId(null);
     setDragOffset(null);
-  };
+  }
 
-  const handleElementClick = (id: string) => {
-    if (activeTool === 'connect') {
-      if (!connectionSourceId) {
-        setConnectionSourceId(id);
-        setSelectedElement(id);
-        return;
-      }
-
-      if (connectionSourceId !== id) {
-        const source = findElementById(diagram, connectionSourceId);
-        const target = findElementById(diagram, id);
-
-        const isIsaConnection =
-          (source?.type === 'isa' && target?.type === 'entity') ||
-          (source?.type === 'entity' && target?.type === 'isa');
-
-        if (source?.type === 'isa' && target?.type === 'entity') {
-          const isKnownSubentity = source.subEntityIds.includes(target.id);
-          const superEntityId = source.superEntityId ?? target.id;
-          const subEntityIds =
-            source.superEntityId && !isKnownSubentity
-              ? [...source.subEntityIds, target.id]
-              : source.subEntityIds;
-
-          updateElement(source.id, { superEntityId, subEntityIds });
-        }
-
-        if (source?.type === 'entity' && target?.type === 'isa') {
-          const isKnownSubentity = target.subEntityIds.includes(source.id);
-          const superEntityId = target.superEntityId ?? source.id;
-          const subEntityIds =
-            target.superEntityId && !isKnownSubentity
-              ? [...target.subEntityIds, source.id]
-              : target.subEntityIds;
-
-          updateElement(target.id, { superEntityId, subEntityIds });
-        }
-
-        addConnection({
-          id: createId('connection'),
-          sourceId: connectionSourceId,
-          targetId: id,
-          cardinality: 'unspecified',
-          minimum: 'unspecified',
-          maximum: 'unspecified',
-          participation: isIsaConnection ? 'mandatory' : 'optional',
-        });
-      }
-
-      setConnectionSourceId(null);
+  function handleElementClick(id: string) {
+    if (activeTool !== 'connect') {
       setSelectedElement(id);
       return;
     }
 
-    setSelectedElement(id);
-  };
+    if (!connectionSourceId) {
+      setConnectionSourceId(id);
+      setSelectedElement(id);
+      return;
+    }
+
+    if (connectionSourceId === id) {
+      setConnectionSourceId(null);
+      return;
+    }
+
+    const source = findElementById(diagram, connectionSourceId);
+    const target = findElementById(diagram, id);
+
+    if (!source || !target) {
+      setConnectionSourceId(null);
+      return;
+    }
+
+    const isIsaConnection =
+      (source.type === 'isa' && target.type === 'entity') ||
+      (source.type === 'entity' && target.type === 'isa');
+
+    if (source.type === 'isa' && target.type === 'entity') {
+      const subEntityIds = source.subEntityIds.includes(target.id)
+        ? source.subEntityIds
+        : [...source.subEntityIds, target.id];
+
+      updateElement(source.id, {
+        superEntityId: source.superEntityId ?? target.id,
+        subEntityIds,
+      });
+    }
+
+    if (source.type === 'entity' && target.type === 'isa') {
+      const subEntityIds = target.subEntityIds.includes(source.id)
+        ? target.subEntityIds
+        : [...target.subEntityIds, source.id];
+
+      updateElement(target.id, {
+        superEntityId: target.superEntityId ?? source.id,
+        subEntityIds,
+      });
+    }
+
+    addConnection({
+      id: createId('connection'),
+      sourceId: source.id,
+      targetId: target.id,
+      cardinality: 'unspecified',
+      minimum: 'unspecified',
+      maximum: 'unspecified',
+      participation: isIsaConnection ? 'mandatory' : 'optional',
+    });
+
+    setConnectionSourceId(null);
+    setSelectedElement(target.id);
+  }
 
   return (
-    <main className="relative h-full w-full overflow-hidden">
+    <main className="relative min-h-0 flex-1 overflow-hidden bg-background">
       <svg
         ref={svgRef}
-        className="h-full w-full"
+        className="h-full w-full touch-none"
         onPointerMove={handlePointerMove}
         onPointerUp={stopDragging}
+        onPointerCancel={stopDragging}
         onPointerLeave={stopDragging}
       >
         <CanvasInteraction>
