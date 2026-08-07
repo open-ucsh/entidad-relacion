@@ -1,5 +1,8 @@
 'use client';
 
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState } from 'react';
+
 import { Canvas } from '@/components/canvas/Canvas';
 import { Header } from '@/components/header/Header';
 import { Inspector } from '@/components/inspector/Inspector';
@@ -8,15 +11,105 @@ import { useDiagramStore } from '@/state/diagram-store';
 
 export function Editor() {
   const diagram = useDiagramStore((state) => state.diagram);
-  return (
-    <main className="flex h-screen flex-col overflow-hidden">
-      <Header />
 
-      <div className="grid min-h-0 flex-1 grid-cols-[240px_1fr_320px] overflow-hidden">
-        <Toolbar />
-        <Canvas diagram={diagram} />
-        <Inspector />
+  const [toolbarOpen, setToolbarOpen] = useState(true);
+  const [inspectorOpen, setInspectorOpen] = useState(true);
+
+  return (
+    <div className="flex h-screen min-h-0 flex-col overflow-hidden">
+      {/* Header */}
+      <div className="shrink-0">
+        <Header />
       </div>
-    </main>
+
+      {/* Editor */}
+      <main className="relative flex min-h-0 flex-1 overflow-hidden">
+        <div
+          className={[
+            'grid h-full min-h-0 min-w-0 flex-1 overflow-hidden',
+            'transition-[grid-template-columns] duration-200 ease-out',
+            toolbarOpen && inspectorOpen
+              ? 'grid-cols-[240px_minmax(0,1fr)_320px]'
+              : toolbarOpen
+                ? 'grid-cols-[240px_minmax(0,1fr)_0px]'
+                : inspectorOpen
+                  ? 'grid-cols-[0px_minmax(0,1fr)_320px]'
+                  : 'grid-cols-[0px_minmax(0,1fr)_0px]',
+          ].join(' ')}
+        >
+          {/* Toolbar */}
+          <div
+            className={[
+              'h-full min-h-0 min-w-0 overflow-hidden',
+              'transition-opacity duration-150',
+              toolbarOpen ? 'opacity-100' : 'pointer-events-none opacity-0',
+            ].join(' ')}
+          >
+            <Toolbar />
+          </div>
+
+          {/* Canvas */}
+          <div className="relative h-full min-h-0 min-w-0 overflow-hidden">
+            <Canvas diagram={diagram} />
+          </div>
+
+          {/* Inspector */}
+          <div
+            className={[
+              'h-full min-h-0 min-w-0 overflow-hidden',
+              'transition-opacity duration-150',
+              inspectorOpen ? 'opacity-100' : 'pointer-events-none opacity-0',
+            ].join(' ')}
+          >
+            <Inspector />
+          </div>
+        </div>
+
+        {/* Toggle toolbar */}
+        <button
+          type="button"
+          onClick={() => {
+            setToolbarOpen((open) => !open);
+          }}
+          aria-label={toolbarOpen ? 'Ocultar herramientas' : 'Mostrar herramientas'}
+          className={[
+            'absolute top-1/2 z-30',
+            'flex h-10 w-7 -translate-y-1/2',
+            'items-center justify-center',
+            'border border-border bg-background',
+            'text-text-muted shadow-sm',
+            'transition-[left] duration-200',
+            'hover:bg-muted hover:text-text',
+            'focus-visible:outline-none',
+            'focus-visible:ring-2 focus-visible:ring-ring/40',
+            toolbarOpen ? 'left-60 rounded-r-md' : 'left-0 rounded-r-md',
+          ].join(' ')}
+        >
+          {toolbarOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setInspectorOpen((open) => !open);
+          }}
+          aria-label={inspectorOpen ? 'Ocultar inspector' : 'Mostrar inspector'}
+          className={[
+            'absolute top-1/2 z-30',
+            'flex h-10 w-7 -translate-y-1/2',
+            'items-center justify-center',
+            'border border-border bg-background',
+            'text-text-muted shadow-sm',
+            'transition-[right] duration-200',
+            'hover:bg-muted hover:text-text',
+            'focus-visible:outline-none',
+            'focus-visible:ring-2 focus-visible:ring-ring/40',
+            inspectorOpen ? 'right-80 rounded-l-md' : 'right-0 rounded-l-md',
+          ].join(' ')}
+        >
+          {inspectorOpen ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+        </button>
+      </main>
+    </div>
   );
 }

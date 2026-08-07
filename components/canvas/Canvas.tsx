@@ -13,6 +13,7 @@ import { useCanvasDrag } from './hooks/useCanvasDrag';
 import { useCanvasKeyboard } from './hooks/useCanvasKeyboard';
 import { useSvgCoordinates } from './hooks/useSvgCoordinates';
 import { useCanvasConnect } from './hooks/useCanvasConnect';
+
 interface CanvasProps {
   diagram: Diagram;
 }
@@ -25,6 +26,7 @@ export function Canvas({ diagram }: CanvasProps) {
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   const selectedElementId = useDiagramStore((state) => state.selectedElementId);
+
   const removeElement = useDiagramStore((state) => state.removeElement);
 
   const removeConnection = useDiagramStore((state) => state.removeConnection);
@@ -50,14 +52,8 @@ export function Canvas({ diagram }: CanvasProps) {
   });
 
   return (
-    <main className="relative min-h-0 overflow-hidden bg-surface">
-      <svg
-        ref={svgRef}
-        className="h-full w-full select-none"
-        onPointerMove={drag}
-        onPointerUp={stopDrag}
-        onPointerCancel={stopDrag}
-      >
+    <main className="relative h-full min-h-0 min-w-0 overflow-hidden">
+      <svg ref={svgRef} className="block h-full w-full" onPointerMove={drag} onPointerUp={stopDrag}>
         <CanvasGrid />
 
         <CanvasInteraction onBackgroundClick={clearSelection}>
