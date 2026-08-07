@@ -125,4 +125,12 @@ export const useDiagramStore = create<DiagramState>((set) => ({
       selectedConnectionId: state.selectedConnectionId === id ? null : state.selectedConnectionId,
     }));
   },
+
+  clearSelection: () => {
+    set({
+      selectedElementId: null,
+      selectedConnectionId: null,
+      connectionSourceId: null,
+    });
+  },
 }));

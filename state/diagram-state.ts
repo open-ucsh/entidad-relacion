@@ -39,6 +39,8 @@ export interface DiagramState {
 
   removeElement: (id: string) => void;
   removeConnection: (id: string) => void;
+
+  clearSelection: () => void;
 }
 
 export const initialDiagram: Diagram = {

@@ -35,6 +35,8 @@ export function Canvas({ diagram }: CanvasProps) {
 
   const setSelectedConnection = useDiagramStore((state) => state.setSelectedConnection);
 
+  const clearSelection = useDiagramStore((state) => state.clearSelection);
+
   const updateElement = useDiagramStore((state) => state.updateElement);
 
   useCanvasKeyboard();
@@ -58,7 +60,7 @@ export function Canvas({ diagram }: CanvasProps) {
       >
         <CanvasGrid />
 
-        <CanvasInteraction>
+        <CanvasInteraction onBackgroundClick={clearSelection}>
           <CanvasLayers
             diagram={diagram}
             selectedElementId={selectedElementId}
