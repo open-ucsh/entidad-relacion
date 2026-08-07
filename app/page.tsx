@@ -1,7 +1,9 @@
-export default function Home() {
+import { Header } from '@/components/header/Header';
+
+export default function HomePage() {
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-4xl items-center justify-center p-8">
-      <h1 className="text-center text-3xl font-semibold">Entity Editor · Base Project</h1>
+    <main className="flex min-h-screen flex-col bg-background">
+      <Header />
     </main>
   );
 }
