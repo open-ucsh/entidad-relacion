@@ -3,17 +3,25 @@
 import type { Diagram } from '@/domain/models';
 import { CanvasInteraction } from './CanvasInteraction';
 import { CanvasLayers } from './CanvasLayers';
+import { useDiagramStore } from '@/state/diagram-store';
 
 interface CanvasProps {
   diagram: Diagram;
 }
 
 export function Canvas({ diagram }: CanvasProps) {
+  const selectedElementId = useDiagramStore((state) => state.selectedElementId);
+  const setSelectedElement = useDiagramStore((state) => state.setSelectedElement);
+
   return (
     <main className="relative h-full min-h-0 overflow-hidden">
       <svg className="block h-full w-full">
         <CanvasInteraction>
-          <CanvasLayers diagram={diagram} />
+          <CanvasLayers
+            diagram={diagram}
+            selectedElementId={selectedElementId}
+            onSelectElement={setSelectedElement}
+          />
         </CanvasInteraction>
       </svg>
 

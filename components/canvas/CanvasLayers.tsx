@@ -7,9 +7,11 @@ import { RelationshipShape } from '@/components/elements/RelationshipShape';
 
 interface CanvasLayersProps {
   diagram: Diagram;
+  selectedElementId: string | null;
+  onSelectElement: (id: string) => void;
 }
 
-export function CanvasLayers({ diagram }: CanvasLayersProps) {
+export function CanvasLayers({ diagram, selectedElementId, onSelectElement }: CanvasLayersProps) {
   return (
     <>
       {/* Grid */}
@@ -21,19 +23,47 @@ export function CanvasLayers({ diagram }: CanvasLayersProps) {
       {/* Elements */}
       <g id="elements-layer">
         {diagram.entities.map((entity) => (
-          <EntityShape key={entity.id} entity={entity} />
+          <EntityShape
+            key={entity.id}
+            entity={entity}
+            selected={selectedElementId === entity.id}
+            onClick={() => {
+              onSelectElement(entity.id);
+            }}
+          />
         ))}
 
         {diagram.relationships.map((relationship) => (
-          <RelationshipShape key={relationship.id} relationship={relationship} />
+          <RelationshipShape
+            key={relationship.id}
+            relationship={relationship}
+            selected={selectedElementId === relationship.id}
+            onClick={() => {
+              onSelectElement(relationship.id);
+            }}
+          />
         ))}
 
         {diagram.attributes.map((attribute) => (
-          <AttributeShape key={attribute.id} attribute={attribute} />
+          <AttributeShape
+            key={attribute.id}
+            attribute={attribute}
+            selected={selectedElementId === attribute.id}
+            onClick={() => {
+              onSelectElement(attribute.id);
+            }}
+          />
         ))}
 
         {diagram.isas.map((isa) => (
-          <IsaShape key={isa.id} isa={isa} />
+          <IsaShape
+            key={isa.id}
+            isa={isa}
+            selected={selectedElementId === isa.id}
+            onClick={() => {
+              onSelectElement(isa.id);
+            }}
+          />
         ))}
       </g>
 

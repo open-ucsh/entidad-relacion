@@ -5,14 +5,22 @@ const HEIGHT = 56;
 
 interface EntityShapeProps {
   entity: Entity;
+  selected: boolean;
+  onClick: () => void;
 }
 
-export function EntityShape({ entity }: EntityShapeProps) {
+export function EntityShape({ entity, selected, onClick }: EntityShapeProps) {
   const x = entity.position.x - WIDTH / 2;
   const y = entity.position.y - HEIGHT / 2;
 
   return (
-    <g>
+    <g
+      onClick={(event) => {
+        event.stopPropagation();
+        onClick();
+      }}
+      className="cursor-pointer"
+    >
       <rect
         x={x}
         y={y}
@@ -20,6 +28,8 @@ export function EntityShape({ entity }: EntityShapeProps) {
         height={HEIGHT}
         rx={6}
         className="fill-background stroke-border"
+        stroke={selected ? 'var(--color-brand-primary: #004574;)' : undefined}
+        strokeWidth={selected ? 3 : 1.5}
       />
 
       <text
