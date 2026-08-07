@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 import type { Attribute, Connection, Diagram, Entity, Isa, Relationship } from '@/domain/models';
+import type { Tool } from '@/domain/models';
 
 interface DiagramState {
   diagram: Diagram;
@@ -20,6 +21,10 @@ interface DiagramState {
   addIsa(isa: Isa): void;
 
   addConnection(connection: Connection): void;
+
+  activeTool: Tool;
+
+  setActiveTool(tool: Tool): void;
 }
 
 const initialDiagram: Diagram = {
@@ -34,6 +39,13 @@ export const useDiagramStore = create<DiagramState>((set) => ({
   diagram: initialDiagram,
 
   selectedElementId: null,
+  activeTool: 'select',
+
+  setActiveTool: (activeTool) => {
+    set({
+      activeTool,
+    });
+  },
 
   setDiagram: (diagram) => {
     set({
