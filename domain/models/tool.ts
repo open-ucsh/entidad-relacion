@@ -1,1 +1,2 @@
-export type Tool = 'select' | 'entity' | 'relationship' | 'attribute' | 'isa' | 'connect';
+export type Tool =
+  'select' | 'entity' | 'relationship' | 'attribute' | 'isa' | 'connect' | 'delete';

@@ -28,18 +28,17 @@ export interface DiagramState {
   setConnectionSourceId: (id: string | null) => void;
 
   addEntity: (entity: Entity) => void;
-
   addRelationship: (relationship: Relationship) => void;
-
   addAttribute: (attribute: Attribute) => void;
-
   addIsa: (isa: Isa) => void;
-
   addConnection: (connection: Connection) => void;
 
   updateElement: (id: string, updates: Partial<Entity | Relationship | Attribute | Isa>) => void;
 
   updateConnection: (id: string, updates: Partial<Connection>) => void;
+
+  removeElement: (id: string) => void;
+  removeConnection: (id: string) => void;
 }
 
 export const initialDiagram: Diagram = {

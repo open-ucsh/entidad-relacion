@@ -1,33 +1,78 @@
-import type { Diagram } from '@/domain/models';
+import type { PointerEvent } from 'react';
+
+import type { Diagram, Tool } from '@/domain/models';
 
 import { AttributeShape } from '@/components/elements/AttributeShape';
 import { EntityShape } from '@/components/elements/EntityShape';
 import { IsaShape } from '@/components/elements/IsaShape';
 import { RelationshipShape } from '@/components/elements/RelationshipShape';
+
 import { Connector } from './Connector';
 
 interface CanvasLayersProps {
   diagram: Diagram;
+
   selectedElementId: string | null;
   selectedConnectionId: string | null;
+
+  activeTool: Tool;
+
   onSelectElement: (id: string) => void;
   onSelectConnection: (id: string) => void;
-  onElementPointerDown: (event: React.PointerEvent<SVGGElement>, id: string) => void;
+
+  onConnect: (id: string) => void;
+
+  onDeleteElement: (id: string) => void;
+  onDeleteConnection: (id: string) => void;
+
+  onElementPointerDown: (event: PointerEvent, id: string) => void;
 }
 
 export function CanvasLayers({
   diagram,
   selectedElementId,
   selectedConnectionId,
+  activeTool,
   onSelectElement,
   onSelectConnection,
+  onConnect,
+  onDeleteElement,
+  onDeleteConnection,
   onElementPointerDown,
 }: CanvasLayersProps) {
+  function handleElementClick(id: string) {
+    if (activeTool === 'connect') {
+      onConnect(id);
+      return;
+    }
+
+    if (activeTool === 'delete') {
+      onDeleteElement(id);
+      return;
+    }
+
+    onSelectElement(id);
+  }
+
+  function handleConnectionClick(id: string) {
+    if (activeTool === 'delete') {
+      onDeleteConnection(id);
+      return;
+    }
+
+    onSelectConnection(id);
+  }
+
+  function handleElementPointerDown(event: PointerEvent, id: string) {
+    if (activeTool === 'connect' || activeTool === 'delete') {
+      return;
+    }
+
+    onElementPointerDown(event, id);
+  }
+
   return (
     <>
-      {/* Grid */}
-      <rect width="100%" height="100%" fill="url(#canvas-grid)" />
-
       <g id="connections-layer">
         {diagram.connections.map((connection) => (
           <Connector
@@ -36,13 +81,12 @@ export function CanvasLayers({
             diagram={diagram}
             selected={selectedConnectionId === connection.id}
             onClick={() => {
-              onSelectConnection(connection.id);
+              handleConnectionClick(connection.id);
             }}
           />
         ))}
       </g>
 
-      {/* Elements */}
       <g id="elements-layer">
         {diagram.entities.map((entity) => (
           <EntityShape
@@ -50,10 +94,10 @@ export function CanvasLayers({
             entity={entity}
             selected={selectedElementId === entity.id}
             onClick={() => {
-              onSelectElement(entity.id);
+              handleElementClick(entity.id);
             }}
             onPointerDown={(event) => {
-              onElementPointerDown(event, entity.id);
+              handleElementPointerDown(event, entity.id);
             }}
           />
         ))}
@@ -64,10 +108,10 @@ export function CanvasLayers({
             relationship={relationship}
             selected={selectedElementId === relationship.id}
             onClick={() => {
-              onSelectElement(relationship.id);
+              handleElementClick(relationship.id);
             }}
             onPointerDown={(event) => {
-              onElementPointerDown(event, relationship.id);
+              handleElementPointerDown(event, relationship.id);
             }}
           />
         ))}
@@ -78,10 +122,10 @@ export function CanvasLayers({
             attribute={attribute}
             selected={selectedElementId === attribute.id}
             onClick={() => {
-              onSelectElement(attribute.id);
+              handleElementClick(attribute.id);
             }}
             onPointerDown={(event) => {
-              onElementPointerDown(event, attribute.id);
+              handleElementPointerDown(event, attribute.id);
             }}
           />
         ))}
@@ -92,19 +136,17 @@ export function CanvasLayers({
             isa={isa}
             selected={selectedElementId === isa.id}
             onClick={() => {
-              onSelectElement(isa.id);
+              handleElementClick(isa.id);
             }}
             onPointerDown={(event) => {
-              onElementPointerDown(event, isa.id);
+              handleElementPointerDown(event, isa.id);
             }}
           />
         ))}
       </g>
 
-      {/* Selection */}
       <g id="selection-layer" />
 
-      {/* Overlay */}
       <g id="overlay-layer" />
     </>
   );

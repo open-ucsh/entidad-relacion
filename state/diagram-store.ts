@@ -1,8 +1,13 @@
 import { create } from 'zustand';
+import {
+  removeDiagramConnection,
+  removeDiagramElement,
+  updateConnections,
+  updateDiagram,
+} from './diagram-utils';
 
 import type { DiagramState } from './diagram-state';
 import { initialDiagram } from './diagram-state';
-import { updateConnections, updateDiagram } from './diagram-utils';
 
 export const useDiagramStore = create<DiagramState>((set) => ({
   diagram: initialDiagram,
@@ -102,6 +107,22 @@ export const useDiagramStore = create<DiagramState>((set) => ({
   updateConnection: (id, updates) => {
     set((state) => ({
       diagram: updateConnections(state.diagram, id, updates),
+    }));
+  },
+
+  removeElement: (id) => {
+    set((state) => ({
+      diagram: removeDiagramElement(state.diagram, id),
+
+      selectedElementId: state.selectedElementId === id ? null : state.selectedElementId,
+    }));
+  },
+
+  removeConnection: (id) => {
+    set((state) => ({
+      diagram: removeDiagramConnection(state.diagram, id),
+
+      selectedConnectionId: state.selectedConnectionId === id ? null : state.selectedConnectionId,
     }));
   },
 }));
