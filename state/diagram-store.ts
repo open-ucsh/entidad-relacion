@@ -1,30 +1,21 @@
 import { create } from 'zustand';
-
 import type { Attribute, Connection, Diagram, Entity, Isa, Relationship } from '@/domain/models';
 import type { Tool } from '@/domain/models';
 
 interface DiagramState {
   diagram: Diagram;
-
   selectedElementId: string | null;
 
-  setDiagram(diagram: Diagram): void;
-
-  setSelectedElement(id: string | null): void;
-
-  addEntity(entity: Entity): void;
-
-  addRelationship(relationship: Relationship): void;
-
-  addAttribute(attribute: Attribute): void;
-
-  addIsa(isa: Isa): void;
-
-  addConnection(connection: Connection): void;
+  setDiagram: (diagram: Diagram) => void;
+  setSelectedElement: (id: string | null) => void;
+  addEntity: (entity: Entity) => void;
+  addRelationship: (relationship: Relationship) => void;
+  addAttribute: (attribute: Attribute) => void;
+  addIsa: (isa: Isa) => void;
+  addConnection: (connection: Connection) => void;
 
   activeTool: Tool;
-
-  setActiveTool(tool: Tool): void;
+  setActiveTool: (tool: Tool) => void;
 }
 
 const initialDiagram: Diagram = {

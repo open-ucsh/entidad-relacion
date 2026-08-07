@@ -1,7 +1,7 @@
 import type { Attribute } from '@/domain/models';
 
-const RX = 48;
-const RY = 22;
+const RX = 55;
+const RY = 28;
 
 interface AttributeShapeProps {
   attribute: Attribute;
@@ -15,9 +15,7 @@ export function AttributeShape({ attribute }: AttributeShapeProps) {
         cy={attribute.position.y}
         rx={RX}
         ry={RY}
-        fill="white"
-        className="stroke-text"
-        strokeWidth={2}
+        className="fill-background stroke-border"
       />
 
       <text

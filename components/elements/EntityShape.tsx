@@ -18,10 +18,8 @@ export function EntityShape({ entity }: EntityShapeProps) {
         y={y}
         width={WIDTH}
         height={HEIGHT}
-        rx={4}
-        fill="white"
-        className="stroke-text"
-        strokeWidth={2}
+        rx={6}
+        className="fill-background stroke-border"
       />
 
       <text
