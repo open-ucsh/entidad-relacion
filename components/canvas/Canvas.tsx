@@ -4,9 +4,11 @@ import type { PointerEvent } from 'react';
 import { useRef, useState } from 'react';
 
 import type { Diagram } from '@/domain/models';
+import { createId } from '@/lib/id';
 import { useDiagramStore } from '@/state/diagram-store';
 
 import { CanvasLayers } from './CanvasLayers';
+import { CanvasInteraction } from './CanvasInteraction';
 
 interface CanvasProps {
   diagram: Diagram;
@@ -18,9 +20,15 @@ export function Canvas({ diagram }: CanvasProps) {
   const selectedElementId = useDiagramStore((state) => state.selectedElementId);
   const setSelectedElement = useDiagramStore((state) => state.setSelectedElement);
   const updateElementPosition = useDiagramStore((state) => state.updateElementPosition);
+  const addConnection = useDiagramStore((state) => state.addConnection);
   const activeTool = useDiagramStore((state) => state.activeTool);
 
   const [draggingId, setDraggingId] = useState<string | null>(null);
+
+  const connectionSourceId = useDiagramStore((state) => state.connectionSourceId);
+
+  const setConnectionSourceId = useDiagramStore((state) => state.setConnectionSourceId);
+
   const [dragOffset, setDragOffset] = useState<{
     x: number;
     y: number;
@@ -107,6 +115,32 @@ export function Canvas({ diagram }: CanvasProps) {
     setDragOffset(null);
   };
 
+  const handleElementClick = (id: string) => {
+    if (activeTool === 'connect') {
+      if (!connectionSourceId) {
+        setConnectionSourceId(id);
+        setSelectedElement(id);
+        return;
+      }
+
+      if (connectionSourceId !== id) {
+        addConnection({
+          id: createId('connection'),
+          sourceId: connectionSourceId,
+          targetId: id,
+          cardinality: 'unspecified',
+          participation: 'partial',
+        });
+      }
+
+      setConnectionSourceId(null);
+      setSelectedElement(id);
+      return;
+    }
+
+    setSelectedElement(id);
+  };
+
   return (
     <main className="relative h-full w-full overflow-hidden">
       <svg
@@ -116,12 +150,14 @@ export function Canvas({ diagram }: CanvasProps) {
         onPointerUp={stopDragging}
         onPointerLeave={stopDragging}
       >
-        <CanvasLayers
-          diagram={diagram}
-          selectedElementId={selectedElementId}
-          onSelectElement={setSelectedElement}
-          onElementPointerDown={handleElementPointerDown}
-        />
+        <CanvasInteraction>
+          <CanvasLayers
+            diagram={diagram}
+            selectedElementId={selectedElementId}
+            onSelectElement={handleElementClick}
+            onElementPointerDown={handleElementPointerDown}
+          />
+        </CanvasInteraction>
       </svg>
 
       <div className="pointer-events-none absolute bottom-4 right-4 rounded-lg border border-border bg-background/90 px-3 py-2 text-xs text-text-muted shadow-sm backdrop-blur">

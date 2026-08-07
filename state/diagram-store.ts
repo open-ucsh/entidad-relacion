@@ -19,6 +19,9 @@ interface DiagramState {
 
   activeTool: Tool;
   setActiveTool: (tool: Tool) => void;
+  connectionSourceId: string | null;
+
+  setConnectionSourceId: (id: string | null) => void;
 }
 
 const initialDiagram: Diagram = {
@@ -30,6 +33,11 @@ const initialDiagram: Diagram = {
 };
 
 export const useDiagramStore = create<DiagramState>((set) => ({
+  connectionSourceId: null,
+
+  setConnectionSourceId: (connectionSourceId) => {
+    set({ connectionSourceId });
+  },
   diagram: initialDiagram,
 
   selectedElementId: null,
@@ -38,6 +46,7 @@ export const useDiagramStore = create<DiagramState>((set) => ({
   setActiveTool: (activeTool) => {
     set({
       activeTool,
+      connectionSourceId: null,
     });
   },
 

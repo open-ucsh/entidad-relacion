@@ -4,6 +4,7 @@ import { AttributeShape } from '@/components/elements/AttributeShape';
 import { EntityShape } from '@/components/elements/EntityShape';
 import { IsaShape } from '@/components/elements/IsaShape';
 import { RelationshipShape } from '@/components/elements/RelationshipShape';
+import { Connector } from './Connector';
 
 interface CanvasLayersProps {
   diagram: Diagram;
@@ -23,8 +24,11 @@ export function CanvasLayers({
       {/* Grid */}
       <rect width="100%" height="100%" fill="url(#canvas-grid)" />
 
-      {/* Connections */}
-      <g id="connections-layer">{/* futuro: Connector */}</g>
+      <g id="connections-layer" pointerEvents="none">
+        {diagram.connections.map((connection) => (
+          <Connector key={connection.id} connection={connection} diagram={diagram} />
+        ))}
+      </g>
 
       {/* Elements */}
       <g id="elements-layer">
