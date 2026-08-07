@@ -1,25 +1,68 @@
-import { FileSearch } from 'lucide-react';
+'use client';
+
+import { MoveHorizontal } from 'lucide-react';
 
 import { Panel, PanelHeader } from '@/components/ui';
+import { useDiagramStore } from '@/state/diagram-store';
+
+import { InspectorEmpty } from './InspectorEmpty';
+import { InspectorField } from './InspectorField';
+import { InspectorHeader } from './InspectorHeader';
+
+function getSelectedElement(
+  diagram: ReturnType<typeof useDiagramStore.getState>['diagram'],
+  id: string,
+) {
+  return [
+    ...diagram.entities,
+    ...diagram.relationships,
+    ...diagram.attributes,
+    ...diagram.isas,
+  ].find((element) => element.id === id);
+}
 
 export function Inspector() {
+  const diagram = useDiagramStore((state) => state.diagram);
+  const selectedElementId = useDiagramStore((state) => state.selectedElementId);
+
+  const element = selectedElementId ? getSelectedElement(diagram, selectedElementId) : null;
+
   return (
-    <aside className="h-full overflow-hidden border-l border-border">
+    <aside className="border-l border-border">
       <Panel>
-        <PanelHeader title="Propiedades" />
+        <PanelHeader title="Inspector" />
 
-        <div className="flex h-full flex-col items-center justify-center px-8 text-center">
-          <div className="mb-5 rounded-full border border-border bg-background p-5">
-            <FileSearch size={34} strokeWidth={1.6} className="text-text-muted" />
+        {!element ? (
+          <InspectorEmpty />
+        ) : (
+          <div className="space-y-6 p-5">
+            <InspectorHeader element={element} />
+
+            <InspectorField label="Identificador">
+              <div className="rounded-md border border-border bg-background px-3 py-2">
+                <code className="break-all text-xs text-text-muted">{element.id}</code>
+              </div>
+            </InspectorField>
+
+            <InspectorField label="Posición">
+              <div className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2">
+                <MoveHorizontal size={14} className="shrink-0 text-text-muted" />
+
+                <div className="flex flex-1 items-center justify-between text-sm text-text">
+                  <span className="tabular-nums">
+                    X <span className="text-text-muted">{Math.round(element.position.x)}</span>
+                  </span>
+
+                  <span className="h-4 w-px bg-border" />
+
+                  <span className="tabular-nums">
+                    Y <span className="text-text-muted">{Math.round(element.position.y)}</span>
+                  </span>
+                </div>
+              </div>
+            </InspectorField>
           </div>
-
-          <h3 className="text-base font-semibold text-text">Nada seleccionado</h3>
-
-          <p className="mt-2 max-w-xs text-sm leading-6 text-text-muted">
-            Selecciona una entidad, relación, atributo o ISA para visualizar y editar sus
-            propiedades.
-          </p>
-        </div>
+        )}
       </Panel>
     </aside>
   );
