@@ -1,12 +1,25 @@
 @import 'tailwindcss';
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* Brand */
+  --color-brand-primary: #004574;
+  --color-brand-primary-hover: #005b98;
+  --color-accent: #f2c100;
+
+  /* Superficies */
+  --color-background: #ffffff;
+  --color-surface: #f7f8fa;
+  --color-surface-hover: #edf2f7;
+  --color-border: #d7dee7;
+
+  /* Texto */
+  --color-text: #17324d;
+  --color-text-muted: #6b7280;
+
+  /* Tipografía */
+  --font-sans: 'Ubuntu', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
 body {
   min-height: 100vh;
-  background-color: var(--background);
-  color: var(--foreground);
 }
