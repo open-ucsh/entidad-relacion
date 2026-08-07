@@ -9,9 +9,15 @@ interface CanvasLayersProps {
   diagram: Diagram;
   selectedElementId: string | null;
   onSelectElement: (id: string) => void;
+  onElementPointerDown: (event: React.PointerEvent<SVGGElement>, id: string) => void;
 }
 
-export function CanvasLayers({ diagram, selectedElementId, onSelectElement }: CanvasLayersProps) {
+export function CanvasLayers({
+  diagram,
+  selectedElementId,
+  onSelectElement,
+  onElementPointerDown,
+}: CanvasLayersProps) {
   return (
     <>
       {/* Grid */}
@@ -30,6 +36,9 @@ export function CanvasLayers({ diagram, selectedElementId, onSelectElement }: Ca
             onClick={() => {
               onSelectElement(entity.id);
             }}
+            onPointerDown={(event) => {
+              onElementPointerDown(event, entity.id);
+            }}
           />
         ))}
 
@@ -40,6 +49,9 @@ export function CanvasLayers({ diagram, selectedElementId, onSelectElement }: Ca
             selected={selectedElementId === relationship.id}
             onClick={() => {
               onSelectElement(relationship.id);
+            }}
+            onPointerDown={(event) => {
+              onElementPointerDown(event, relationship.id);
             }}
           />
         ))}
@@ -52,6 +64,9 @@ export function CanvasLayers({ diagram, selectedElementId, onSelectElement }: Ca
             onClick={() => {
               onSelectElement(attribute.id);
             }}
+            onPointerDown={(event) => {
+              onElementPointerDown(event, attribute.id);
+            }}
           />
         ))}
 
@@ -62,6 +77,9 @@ export function CanvasLayers({ diagram, selectedElementId, onSelectElement }: Ca
             selected={selectedElementId === isa.id}
             onClick={() => {
               onSelectElement(isa.id);
+            }}
+            onPointerDown={(event) => {
+              onElementPointerDown(event, isa.id);
             }}
           />
         ))}

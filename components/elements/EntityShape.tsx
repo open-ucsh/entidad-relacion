@@ -7,19 +7,21 @@ interface EntityShapeProps {
   entity: Entity;
   selected: boolean;
   onClick: () => void;
+  onPointerDown?: (event: React.PointerEvent<SVGGElement>) => void;
 }
 
-export function EntityShape({ entity, selected, onClick }: EntityShapeProps) {
+export function EntityShape({ entity, selected, onClick, onPointerDown }: EntityShapeProps) {
   const x = entity.position.x - WIDTH / 2;
   const y = entity.position.y - HEIGHT / 2;
 
   return (
     <g
+      onPointerDown={onPointerDown}
       onClick={(event) => {
         event.stopPropagation();
         onClick();
       }}
-      className="cursor-pointer"
+      className={selected ? 'cursor-grabbing' : 'cursor-pointer'}
     >
       <rect
         x={x}

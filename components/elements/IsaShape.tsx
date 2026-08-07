@@ -6,9 +6,10 @@ interface IsaShapeProps {
   isa: Isa;
   selected: boolean;
   onClick: () => void;
+  onPointerDown?: (event: React.PointerEvent<SVGGElement>) => void;
 }
 
-export function IsaShape({ isa, selected, onClick }: IsaShapeProps) {
+export function IsaShape({ isa, selected, onClick, onPointerDown }: IsaShapeProps) {
   const { x, y } = isa.position;
 
   const points = [
@@ -19,11 +20,12 @@ export function IsaShape({ isa, selected, onClick }: IsaShapeProps) {
 
   return (
     <g
+      onPointerDown={onPointerDown}
       onClick={(event) => {
         event.stopPropagation();
         onClick();
       }}
-      className="cursor-pointer"
+      className={selected ? 'cursor-grabbing' : 'cursor-pointer'}
     >
       <polygon
         points={points}

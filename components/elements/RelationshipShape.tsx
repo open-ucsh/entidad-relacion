@@ -7,9 +7,15 @@ interface RelationshipShapeProps {
   relationship: Relationship;
   selected: boolean;
   onClick: () => void;
+  onPointerDown?: (event: React.PointerEvent<SVGGElement>) => void;
 }
 
-export function RelationshipShape({ relationship, selected, onClick }: RelationshipShapeProps) {
+export function RelationshipShape({
+  relationship,
+  selected,
+  onClick,
+  onPointerDown,
+}: RelationshipShapeProps) {
   const { x, y } = relationship.position;
 
   const points = [
@@ -21,11 +27,12 @@ export function RelationshipShape({ relationship, selected, onClick }: Relations
 
   return (
     <g
+      onPointerDown={onPointerDown}
       onClick={(event) => {
         event.stopPropagation();
         onClick();
       }}
-      className="cursor-pointer"
+      className={selected ? 'cursor-grabbing' : 'cursor-pointer'}
     >
       <polygon
         points={points}

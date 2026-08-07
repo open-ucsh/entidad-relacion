@@ -7,16 +7,23 @@ interface AttributeShapeProps {
   attribute: Attribute;
   selected: boolean;
   onClick: () => void;
+  onPointerDown?: (event: React.PointerEvent<SVGGElement>) => void;
 }
 
-export function AttributeShape({ attribute, selected, onClick }: AttributeShapeProps) {
+export function AttributeShape({
+  attribute,
+  selected,
+  onClick,
+  onPointerDown,
+}: AttributeShapeProps) {
   return (
     <g
+      onPointerDown={onPointerDown}
       onClick={(event) => {
         event.stopPropagation();
         onClick();
       }}
-      className="cursor-pointer"
+      className={selected ? 'cursor-grabbing' : 'cursor-pointer'}
     >
       <ellipse
         cx={attribute.position.x}
