@@ -8,6 +8,7 @@ import { Canvas } from './canvas/Canvas';
 import { useCanvasExport } from './canvas/hooks/useCanvasExport';
 import { EditorPanelToggle } from './EditorPanelToggle';
 import { Header } from './header/Header';
+import { useDiagramFile } from './hooks/useDiagramFile';
 import { useEditorPanels } from './hooks/useEditorPanels';
 import { Inspector } from './inspector/Inspector';
 import { Toolbar } from './toolbar/Toolbar';
@@ -15,9 +16,14 @@ import { Toolbar } from './toolbar/Toolbar';
 export function Editor() {
   const diagram = useDiagramStore((state) => state.diagram);
   const resetDiagram = useDiagramStore((state) => state.resetDiagram);
+  const importDiagram = useDiagramStore((state) => state.importDiagram);
 
   const svgRef = useRef<SVGSVGElement | null>(null);
   const { exportDiagram } = useCanvasExport(svgRef, diagram);
+  const { exportJson, importJson } = useDiagramFile({
+    diagram,
+    onImportDiagram: importDiagram,
+  });
 
   const { isToolbarOpen, isInspectorOpen, workspaceColumns, toggleToolbar, toggleInspector } =
     useEditorPanels();
@@ -33,12 +39,14 @@ export function Editor() {
   }
 
   return (
-    <div className="flex h-dvh min-h-0 flex-col overflow-hidden">
+    <div className="flex h-full min-h-0 flex-col">
       <Header
         onNewDiagram={handleNewDiagram}
         onExport={(format) => {
           void exportDiagram(format);
         }}
+        onExportJson={exportJson}
+        onImportJson={importJson}
       />
 
       <main className="relative min-h-0 flex-1 overflow-hidden">

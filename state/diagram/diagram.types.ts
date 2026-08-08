@@ -22,6 +22,7 @@ export interface DiagramState {
   activeTool: Tool;
 
   setDiagram: (diagram: Diagram) => void;
+  importDiagram: (diagram: Diagram) => void;
   resetDiagram: () => void;
 
   setSelectedElement: (id: string | null) => void;

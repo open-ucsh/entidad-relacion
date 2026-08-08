@@ -50,6 +50,35 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
     });
   },
 
+  importDiagram: (diagram) => {
+    const importedAt = new Date().toISOString();
+
+    set({
+      diagram: {
+        ...diagram,
+        metadata: {
+          ...diagram.metadata,
+          origin: 'imported',
+          importedAt,
+          updatedAt: importedAt,
+        },
+        activity: [
+          ...diagram.activity,
+          {
+            id: createId('activity'),
+            type: 'diagram-imported',
+            occurredAt: importedAt,
+            details: 'Se importó un proyecto JSON en ER Designer.',
+          },
+        ],
+      },
+      selectedElementId: null,
+      selectedElementIds: [],
+      connectionSourceId: null,
+      activeTool: 'select',
+    });
+  },
+
   resetDiagram: () => {
     set({
       diagram: createInitialDiagram(),

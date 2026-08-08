@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronDown, FilePlus, ImageDown, type LucideIcon } from 'lucide-react';
+import { ChevronDown, FileDown, FilePlus, FileUp, ImageDown, type LucideIcon } from 'lucide-react';
 import { useEffect, useId, useRef, useState } from 'react';
 
 import type { ExportFormat } from '@/components/editor/canvas/hooks/useCanvasExport';
@@ -20,36 +20,32 @@ const ACTION_BUTTON_CLASS_NAME =
 interface HeaderActionsProps {
   onNewDiagram: () => void;
   onExport: (format: ExportFormat) => void;
+  onExportJson: () => void;
+  onImportJson: (file: File) => Promise<void>;
 }
 
 interface ExportMenuProps {
   onExport: (format: ExportFormat) => void;
+  onExportJson: () => void;
 }
 
 interface ActionButtonProps {
   icon: LucideIcon;
   label: string;
   onClick?: (() => void) | undefined;
-  disabled?: boolean | undefined;
   title?: string | undefined;
 }
 
-function ActionButton({ icon: Icon, label, onClick, disabled = false, title }: ActionButtonProps) {
+function ActionButton({ icon: Icon, label, onClick, title }: ActionButtonProps) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      title={title}
-      className={ACTION_BUTTON_CLASS_NAME}
-    >
-      <Icon size={17} aria-hidden="true" />
+    <button type="button" onClick={onClick} title={title} className={ACTION_BUTTON_CLASS_NAME}>
+      <Icon size={16} aria-hidden="true" />
       {label}
     </button>
   );
 }
 
-function ExportMenu({ onExport }: ExportMenuProps) {
+function ExportMenu({ onExport, onExportJson }: ExportMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const menuId = useId();
@@ -92,7 +88,7 @@ function ExportMenu({ onExport }: ExportMenuProps) {
         aria-controls={menuId}
         className={ACTION_BUTTON_CLASS_NAME}
       >
-        <ImageDown size={17} aria-hidden="true" />
+        <ImageDown size={16} aria-hidden="true" />
         Exportar
         <ChevronDown
           size={14}
@@ -106,7 +102,7 @@ function ExportMenu({ onExport }: ExportMenuProps) {
           id={menuId}
           role="menu"
           aria-label="Formatos de exportación"
-          className="absolute right-0 top-full z-40 mt-1 w-32 overflow-hidden rounded-md border border-border bg-background py-1 shadow-lg"
+          className="absolute right-0 top-full z-40 mt-1 w-44 overflow-hidden rounded-md border border-border bg-background py-1 shadow-lg"
         >
           {FORMAT_OPTIONS.map((option) => (
             <button
@@ -119,26 +115,84 @@ function ExportMenu({ onExport }: ExportMenuProps) {
               }}
               className="block w-full px-3 py-2 text-left text-xs font-medium text-text transition-colors hover:bg-surface-hover"
             >
-              {option.label}
+              Exportar como {option.label}
             </button>
           ))}
+
+          <div className="my-1 border-t border-border" />
+
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              onExportJson();
+              setIsOpen(false);
+            }}
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium text-text transition-colors hover:bg-surface-hover"
+          >
+            <FileDown size={14} aria-hidden="true" />
+            Proyecto JSON
+          </button>
         </div>
       )}
     </div>
   );
 }
 
-export function HeaderActions({ onNewDiagram, onExport }: HeaderActionsProps) {
+export function HeaderActions({
+  onNewDiagram,
+  onExport,
+  onExportJson,
+  onImportJson,
+}: HeaderActionsProps) {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  async function handleImport(file: File) {
+    try {
+      await onImportJson(file);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'No se pudo importar el archivo JSON.';
+
+      window.alert(message);
+    }
+  }
+
   return (
-    <div className="flex shrink-0 items-center gap-2">
+    <div className="flex items-center gap-2">
       <ActionButton
         icon={FilePlus}
         label="Nuevo"
         onClick={onNewDiagram}
-        title="Crear un diagrama nuevo"
+        title="Crear un nuevo diagrama"
       />
 
-      <ExportMenu onExport={onExport} />
+      <ActionButton
+        icon={FileUp}
+        label="Importar"
+        onClick={() => {
+          inputRef.current?.click();
+        }}
+        title="Importar proyecto JSON"
+      />
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="application/json,.json"
+        className="hidden"
+        onChange={(event) => {
+          const [file] = Array.from(event.target.files ?? []);
+
+          if (file) {
+            void handleImport(file);
+          }
+
+          event.target.value = '';
+        }}
+      />
+
+      <ExportMenu onExport={onExport} onExportJson={onExportJson} />
     </div>
   );
 }
