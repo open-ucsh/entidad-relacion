@@ -10,6 +10,7 @@ export function createInitialDiagram(): Diagram {
     attributes: [],
     connections: [],
     metadata: {
+      name: 'Diagrama sin título',
       createdAt,
       updatedAt: createdAt,
       origin: 'created-in-app',

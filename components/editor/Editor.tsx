@@ -17,6 +17,7 @@ import { Toolbar } from './toolbar/Toolbar';
 export function Editor() {
   const diagram = useDiagramStore((state) => state.diagram);
   const resetDiagram = useDiagramStore((state) => state.resetDiagram);
+  const setDiagramName = useDiagramStore((state) => state.setDiagramName);
   const importDiagram = useDiagramStore((state) => state.importDiagram);
 
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
@@ -44,6 +45,8 @@ export function Editor() {
   return (
     <div className="flex h-full min-h-0 flex-col">
       <Header
+        diagramName={diagram.metadata.name}
+        onRenameDiagram={setDiagramName}
         onNewDiagram={handleNewDiagram}
         onOpenHistory={() => {
           setIsHistoryOpen(true);

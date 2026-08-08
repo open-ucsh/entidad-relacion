@@ -1,8 +1,9 @@
-export type DiagramOrigin = 'created-in-app' | 'imported';
+type DiagramOrigin = 'created-in-app' | 'imported';
 
 export type DiagramActivityType =
   | 'diagram-created'
   | 'diagram-imported'
+  | 'diagram-renamed'
   | 'element-created'
   | 'element-updated'
   | 'element-renamed'
@@ -12,6 +13,7 @@ export type DiagramActivityType =
   | 'connection-updated';
 
 export interface DiagramMetadata {
+  name: string;
   createdAt: string;
   updatedAt: string;
   origin: DiagramOrigin;

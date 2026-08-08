@@ -58,6 +58,7 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
         ...diagram,
         metadata: {
           ...diagram.metadata,
+          name: diagram.metadata.name || 'Diagrama importado',
           origin: 'imported',
           importedAt,
           updatedAt: importedAt,
@@ -86,6 +87,34 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
       selectedElementIds: [],
       connectionSourceId: null,
       activeTool: 'select',
+    });
+  },
+
+  setDiagramName: (name) => {
+    const trimmedName = name.trim();
+
+    if (!trimmedName) {
+      return;
+    }
+
+    set((state) => {
+      if (state.diagram.metadata.name === trimmedName) {
+        return state;
+      }
+
+      return {
+        diagram: appendActivity(
+          {
+            ...state.diagram,
+            metadata: {
+              ...state.diagram.metadata,
+              name: trimmedName,
+            },
+          },
+          'diagram-renamed',
+          `Se renombró el proyecto a “${trimmedName}”.`,
+        ),
+      };
     });
   },
 

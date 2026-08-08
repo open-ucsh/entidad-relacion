@@ -24,6 +24,7 @@ export interface DiagramState {
   setDiagram: (diagram: Diagram) => void;
   importDiagram: (diagram: Diagram) => void;
   resetDiagram: () => void;
+  setDiagramName: (name: string) => void;
 
   setSelectedElement: (id: string | null) => void;
   toggleSelectedElement: (id: string) => void;

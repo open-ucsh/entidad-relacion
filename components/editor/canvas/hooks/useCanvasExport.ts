@@ -3,8 +3,6 @@
 import { jsPDF } from 'jspdf';
 import { useCallback, useState, type RefObject } from 'react';
 
-import { BRANDING } from '@/config/branding';
-
 import type { ExportFormat } from '../export/export.types';
 import { canvasToBlob, downloadBlob, renderDiagramToCanvas } from '../export/renderDiagram';
 import type { Diagram } from '@/domain/diagram/models/diagram';
@@ -17,8 +15,16 @@ interface UseCanvasExportResult {
   exportError: Error | null;
 }
 
-function getFileBaseName(): string {
-  return BRANDING.applicationName.toLowerCase().replace(/\s+/g, '-');
+function getFileBaseName(projectName: string): string {
+  const normalizedName = projectName
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  return normalizedName || 'diagrama-er';
 }
 
 export function useCanvasExport(
@@ -41,7 +47,7 @@ export function useCanvasExport(
 
       try {
         const canvas = await renderDiagramToCanvas(svg, diagram);
-        const fileBaseName = getFileBaseName();
+        const fileBaseName = getFileBaseName(diagram.metadata.name);
 
         if (format === 'pdf') {
           const orientation = canvas.width >= canvas.height ? 'landscape' : 'portrait';
@@ -54,7 +60,7 @@ export function useCanvasExport(
 
           pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, canvas.width, canvas.height);
 
-          pdf.save(`${fileBaseName}-diagrama.pdf`);
+          pdf.save(`${fileBaseName}.pdf`);
           return;
         }
 
@@ -63,7 +69,7 @@ export function useCanvasExport(
 
         const blob = await canvasToBlob(canvas, mimeType, quality);
 
-        downloadBlob(blob, `${fileBaseName}-diagrama.${format}`);
+        downloadBlob(blob, `${fileBaseName}.${format}`);
       } catch (error) {
         setExportError(error instanceof Error ? error : new Error('Error al exportar el diagrama'));
       } finally {

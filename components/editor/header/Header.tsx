@@ -2,25 +2,38 @@ import type { ExportFormat } from '../canvas/hooks/useCanvasExport';
 
 import { HeaderActions } from './HeaderActions';
 import { HeaderBrand } from './HeaderBrand';
+import { ProjectNameEditor } from './ProjectNameEditor';
 
 interface HeaderProps {
+  diagramName: string;
   onNewDiagram: () => void;
   onOpenHistory: () => void;
+  onRenameDiagram: (name: string) => void;
   onExport: (format: ExportFormat) => void;
   onExportJson: () => void;
   onImportJson: (file: File) => Promise<void>;
 }
 
 export function Header({
+  diagramName,
   onNewDiagram,
   onOpenHistory,
+  onRenameDiagram,
   onExport,
   onExportJson,
   onImportJson,
 }: HeaderProps) {
   return (
     <header className="relative flex h-27 shrink-0 items-center justify-between bg-brand-primary px-6">
-      <HeaderBrand />
+      <div className="flex min-w-0 items-center gap-5">
+        <HeaderBrand />
+
+        <div className="hidden h-7 w-px bg-white/15 lg:block" aria-hidden="true" />
+
+        <div className="hidden lg:block">
+          <ProjectNameEditor name={diagramName} onCommit={onRenameDiagram} />
+        </div>
+      </div>
 
       <HeaderActions
         onNewDiagram={onNewDiagram}
