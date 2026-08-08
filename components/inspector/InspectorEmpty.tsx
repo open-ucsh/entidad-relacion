@@ -10,7 +10,7 @@ export function InspectorEmpty() {
       <h3 className="text-base font-semibold text-text">Nada seleccionado</h3>
 
       <p className="mt-2 max-w-55 text-sm leading-6 text-text-muted">
-        Selecciona una entidad, relación, atributo o ISA para ver sus propiedades aquí.
+        Selecciona una entidad, relación o atributo para ver sus propiedades aquí.
       </p>
     </div>
   );

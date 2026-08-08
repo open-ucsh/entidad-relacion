@@ -3,16 +3,32 @@ import type { Entity } from '@/domain/models';
 const WIDTH = 120;
 const HEIGHT = 56;
 
+const DIAMOND_MARGIN_X = 14;
+const DIAMOND_MARGIN_Y = 10;
+
 interface EntityShapeProps {
   entity: Entity;
   selected: boolean;
   onClick: () => void;
-  onPointerDown?: (event: React.PointerEvent<SVGGElement>) => void;
+  onPointerDown?: (event: React.PointerEvent) => void;
 }
 
 export function EntityShape({ entity, selected, onClick, onPointerDown }: EntityShapeProps) {
   const x = entity.position.x - WIDTH / 2;
   const y = entity.position.y - HEIGHT / 2;
+
+  const isWeak = entity.kind === 'weak';
+  const isAssociative = entity.kind === 'associative';
+
+  const diamondWidth = WIDTH - DIAMOND_MARGIN_X * 2;
+  const diamondHeight = HEIGHT - DIAMOND_MARGIN_Y * 2;
+
+  const diamondPoints = [
+    `${String(entity.position.x)},${String(entity.position.y - diamondHeight / 2)} `,
+    `${String(entity.position.x + diamondWidth / 2)},${String(entity.position.y)} `,
+    `${String(entity.position.x)},${String(entity.position.y + diamondHeight / 2)} `,
+    `${String(entity.position.x - diamondWidth / 2)},${String(entity.position.y)} `,
+  ].join(' ');
 
   return (
     <g
@@ -23,16 +39,39 @@ export function EntityShape({ entity, selected, onClick, onPointerDown }: Entity
       }}
       className={selected ? 'cursor-grabbing' : 'cursor-pointer'}
     >
+      {/* Entidad débil: segundo rectángulo */}
+      {isWeak && (
+        <rect
+          x={x + 4}
+          y={y + 4}
+          width={WIDTH}
+          height={HEIGHT}
+          rx={6}
+          className="fill-background stroke-border"
+          strokeWidth={selected ? 3 : 1.5}
+        />
+      )}
+
+      {/* Entidad principal */}
       <rect
         x={x}
         y={y}
         width={WIDTH}
         height={HEIGHT}
-        rx={6}
+        rx={isAssociative ? 0 : 6}
         className="fill-background stroke-border"
-        stroke={selected ? 'var(--color-brand-primary: #004574;)' : undefined}
+        stroke={selected ? 'var(--color-brand-primary)' : undefined}
         strokeWidth={selected ? 3 : 1.5}
       />
+
+      {/* Entidad asociativa */}
+      {isAssociative && (
+        <polygon
+          points={diamondPoints}
+          className="fill-background stroke-border"
+          strokeWidth={selected ? 2 : 1}
+        />
+      )}
 
       <text
         x={entity.position.x}

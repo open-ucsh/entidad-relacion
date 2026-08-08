@@ -7,11 +7,7 @@ import { useDiagramStore } from '@/state/diagram-store';
 export function useCanvasKeyboard() {
   const selectedElementId = useDiagramStore((state) => state.selectedElementId);
 
-  const selectedConnectionId = useDiagramStore((state) => state.selectedConnectionId);
-
   const removeElement = useDiagramStore((state) => state.removeElement);
-
-  const removeConnection = useDiagramStore((state) => state.removeConnection);
 
   const setActiveTool = useDiagramStore((state) => state.setActiveTool);
 
@@ -26,11 +22,6 @@ export function useCanvasKeyboard() {
         return;
       }
 
-      if (selectedConnectionId) {
-        removeConnection(selectedConnectionId);
-        return;
-      }
-
       if (selectedElementId) {
         removeElement(selectedElementId);
       }
@@ -41,5 +32,5 @@ export function useCanvasKeyboard() {
     return () => {
       window.removeEventListener('keydown', handleKey);
     };
-  }, [selectedElementId, selectedConnectionId, removeElement, removeConnection, setActiveTool]);
+  }, [selectedElementId, removeElement, setActiveTool]);
 }

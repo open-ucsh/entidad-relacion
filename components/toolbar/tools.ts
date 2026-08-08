@@ -1,4 +1,4 @@
-import { Circle, Diamond, MousePointer2, MoveRight, Square, Trash2, Triangle } from 'lucide-react';
+import { Circle, Diamond, MousePointer2, MoveRight, Square, Trash2 } from 'lucide-react';
 
 export const TOOL_GROUPS = [
   {
@@ -21,12 +21,6 @@ export const TOOL_GROUPS = [
         label: 'Atributo',
         icon: Circle,
         shortcut: 'A',
-      },
-      {
-        id: 'isa',
-        label: 'ISA',
-        icon: Triangle,
-        shortcut: 'I',
       },
     ],
   },

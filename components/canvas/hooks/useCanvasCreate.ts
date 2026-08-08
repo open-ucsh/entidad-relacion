@@ -1,9 +1,43 @@
-import type { Attribute, Entity, Isa, Relationship, Tool } from '@/domain/models';
+import type { Attribute, Entity, Relationship, Tool } from '@/domain/models';
 
 import { createId } from '@/lib/id';
+import { distance } from '@/lib/geometry';
+import { getElements } from '@/domain/queries';
 import { useDiagramStore } from '@/state/diagram-store';
 
-type CanvasElement = Entity | Relationship | Attribute | Isa;
+type CanvasElement = Entity | Relationship | Attribute;
+
+const GRID_START_X = 180;
+const GRID_START_Y = 120;
+const GRID_SPACING_X = 160;
+const GRID_SPACING_Y = 120;
+const GRID_COLUMNS = 5;
+
+const MIN_DISTANCE = 130;
+
+const MAX_ATTEMPTS = 500;
+
+function getNextFreePosition(occupiedPositions: { x: number; y: number }[]) {
+  for (let index = 0; index < MAX_ATTEMPTS; index += 1) {
+    const candidate = {
+      x: GRID_START_X + (index % GRID_COLUMNS) * GRID_SPACING_X,
+      y: GRID_START_Y + Math.floor(index / GRID_COLUMNS) * GRID_SPACING_Y,
+    };
+
+    const isOccupied = occupiedPositions.some(
+      (position) => distance(position, candidate) < MIN_DISTANCE,
+    );
+
+    if (!isOccupied) {
+      return candidate;
+    }
+  }
+
+  return {
+    x: GRID_START_X,
+    y: GRID_START_Y + Math.ceil(MAX_ATTEMPTS / GRID_COLUMNS) * GRID_SPACING_Y,
+  };
+}
 
 export function useCanvasCreate() {
   const diagram = useDiagramStore((state) => state.diagram);
@@ -11,7 +45,6 @@ export function useCanvasCreate() {
   const addEntity = useDiagramStore((state) => state.addEntity);
   const addRelationship = useDiagramStore((state) => state.addRelationship);
   const addAttribute = useDiagramStore((state) => state.addAttribute);
-  const addIsa = useDiagramStore((state) => state.addIsa);
 
   const setSelectedElement = useDiagramStore((state) => state.setSelectedElement);
 
@@ -20,16 +53,9 @@ export function useCanvasCreate() {
       return;
     }
 
-    const totalElements =
-      diagram.entities.length +
-      diagram.relationships.length +
-      diagram.attributes.length +
-      diagram.isas.length;
+    const occupiedPositions = getElements(diagram).map((element) => element.position);
 
-    const position = {
-      x: 180 + (totalElements % 5) * 160,
-      y: 120 + Math.floor(totalElements / 5) * 120,
-    };
+    const position = getNextFreePosition(occupiedPositions);
 
     let element: CanvasElement | null = null;
 
@@ -51,10 +77,6 @@ export function useCanvasCreate() {
           name: 'Nueva Relación',
           position,
           kind: 'regular',
-          minimum: 'unspecified',
-          maximum: 'unspecified',
-          cardinality: 'unspecified',
-          participation: 'optional',
         };
         break;
 
@@ -73,19 +95,6 @@ export function useCanvasCreate() {
         };
         break;
 
-      case 'isa':
-        element = {
-          type: 'isa',
-          id: createId('isa'),
-          name: 'ISA',
-          position,
-          superEntityId: null,
-          subEntityIds: [],
-          disjointness: 'disjoint',
-          completeness: 'partial',
-        };
-        break;
-
       default:
         return;
     }
@@ -101,10 +110,6 @@ export function useCanvasCreate() {
 
       case 'attribute':
         addAttribute(element);
-        break;
-
-      case 'isa':
-        addIsa(element);
         break;
     }
 

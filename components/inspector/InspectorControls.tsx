@@ -11,12 +11,6 @@ interface SegmentedProps<T extends string> {
   onChange: (value: T) => void;
 }
 
-interface SelectProps<T extends string> {
-  value: T;
-  options: Option<T>[];
-  onChange: (value: T) => void;
-}
-
 interface SwitchProps {
   checked: boolean;
   label: string;
@@ -58,24 +52,6 @@ export function SegmentedControl<T extends string>({
         );
       })}
     </div>
-  );
-}
-
-export function SelectControl<T extends string>({ value, options, onChange }: SelectProps<T>) {
-  return (
-    <select
-      className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-text outline-none transition focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
-      value={value}
-      onChange={(event) => {
-        onChange(event.target.value as T);
-      }}
-    >
-      {options.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
   );
 }
 

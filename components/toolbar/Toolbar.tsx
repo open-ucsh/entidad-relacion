@@ -3,7 +3,6 @@
 import type { Tool } from '@/domain/models';
 
 import { useCanvasCreate } from '@/components/canvas/hooks/useCanvasCreate';
-import { PanelHeader } from '@/components/ui';
 import { useDiagramStore } from '@/state/diagram-store';
 
 import { ToolbarGroup } from './ToolbarGroup';
@@ -19,15 +18,13 @@ export function Toolbar() {
   function handleToolSelect(tool: Tool) {
     setActiveTool(tool);
 
-    if (tool === 'entity' || tool === 'relationship' || tool === 'attribute' || tool === 'isa') {
+    if (tool === 'entity' || tool === 'relationship' || tool === 'attribute') {
       create(tool);
     }
   }
 
   return (
     <aside className="flex h-full min-h-0 flex-col border-r border-border">
-      <PanelHeader title="Herramientas" />
-
       <div className="flex-1 overflow-y-auto px-5 py-5" style={{ scrollbarWidth: 'thin' }}>
         <div className="space-y-8">
           {TOOL_GROUPS.map((group, index) => (

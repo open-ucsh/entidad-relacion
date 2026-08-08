@@ -1,64 +1,34 @@
 import { create } from 'zustand';
-import {
-  removeDiagramConnection,
-  removeDiagramElement,
-  updateConnections,
-  updateDiagram,
-} from './diagram-utils';
+import { removeDiagramElement, updateDiagram } from './diagram-utils';
 
 import type { DiagramState } from './diagram-state';
 import { initialDiagram } from './diagram-state';
+import { createId } from '@/lib/id';
 
-export const useDiagramStore = create<DiagramState>((set) => ({
+export const useDiagramStore = create<DiagramState>((set, get) => ({
   diagram: initialDiagram,
 
   selectedElementId: null,
-  selectedConnectionId: null,
+  connectionSourceId: null,
 
   activeTool: 'select',
 
-  connectionSourceId: null,
-
   setDiagram: (diagram) => {
-    set({
-      diagram,
-    });
+    set({ diagram });
   },
 
   setSelectedElement: (selectedElementId) => {
-    set({
-      selectedElementId,
-      selectedConnectionId: null,
-    });
-  },
-
-  setSelectedConnection: (selectedConnectionId) => {
-    set({
-      selectedConnectionId,
-      selectedElementId: null,
-    });
+    set({ selectedElementId });
   },
 
   setActiveTool: (activeTool) => {
-    set({
-      activeTool,
-      connectionSourceId: null,
-      selectedConnectionId: null,
-    });
-  },
-
-  setConnectionSourceId: (connectionSourceId) => {
-    set({
-      connectionSourceId,
-    });
+    // al cambiar de herramienta cancelamos cualquier conexión a medio empezar
+    set({ activeTool, connectionSourceId: null });
   },
 
   addEntity: (entity) => {
     set((state) => ({
-      diagram: {
-        ...state.diagram,
-        entities: [...state.diagram.entities, entity],
-      },
+      diagram: { ...state.diagram, entities: [...state.diagram.entities, entity] },
     }));
   },
 
@@ -73,28 +43,13 @@ export const useDiagramStore = create<DiagramState>((set) => ({
 
   addAttribute: (attribute) => {
     set((state) => ({
-      diagram: {
-        ...state.diagram,
-        attributes: [...state.diagram.attributes, attribute],
-      },
-    }));
-  },
-
-  addIsa: (isa) => {
-    set((state) => ({
-      diagram: {
-        ...state.diagram,
-        isas: [...state.diagram.isas, isa],
-      },
+      diagram: { ...state.diagram, attributes: [...state.diagram.attributes, attribute] },
     }));
   },
 
   addConnection: (connection) => {
     set((state) => ({
-      diagram: {
-        ...state.diagram,
-        connections: [...state.diagram.connections, connection],
-      },
+      diagram: { ...state.diagram, connections: [...state.diagram.connections, connection] },
     }));
   },
 
@@ -104,33 +59,47 @@ export const useDiagramStore = create<DiagramState>((set) => ({
     }));
   },
 
-  updateConnection: (id, updates) => {
-    set((state) => ({
-      diagram: updateConnections(state.diagram, id, updates),
-    }));
-  },
-
   removeElement: (id) => {
     set((state) => ({
       diagram: removeDiagramElement(state.diagram, id),
-
       selectedElementId: state.selectedElementId === id ? null : state.selectedElementId,
     }));
   },
 
-  removeConnection: (id) => {
-    set((state) => ({
-      diagram: removeDiagramConnection(state.diagram, id),
+  // Herramienta 'connect': primer click = origen, segundo click en otro = destino.
+  handleConnectClick: (id) => {
+    const { connectionSourceId, diagram, addConnection } = get();
 
-      selectedConnectionId: state.selectedConnectionId === id ? null : state.selectedConnectionId,
-    }));
+    if (!connectionSourceId) {
+      set({ connectionSourceId: id });
+      return;
+    }
+
+    if (connectionSourceId === id) {
+      // click sobre el mismo elemento otra vez: cancela
+      set({ connectionSourceId: null });
+      return;
+    }
+
+    const alreadyExists = diagram.connections.some(
+      (connection) =>
+        (connection.fromId === connectionSourceId && connection.toId === id) ||
+        (connection.fromId === id && connection.toId === connectionSourceId),
+    );
+
+    if (!alreadyExists) {
+      addConnection({
+        id: createId('connection'),
+        type: 'connection',
+        fromId: connectionSourceId,
+        toId: id,
+      });
+    }
+
+    set({ connectionSourceId: null });
   },
 
   clearSelection: () => {
-    set({
-      selectedElementId: null,
-      selectedConnectionId: null,
-      connectionSourceId: null,
-    });
+    set({ selectedElementId: null });
   },
 }));

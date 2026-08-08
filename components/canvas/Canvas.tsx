@@ -12,7 +12,6 @@ import { CanvasLayers } from './CanvasLayers';
 import { useCanvasDrag } from './hooks/useCanvasDrag';
 import { useCanvasKeyboard } from './hooks/useCanvasKeyboard';
 import { useSvgCoordinates } from './hooks/useSvgCoordinates';
-import { useCanvasConnect } from './hooks/useCanvasConnect';
 
 interface CanvasProps {
   diagram: Diagram;
@@ -21,25 +20,16 @@ interface CanvasProps {
 export function Canvas({ diagram }: CanvasProps) {
   const activeTool = useDiagramStore((state) => state.activeTool);
 
-  const { connect } = useCanvasConnect();
-
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   const selectedElementId = useDiagramStore((state) => state.selectedElementId);
+  const connectionSourceId = useDiagramStore((state) => state.connectionSourceId);
 
   const removeElement = useDiagramStore((state) => state.removeElement);
-
-  const removeConnection = useDiagramStore((state) => state.removeConnection);
-
-  const selectedConnectionId = useDiagramStore((state) => state.selectedConnectionId);
-
   const setSelectedElement = useDiagramStore((state) => state.setSelectedElement);
-
-  const setSelectedConnection = useDiagramStore((state) => state.setSelectedConnection);
-
   const clearSelection = useDiagramStore((state) => state.clearSelection);
-
   const updateElement = useDiagramStore((state) => state.updateElement);
+  const handleConnectClick = useDiagramStore((state) => state.handleConnectClick);
 
   useCanvasKeyboard();
 
@@ -60,21 +50,19 @@ export function Canvas({ diagram }: CanvasProps) {
           <CanvasLayers
             diagram={diagram}
             selectedElementId={selectedElementId}
-            selectedConnectionId={selectedConnectionId}
+            connectionSourceId={connectionSourceId}
             activeTool={activeTool}
             onSelectElement={setSelectedElement}
-            onSelectConnection={setSelectedConnection}
-            onConnect={connect}
             onDeleteElement={removeElement}
-            onDeleteConnection={removeConnection}
             onElementPointerDown={startDrag}
+            onConnectClick={handleConnectClick}
           />
         </CanvasInteraction>
       </svg>
 
       <div className="pointer-events-none absolute bottom-4 right-4 rounded-lg border border-border bg-background/90 px-3 py-2 text-xs text-text-muted shadow-sm backdrop-blur">
         {diagram.entities.length} entidades · {diagram.relationships.length} relaciones ·{' '}
-        {diagram.attributes.length} atributos
+        {diagram.attributes.length} atributos · {diagram.connections.length} conexiones
       </div>
     </main>
   );
