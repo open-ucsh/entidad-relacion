@@ -31,14 +31,17 @@ export function updateDiagram(
   };
 }
 
-export function removeDiagramElement(diagram: Diagram, id: string): Diagram {
+export function removeDiagramElements(diagram: Diagram, ids: string[]): Diagram {
+  const removedIds = new Set(ids);
+
   return {
     ...diagram,
-    entities: diagram.entities.filter((item) => item.id !== id),
-    relationships: diagram.relationships.filter((item) => item.id !== id),
-    attributes: diagram.attributes.filter((item) => item.id !== id),
+    entities: diagram.entities.filter((item) => !removedIds.has(item.id)),
+    relationships: diagram.relationships.filter((item) => !removedIds.has(item.id)),
+    attributes: diagram.attributes.filter((item) => !removedIds.has(item.id)),
     connections: diagram.connections.filter(
-      (item) => item.id !== id && item.fromId !== id && item.toId !== id,
+      (item) =>
+        !removedIds.has(item.id) && !removedIds.has(item.fromId) && !removedIds.has(item.toId),
     ),
   };
 }

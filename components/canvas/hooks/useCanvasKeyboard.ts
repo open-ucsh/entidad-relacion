@@ -2,8 +2,8 @@
 
 import { useEffect } from 'react';
 
-import type { Tool } from '@/domain/models';
 import { TOOL_GROUPS } from '@/components/toolbar/tools';
+import type { Tool } from '@/domain/models';
 import { useDiagramStore } from '@/state/diagram-store';
 
 import { useToolSelect } from '../../editor/hooks/useToolSelect';
@@ -25,8 +25,9 @@ function isTypingTarget(target: EventTarget | null): boolean {
 }
 
 export function useCanvasKeyboard() {
-  const selectedElementId = useDiagramStore((state) => state.selectedElementId);
-  const removeElement = useDiagramStore((state) => state.removeElement);
+  const selectedElementIds = useDiagramStore((state) => state.selectedElementIds);
+  const removeElements = useDiagramStore((state) => state.removeElements);
+  const selectAllElements = useDiagramStore((state) => state.selectAllElements);
   const setActiveTool = useDiagramStore((state) => state.setActiveTool);
   const { selectTool } = useToolSelect();
 
@@ -36,16 +37,32 @@ export function useCanvasKeyboard() {
         return;
       }
 
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'a') {
+        event.preventDefault();
+        selectAllElements();
+        return;
+      }
+
       if (event.key === 'Escape') {
         setActiveTool('select');
         return;
       }
 
       if (event.key === 'Delete' || event.key === 'Backspace') {
-        if (selectedElementId) {
+        if (selectedElementIds.length > 0) {
           event.preventDefault();
-          removeElement(selectedElementId);
+          removeElements(selectedElementIds);
         }
+
+        return;
+      }
+
+      if (event.ctrlKey || event.metaKey) {
+        if (event.key.toLowerCase() === 'a') {
+          event.preventDefault();
+          selectAllElements();
+        }
+
         return;
       }
 
@@ -62,5 +79,5 @@ export function useCanvasKeyboard() {
     return () => {
       window.removeEventListener('keydown', handleKey);
     };
-  }, [selectedElementId, removeElement, setActiveTool, selectTool]);
+  }, [removeElements, selectAllElements, selectedElementIds, selectTool, setActiveTool]);
 }

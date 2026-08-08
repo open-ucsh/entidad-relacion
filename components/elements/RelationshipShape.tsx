@@ -1,4 +1,4 @@
-import type { PointerEvent } from 'react';
+import type { MouseEvent, PointerEvent } from 'react';
 import type { Relationship } from '@/domain/models';
 
 const WIDTH = 120;
@@ -7,14 +7,16 @@ const HEIGHT = 60;
 interface RelationshipShapeProps {
   relationship: Relationship;
   selected: boolean;
-  onClick: () => void;
-  onPointerDown?: (event: PointerEvent<SVGGElement>) => void;
+  onClick: (event: MouseEvent<SVGGElement>) => void;
+  onDoubleClick: () => void;
+  onPointerDown?: (event: PointerEvent) => void;
 }
 
 export function RelationshipShape({
   relationship,
   selected,
   onClick,
+  onDoubleClick,
   onPointerDown,
 }: RelationshipShapeProps) {
   const { x, y } = relationship.position;
@@ -37,7 +39,11 @@ export function RelationshipShape({
       onPointerDown={onPointerDown}
       onClick={(event) => {
         event.stopPropagation();
-        onClick();
+        onClick(event);
+      }}
+      onDoubleClick={(event) => {
+        event.stopPropagation();
+        onDoubleClick();
       }}
       className={selected ? 'cursor-grabbing' : 'cursor-pointer'}
     >

@@ -1,4 +1,4 @@
-import type { PointerEvent } from 'react';
+import type { MouseEvent, PointerEvent } from 'react';
 import type { Entity } from '@/domain/models';
 
 const WIDTH = 120;
@@ -10,11 +10,18 @@ const DIAMOND_MARGIN_Y = 10;
 interface EntityShapeProps {
   entity: Entity;
   selected: boolean;
-  onClick: () => void;
-  onPointerDown?: (event: PointerEvent<SVGGElement>) => void;
+  onClick: (event: MouseEvent<SVGGElement>) => void;
+  onDoubleClick: () => void;
+  onPointerDown?: (event: PointerEvent) => void;
 }
 
-export function EntityShape({ entity, selected, onClick, onPointerDown }: EntityShapeProps) {
+export function EntityShape({
+  entity,
+  selected,
+  onClick,
+  onDoubleClick,
+  onPointerDown,
+}: EntityShapeProps) {
   const x = entity.position.x - WIDTH / 2;
   const y = entity.position.y - HEIGHT / 2;
 
@@ -36,7 +43,11 @@ export function EntityShape({ entity, selected, onClick, onPointerDown }: Entity
       onPointerDown={onPointerDown}
       onClick={(event) => {
         event.stopPropagation();
-        onClick();
+        onClick(event);
+      }}
+      onDoubleClick={(event) => {
+        event.stopPropagation();
+        onDoubleClick();
       }}
       className={selected ? 'cursor-grabbing' : 'cursor-pointer'}
     >

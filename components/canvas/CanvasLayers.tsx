@@ -1,4 +1,4 @@
-import type { PointerEvent } from 'react';
+import type { MouseEvent, PointerEvent } from 'react';
 
 import { AttributeShape } from '@/components/elements/AttributeShape';
 import { ConnectionShape } from '@/components/elements/ConnectionShape';
@@ -9,41 +9,49 @@ import { getConnectionEndpoints } from '@/domain/queries/connections';
 
 interface CanvasLayersProps {
   diagram: Diagram;
-  selectedElementId: string | null;
+  selectedElementIds: string[];
   connectionSourceId: string | null;
   activeTool: Tool;
   onSelectElement: (id: string) => void;
+  onToggleElement: (id: string) => void;
   onDeleteElement: (id: string) => void;
-  onElementPointerDown: (event: PointerEvent<SVGGElement>, id: string) => void;
+  onElementPointerDown: (event: PointerEvent, id: string) => void;
   onConnectClick: (id: string) => void;
+  onEditElement: (id: string) => void;
 }
 
 export function CanvasLayers({
   diagram,
-  selectedElementId,
+  selectedElementIds,
   connectionSourceId,
   activeTool,
   onSelectElement,
+  onToggleElement,
   onDeleteElement,
   onElementPointerDown,
   onConnectClick,
+  onEditElement,
 }: CanvasLayersProps) {
-  function handleElementClick(id: string) {
-    switch (activeTool) {
-      case 'delete':
-        onDeleteElement(id);
-        break;
-
-      case 'connect':
-        onConnectClick(id);
-        break;
-
-      default:
-        onSelectElement(id);
+  function handleElementClick(event: MouseEvent<SVGGElement>, id: string) {
+    if (activeTool === 'delete') {
+      onDeleteElement(id);
+      return;
     }
+
+    if (activeTool === 'connect') {
+      onConnectClick(id);
+      return;
+    }
+
+    if (event.ctrlKey || event.metaKey) {
+      onToggleElement(id);
+      return;
+    }
+
+    onSelectElement(id);
   }
 
-  function handleElementPointerDown(event: PointerEvent<SVGGElement>, id: string) {
+  function handleElementPointerDown(event: PointerEvent, id: string) {
     event.stopPropagation();
 
     if (activeTool === 'delete' || activeTool === 'connect') {
@@ -53,8 +61,14 @@ export function CanvasLayers({
     onElementPointerDown(event, id);
   }
 
+  function handleElementDoubleClick(id: string) {
+    if (activeTool === 'select') {
+      onEditElement(id);
+    }
+  }
+
   function isSelected(id: string) {
-    return selectedElementId === id || connectionSourceId === id;
+    return selectedElementIds.includes(id) || connectionSourceId === id;
   }
 
   return (
@@ -72,9 +86,9 @@ export function CanvasLayers({
               key={connection.id}
               from={endpoints.from}
               to={endpoints.to}
-              selected={selectedElementId === connection.id}
+              selected={selectedElementIds.includes(connection.id)}
               onClick={() => {
-                handleElementClick(connection.id);
+                onSelectElement(connection.id);
               }}
             />
           );
@@ -87,8 +101,11 @@ export function CanvasLayers({
             key={entity.id}
             entity={entity}
             selected={isSelected(entity.id)}
-            onClick={() => {
-              handleElementClick(entity.id);
+            onClick={(event) => {
+              handleElementClick(event, entity.id);
+            }}
+            onDoubleClick={() => {
+              handleElementDoubleClick(entity.id);
             }}
             onPointerDown={(event) => {
               handleElementPointerDown(event, entity.id);
@@ -101,8 +118,11 @@ export function CanvasLayers({
             key={relationship.id}
             relationship={relationship}
             selected={isSelected(relationship.id)}
-            onClick={() => {
-              handleElementClick(relationship.id);
+            onClick={(event) => {
+              handleElementClick(event, relationship.id);
+            }}
+            onDoubleClick={() => {
+              handleElementDoubleClick(relationship.id);
             }}
             onPointerDown={(event) => {
               handleElementPointerDown(event, relationship.id);
@@ -115,8 +135,11 @@ export function CanvasLayers({
             key={attribute.id}
             attribute={attribute}
             selected={isSelected(attribute.id)}
-            onClick={() => {
-              handleElementClick(attribute.id);
+            onClick={(event) => {
+              handleElementClick(event, attribute.id);
+            }}
+            onDoubleClick={() => {
+              handleElementDoubleClick(attribute.id);
             }}
             onPointerDown={(event) => {
               handleElementPointerDown(event, attribute.id);
@@ -124,9 +147,6 @@ export function CanvasLayers({
           />
         ))}
       </g>
-
-      <g id="selection-layer" />
-      <g id="overlay-layer" />
     </>
   );
 }

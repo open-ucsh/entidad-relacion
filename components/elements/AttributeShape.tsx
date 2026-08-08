@@ -1,4 +1,4 @@
-import type { PointerEvent } from 'react';
+import type { MouseEvent, PointerEvent } from 'react';
 import type { Attribute } from '@/domain/models';
 
 const RX = 55;
@@ -7,8 +7,9 @@ const RY = 28;
 interface AttributeShapeProps {
   attribute: Attribute;
   selected: boolean;
-  onClick: () => void;
-  onPointerDown?: (event: PointerEvent<SVGGElement>) => void;
+  onClick: (event: MouseEvent<SVGGElement>) => void;
+  onDoubleClick: () => void;
+  onPointerDown?: (event: PointerEvent) => void;
 }
 
 function estimateTextWidth(text: string): number {
@@ -20,6 +21,7 @@ export function AttributeShape({
   attribute,
   selected,
   onClick,
+  onDoubleClick,
   onPointerDown,
 }: AttributeShapeProps) {
   const { x, y } = attribute.position;
@@ -37,7 +39,11 @@ export function AttributeShape({
       onPointerDown={onPointerDown}
       onClick={(event) => {
         event.stopPropagation();
-        onClick();
+        onClick(event);
+      }}
+      onDoubleClick={(event) => {
+        event.stopPropagation();
+        onDoubleClick();
       }}
       className={selected ? 'cursor-grabbing' : 'cursor-pointer'}
     >
