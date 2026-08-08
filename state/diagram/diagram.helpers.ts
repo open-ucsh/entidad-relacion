@@ -1,13 +1,33 @@
 import { createId } from '@/domain/diagram/lib/id';
-import type { Diagram, DiagramActivityType, DiagramDocument } from '@/domain/diagram/models';
+import type {
+  Diagram,
+  DiagramActivityType,
+  DiagramDocument,
+  DiagramDocumentHistory,
+} from '@/domain/diagram/models';
 
 import { createInitialDiagram } from './diagram.initial';
 import type { DiagramState } from './diagram.types';
+
+const MAX_HISTORY_SIZE = 50;
+
+interface ReplaceDiagramOptions {
+  history?: DiagramDocumentHistory | undefined;
+  recordHistory?: boolean | undefined;
+}
+
+export function createDocumentHistory(): DiagramDocumentHistory {
+  return {
+    undoStack: [],
+    redoStack: [],
+  };
+}
 
 export function createDiagramDocument(name = 'Diagrama sin título'): DiagramDocument {
   return {
     id: createId('document'),
     diagram: createInitialDiagram(name),
+    history: createDocumentHistory(),
   };
 }
 
@@ -36,10 +56,36 @@ export function appendDiagramActivity(
   };
 }
 
-export function replaceActiveDiagram(
-  state: Pick<DiagramState, 'activeDocumentId' | 'documents'>,
+export function pushUndoSnapshot(
+  history: DiagramDocumentHistory,
   diagram: Diagram,
+): DiagramDocumentHistory {
+  return {
+    undoStack: [...history.undoStack, diagram].slice(-MAX_HISTORY_SIZE),
+    redoStack: [],
+  };
+}
+
+export function replaceActiveDiagram(
+  state: Pick<DiagramState, 'activeDocumentId' | 'diagram' | 'documents'>,
+  diagram: Diagram,
+  options: ReplaceDiagramOptions = {},
 ) {
+  const activeDocument = state.documents.find((document) => document.id === state.activeDocumentId);
+
+  if (!activeDocument) {
+    return {
+      diagram,
+      documents: state.documents,
+    };
+  }
+
+  const history =
+    options.history ??
+    (options.recordHistory === false
+      ? activeDocument.history
+      : pushUndoSnapshot(activeDocument.history, state.diagram));
+
   return {
     diagram,
     documents: state.documents.map((document) =>
@@ -47,6 +93,7 @@ export function replaceActiveDiagram(
         ? {
             ...document,
             diagram,
+            history,
           }
         : document,
     ),

@@ -73,10 +73,22 @@ export interface ActivitySlice {
   recordActivity: (type: DiagramActivityType, details: string) => void;
 }
 
+export interface HistorySlice {
+  pendingHistorySnapshot: Diagram | null;
+
+  undo: () => void;
+  redo: () => void;
+
+  beginHistoryTransaction: () => void;
+  completeHistoryTransaction: (type: DiagramActivityType, details: string) => void;
+  cancelHistoryTransaction: () => void;
+}
+
 export type DiagramState = DocumentSlice &
   SelectionSlice &
   ElementSlice &
   ConnectionSlice &
-  ActivitySlice;
+  ActivitySlice &
+  HistorySlice;
 
 export type DiagramStoreSlice<T> = StateCreator<DiagramState, [], [], T>;

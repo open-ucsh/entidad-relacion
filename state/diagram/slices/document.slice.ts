@@ -6,6 +6,7 @@ import {
   createDiagramDocument,
   createEditorResetState,
   replaceActiveDiagram,
+  createDocumentHistory,
 } from '../diagram.helpers';
 import type { DiagramStoreSlice, DocumentSlice } from '../diagram.types';
 
@@ -50,6 +51,7 @@ export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) 
       const importedDocument: DiagramDocument = {
         id: createId('document'),
         diagram: importedDiagram,
+        history: createDocumentHistory(),
       };
 
       set((state) => ({
@@ -125,6 +127,7 @@ export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) 
       const duplicatedDocument: DiagramDocument = {
         id: createId('document'),
         diagram: duplicatedDiagram,
+        history: createDocumentHistory(),
       };
 
       set((state) => ({

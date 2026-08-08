@@ -36,7 +36,9 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
   const clearSelection = useDiagramStore((state) => state.clearSelection);
   const updateElement = useDiagramStore((state) => state.updateElement);
   const moveElements = useDiagramStore((state) => state.moveElements);
-  const recordActivity = useDiagramStore((state) => state.recordActivity);
+  const beginHistoryTransaction = useDiagramStore((state) => state.beginHistoryTransaction);
+  const completeHistoryTransaction = useDiagramStore((state) => state.completeHistoryTransaction);
+  const cancelHistoryTransaction = useDiagramStore((state) => state.cancelHistoryTransaction);
   const handleConnectClick = useDiagramStore((state) => state.handleConnectClick);
 
   useCanvasKeyboard();
@@ -64,12 +66,14 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
     selectedElementIds,
     getSvgPoint: getWorldPoint,
     moveElements,
+    onMoveStarted: beginHistoryTransaction,
     onMoveCompleted: (movedElementCount) => {
-      recordActivity(
+      completeHistoryTransaction(
         'elements-moved',
         `Se movió ${movedElementCount} elemento${movedElementCount === 1 ? '' : 's'}.`,
       );
     },
+    onMoveCancelled: cancelHistoryTransaction,
   });
 
   const { editingElement, editingName, setEditingName, startEditing, cancelEditing, saveEditing } =
@@ -88,7 +92,7 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
     diagram.connections.some((connection) => connection.id === selectedElementId);
 
   return (
-    <main className="relative h-full min-h-0 min-w-0 overflow-hidden bg-background">
+    <main className="relative h-full min-h-0 min-w-0 overflow-hidden">
       <svg
         ref={svgRef}
         className={`block h-full w-full touch-none ${

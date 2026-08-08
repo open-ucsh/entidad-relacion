@@ -26,7 +26,9 @@ interface UseCanvasDragProps {
       position: Point;
     }>,
   ) => void;
+  onMoveStarted: () => void;
   onMoveCompleted: (movedElementCount: number) => void;
+  onMoveCancelled: () => void;
 }
 
 export function useCanvasDrag({
@@ -34,7 +36,9 @@ export function useCanvasDrag({
   selectedElementIds,
   getSvgPoint,
   moveElements,
+  onMoveStarted,
   onMoveCompleted,
+  onMoveCancelled,
 }: UseCanvasDragProps) {
   const dragSessionRef = useRef<DragSession | null>(null);
 
@@ -55,12 +59,17 @@ export function useCanvasDrag({
       return position ? [{ id: elementId, position }] : [];
     });
 
+    if (items.length === 0) {
+      return;
+    }
+
     dragSessionRef.current = {
       startPoint,
       items,
       hasMoved: false,
     };
 
+    onMoveStarted();
     event.currentTarget.setPointerCapture(event.pointerId);
   }
 
@@ -100,8 +109,14 @@ export function useCanvasDrag({
   function stopDrag() {
     const session = dragSessionRef.current;
 
-    if (session?.hasMoved) {
+    if (!session) {
+      return;
+    }
+
+    if (session.hasMoved) {
       onMoveCompleted(session.items.length);
+    } else {
+      onMoveCancelled();
     }
 
     dragSessionRef.current = null;

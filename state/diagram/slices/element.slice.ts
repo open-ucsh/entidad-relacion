@@ -1,9 +1,8 @@
-import type { ElementSlice, DiagramStoreSlice } from '../diagram.types';
-
 import { findDiagramElement } from '@/domain/diagram/queries/elements';
 
 import { appendDiagramActivity, replaceActiveDiagram } from '../diagram.helpers';
 import { moveDiagramElements, removeDiagramElements, updateDiagram } from '../diagram.mutations';
+import type { DiagramStoreSlice, ElementSlice } from '../diagram.types';
 
 export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) => ({
   addEntity: (entity) => {
@@ -76,7 +75,11 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
       return;
     }
 
-    set((state) => replaceActiveDiagram(state, moveDiagramElements(state.diagram, updates)));
+    set((state) =>
+      replaceActiveDiagram(state, moveDiagramElements(state.diagram, updates), {
+        recordHistory: false,
+      }),
+    );
   },
 
   removeElement: (id) => {

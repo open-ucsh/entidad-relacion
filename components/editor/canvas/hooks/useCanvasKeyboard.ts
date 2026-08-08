@@ -19,6 +19,8 @@ export function useCanvasKeyboard() {
   const removeElements = useDiagramStore((state) => state.removeElements);
   const selectAllElements = useDiagramStore((state) => state.selectAllElements);
   const setActiveTool = useDiagramStore((state) => state.setActiveTool);
+  const undo = useDiagramStore((state) => state.undo);
+  const redo = useDiagramStore((state) => state.redo);
   const { activateTool } = useDiagramTool();
 
   useEffect(() => {
@@ -27,12 +29,30 @@ export function useCanvasKeyboard() {
         return;
       }
 
-      if (event.ctrlKey || event.metaKey) {
-        if (event.key.toLowerCase() === 'a') {
-          event.preventDefault();
-          selectAllElements();
+      const hasModifier = event.ctrlKey || event.metaKey;
+      const key = event.key.toLowerCase();
+
+      if (hasModifier && key === 'z') {
+        event.preventDefault();
+
+        if (event.shiftKey) {
+          redo();
+        } else {
+          undo();
         }
 
+        return;
+      }
+
+      if (hasModifier && key === 'y') {
+        event.preventDefault();
+        redo();
+        return;
+      }
+
+      if (hasModifier && key === 'a') {
+        event.preventDefault();
+        selectAllElements();
         return;
       }
 
@@ -63,5 +83,13 @@ export function useCanvasKeyboard() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [activateTool, removeElements, selectAllElements, selectedElementIds, setActiveTool]);
+  }, [
+    activateTool,
+    redo,
+    removeElements,
+    selectAllElements,
+    selectedElementIds,
+    setActiveTool,
+    undo,
+  ]);
 }
