@@ -1,4 +1,5 @@
 import type { Attribute, Diagram, Entity, Relationship } from '@/domain/diagram/models';
+import type { Connection } from '@/domain/diagram/models';
 
 import type { ElementPositionUpdate } from './diagram.types';
 
@@ -45,6 +46,17 @@ export function updateDiagram(
     entities: updateCollection(diagram.entities, id, updates as Partial<Entity>),
     relationships: updateCollection(diagram.relationships, id, updates as Partial<Relationship>),
     attributes: updateCollection(diagram.attributes, id, updates as Partial<Attribute>),
+  };
+}
+
+export function updateDiagramConnection(
+  diagram: Diagram,
+  id: string,
+  updates: Partial<Connection>,
+): Diagram {
+  return {
+    ...diagram,
+    connections: updateCollection(diagram.connections, id, updates),
   };
 }
 

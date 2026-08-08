@@ -23,3 +23,11 @@ export function getConnectionEndpoints(
     to,
   };
 }
+
+export function formatConnectionCardinality(connection: Connection): string | null {
+  if (connection.minimum === 'unspecified' || connection.maximum === 'unspecified') {
+    return null;
+  }
+
+  return `(${connection.minimum},${connection.maximum})`;
+}

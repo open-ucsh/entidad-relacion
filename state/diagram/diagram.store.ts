@@ -3,7 +3,12 @@ import { create } from 'zustand';
 import { createId } from '@/domain/diagram/lib/id';
 
 import { createInitialDiagram } from './diagram.initial';
-import { moveDiagramElements, removeDiagramElements, updateDiagram } from './diagram.mutations';
+import {
+  moveDiagramElements,
+  removeDiagramElements,
+  updateDiagram,
+  updateDiagramConnection,
+} from './diagram.mutations';
 import type { DiagramState } from './diagram.types';
 
 export const useDiagramStore = create<DiagramState>((set, get) => ({
@@ -125,6 +130,12 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
     }));
   },
 
+  updateConnection: (id, updates) => {
+    set((state) => ({
+      diagram: updateDiagramConnection(state.diagram, id, updates),
+    }));
+  },
+
   moveElements: (updates) => {
     if (updates.length === 0) {
       return;
@@ -186,6 +197,8 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
         type: 'connection',
         fromId: connectionSourceId,
         toId: id,
+        minimum: 'unspecified',
+        maximum: 'unspecified',
       });
     }
 
