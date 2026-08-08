@@ -13,6 +13,7 @@ interface DragItem {
 interface DragSession {
   startPoint: Point;
   items: DragItem[];
+  hasMoved: boolean;
 }
 
 interface UseCanvasDragProps {
@@ -25,6 +26,7 @@ interface UseCanvasDragProps {
       position: Point;
     }>,
   ) => void;
+  onMoveCompleted: (movedElementCount: number) => void;
 }
 
 export function useCanvasDrag({
@@ -32,6 +34,7 @@ export function useCanvasDrag({
   selectedElementIds,
   getSvgPoint,
   moveElements,
+  onMoveCompleted,
 }: UseCanvasDragProps) {
   const dragSessionRef = useRef<DragSession | null>(null);
 
@@ -55,6 +58,7 @@ export function useCanvasDrag({
     dragSessionRef.current = {
       startPoint,
       items,
+      hasMoved: false,
     };
 
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -76,6 +80,12 @@ export function useCanvasDrag({
     const dx = point.x - session.startPoint.x;
     const dy = point.y - session.startPoint.y;
 
+    if (dx === 0 && dy === 0) {
+      return;
+    }
+
+    session.hasMoved = true;
+
     moveElements(
       session.items.map((item) => ({
         id: item.id,
@@ -88,6 +98,12 @@ export function useCanvasDrag({
   }
 
   function stopDrag() {
+    const session = dragSessionRef.current;
+
+    if (session?.hasMoved) {
+      onMoveCompleted(session.items.length);
+    }
+
     dragSessionRef.current = null;
   }
 

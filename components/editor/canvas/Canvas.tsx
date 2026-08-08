@@ -36,6 +36,7 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
   const clearSelection = useDiagramStore((state) => state.clearSelection);
   const updateElement = useDiagramStore((state) => state.updateElement);
   const moveElements = useDiagramStore((state) => state.moveElements);
+  const recordActivity = useDiagramStore((state) => state.recordActivity);
   const handleConnectClick = useDiagramStore((state) => state.handleConnectClick);
 
   useCanvasKeyboard();
@@ -63,6 +64,12 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
     selectedElementIds,
     getSvgPoint: getWorldPoint,
     moveElements,
+    onMoveCompleted: (movedElementCount) => {
+      recordActivity(
+        'elements-moved',
+        `Se movió ${movedElementCount} elemento${movedElementCount === 1 ? '' : 's'}.`,
+      );
+    },
   });
 
   const { editingElement, editingName, setEditingName, startEditing, cancelEditing, saveEditing } =
