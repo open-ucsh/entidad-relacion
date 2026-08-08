@@ -1,8 +1,9 @@
 'use client';
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
+import { useCanvasExport } from '@/components/canvas/hooks/useCanvasExport';
 import { Canvas } from '@/components/canvas/Canvas';
 import { Header } from '@/components/header/Header';
 import { Inspector } from '@/components/inspector/Inspector';
@@ -12,15 +13,18 @@ import { useDiagramStore } from '@/state/diagram-store';
 const TOOLBAR_WIDTH = '240px';
 const INSPECTOR_WIDTH = '320px';
 
-function getWorkspaceColumns(toolbarOpen: boolean, inspectorOpen: boolean) {
+function getWorkspaceColumns(toolbarOpen: boolean, inspectorOpen: boolean): string {
   const toolbarWidth = toolbarOpen ? TOOLBAR_WIDTH : '0px';
   const inspectorWidth = inspectorOpen ? INSPECTOR_WIDTH : '0px';
 
-  return `${toolbarWidth} minmax(0, 1fr) ${inspectorWidth}`;
+  return `${toolbarWidth} minmax(0, 1fr) ${inspectorWidth} `;
 }
 
 export function Editor() {
   const diagram = useDiagramStore((state) => state.diagram);
+
+  const svgRef = useRef<SVGSVGElement | null>(null);
+  const { exportDiagram } = useCanvasExport(svgRef);
 
   const [toolbarOpen, setToolbarOpen] = useState(true);
   const [inspectorOpen, setInspectorOpen] = useState(true);
@@ -28,8 +32,12 @@ export function Editor() {
   const workspaceColumns = getWorkspaceColumns(toolbarOpen, inspectorOpen);
 
   return (
-    <div className="flex h-screen min-h-0 flex-col overflow-hidden">
-      <Header />
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+      <Header
+        onExport={(format) => {
+          void exportDiagram(format);
+        }}
+      />
 
       <main className="relative flex min-h-0 flex-1 overflow-hidden">
         <div
@@ -47,7 +55,7 @@ export function Editor() {
           </div>
 
           <div className="relative h-full min-h-0 min-w-0 overflow-hidden">
-            <Canvas diagram={diagram} />
+            <Canvas diagram={diagram} svgRef={svgRef} />
           </div>
 
           <div

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { type RefObject } from 'react';
 
 import type { Diagram } from '@/domain/models';
 import { findElementById } from '@/domain/queries';
@@ -11,12 +11,12 @@ import { CanvasInteraction } from './CanvasInteraction';
 import { CanvasLayers } from './CanvasLayers';
 
 import { useCanvasDrag } from './hooks/useCanvasDrag';
-import { useCanvasExport } from './hooks/useCanvasExport';
 import { useCanvasKeyboard } from './hooks/useCanvasKeyboard';
 import { useSvgCoordinates } from './hooks/useSvgCoordinates';
 
 interface CanvasProps {
   diagram: Diagram;
+  svgRef: RefObject<SVGSVGElement | null>;
 }
 
 const ELEMENT_TYPE_LABELS: Record<string, string> = {
@@ -25,11 +25,8 @@ const ELEMENT_TYPE_LABELS: Record<string, string> = {
   attribute: 'Atributo',
 };
 
-export function Canvas({ diagram }: CanvasProps) {
+export function Canvas({ diagram, svgRef }: CanvasProps) {
   const activeTool = useDiagramStore((state) => state.activeTool);
-
-  const svgRef = useRef<SVGSVGElement | null>(null);
-
   const selectedElementId = useDiagramStore((state) => state.selectedElementId);
   const connectionSourceId = useDiagramStore((state) => state.connectionSourceId);
 
@@ -38,7 +35,6 @@ export function Canvas({ diagram }: CanvasProps) {
   const clearSelection = useDiagramStore((state) => state.clearSelection);
   const updateElement = useDiagramStore((state) => state.updateElement);
   const handleConnectClick = useDiagramStore((state) => state.handleConnectClick);
-  const setExportHandler = useDiagramStore((state) => state.setExportHandler);
 
   useCanvasKeyboard();
 
@@ -50,21 +46,10 @@ export function Canvas({ diagram }: CanvasProps) {
     updateElement,
   });
 
-  const { exportDiagram } = useCanvasExport(svgRef);
-
-  useEffect(() => {
-    setExportHandler((format) => {
-      void exportDiagram(format);
-    });
-
-    return () => {
-      setExportHandler(null);
-    };
-  }, [setExportHandler, exportDiagram]);
-
   const selectedElement = selectedElementId
     ? findElementById(diagram, selectedElementId)
     : undefined;
+
   const isConnectionSelected =
     !selectedElement &&
     selectedElementId !== null &&
@@ -72,7 +57,14 @@ export function Canvas({ diagram }: CanvasProps) {
 
   return (
     <main className="relative h-full min-h-0 min-w-0 overflow-hidden">
-      <svg ref={svgRef} className="block h-full w-full" onPointerMove={drag} onPointerUp={stopDrag}>
+      <svg
+        ref={svgRef}
+        className="h-full w-full"
+        onPointerMove={drag}
+        onPointerUp={stopDrag}
+        role="application"
+        aria-label="Lienzo del diagrama Entidad-Relación"
+      >
         <CanvasGrid />
 
         <CanvasInteraction onBackgroundClick={clearSelection}>

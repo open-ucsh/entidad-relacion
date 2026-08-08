@@ -1,16 +1,15 @@
 import { create } from 'zustand';
-import { removeDiagramElement, updateDiagram } from './diagram-utils';
 
-import type { DiagramState } from './diagram-state';
-import { initialDiagram } from './diagram-state';
 import { createId } from '@/lib/id';
 
-export const useDiagramStore = create<DiagramState>((set, get) => ({
-  diagram: initialDiagram,
+import { removeDiagramElement, updateDiagram } from './diagram-utils';
+import type { DiagramState } from './diagram-state';
+import { createInitialDiagram } from './diagram-state';
 
+export const useDiagramStore = create<DiagramState>((set, get) => ({
+  diagram: createInitialDiagram(),
   selectedElementId: null,
   connectionSourceId: null,
-
   activeTool: 'select',
 
   setDiagram: (diagram) => {
@@ -33,10 +32,7 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
 
   addRelationship: (relationship) => {
     set((state) => ({
-      diagram: {
-        ...state.diagram,
-        relationships: [...state.diagram.relationships, relationship],
-      },
+      diagram: { ...state.diagram, relationships: [...state.diagram.relationships, relationship] },
     }));
   },
 
@@ -62,6 +58,9 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
     set((state) => ({
       diagram: removeDiagramElement(state.diagram, id),
       selectedElementId: state.selectedElementId === id ? null : state.selectedElementId,
+      // Evita conexiones fantasma: si se borra el elemento que era el
+      // origen pendiente de una conexión, se cancela ese estado también.
+      connectionSourceId: state.connectionSourceId === id ? null : state.connectionSourceId,
     }));
   },
 

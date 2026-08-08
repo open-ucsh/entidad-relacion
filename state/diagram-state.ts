@@ -2,10 +2,8 @@ import type { Attribute, Connection, Diagram, Entity, Relationship, Tool } from 
 
 export interface DiagramState {
   diagram: Diagram;
-
   selectedElementId: string | null;
   connectionSourceId: string | null;
-
   activeTool: Tool;
 
   setDiagram: (diagram: Diagram) => void;
@@ -19,19 +17,25 @@ export interface DiagramState {
 
   updateElement: (
     id: string,
-    updates: Partial<Entity | Relationship | Attribute | Connection>,
+    updates: Partial<Entity> | Partial<Relationship> | Partial<Attribute> | Partial<Connection>,
   ) => void;
 
   removeElement: (id: string) => void;
 
+  /**
+   * Maneja el flujo de dos clics para crear una conexión:
+   * primer clic define el origen, segundo clic el destino.
+   * Un segundo clic sobre el mismo elemento cancela la selección de origen.
+   */
   handleConnectClick: (id: string) => void;
 
   clearSelection: () => void;
 }
 
-export const initialDiagram: Diagram = {
+/** Crea un diagrama vacío. Usar como fábrica, no como referencia compartida. */
+export const createInitialDiagram = (): Diagram => ({
   entities: [],
   relationships: [],
   attributes: [],
   connections: [],
-};
+});
