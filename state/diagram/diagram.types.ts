@@ -1,3 +1,5 @@
+import type { StateCreator } from 'zustand';
+
 import type {
   Attribute,
   Connection,
@@ -15,15 +17,10 @@ export interface ElementPositionUpdate {
   position: Point;
 }
 
-export interface DiagramState {
+export interface DocumentSlice {
   diagram: Diagram;
   documents: DiagramDocument[];
   activeDocumentId: string;
-
-  selectedElementId: string | null;
-  selectedElementIds: string[];
-  connectionSourceId: string | null;
-  activeTool: Tool;
 
   setDiagram: (diagram: Diagram) => void;
   importDiagram: (diagram: Diagram) => void;
@@ -35,6 +32,13 @@ export interface DiagramState {
   deleteDocument: (id: string) => void;
 
   setDiagramName: (name: string) => void;
+}
+
+export interface SelectionSlice {
+  selectedElementId: string | null;
+  selectedElementIds: string[];
+  connectionSourceId: string | null;
+  activeTool: Tool;
 
   setSelectedElement: (id: string | null) => void;
   toggleSelectedElement: (id: string) => void;
@@ -42,22 +46,37 @@ export interface DiagramState {
   clearSelection: () => void;
 
   setActiveTool: (tool: Tool) => void;
+}
 
+export interface ElementSlice {
   addEntity: (entity: Entity) => void;
   addRelationship: (relationship: Relationship) => void;
   addAttribute: (attribute: Attribute) => void;
-  addConnection: (connection: Connection) => void;
 
   updateElement: (id: string, updates: Partial<Entity | Relationship | Attribute>) => void;
-
-  updateConnection: (id: string, updates: Partial<Connection>) => void;
 
   moveElements: (updates: ElementPositionUpdate[]) => void;
 
   removeElement: (id: string) => void;
   removeElements: (ids: string[]) => void;
+}
 
-  recordActivity: (type: DiagramActivityType, details: string) => void;
+export interface ConnectionSlice {
+  addConnection: (connection: Connection) => void;
+
+  updateConnection: (id: string, updates: Partial<Connection>) => void;
 
   handleConnectClick: (id: string) => void;
 }
+
+export interface ActivitySlice {
+  recordActivity: (type: DiagramActivityType, details: string) => void;
+}
+
+export type DiagramState = DocumentSlice &
+  SelectionSlice &
+  ElementSlice &
+  ConnectionSlice &
+  ActivitySlice;
+
+export type DiagramStoreSlice<T> = StateCreator<DiagramState, [], [], T>;
