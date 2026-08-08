@@ -1,17 +1,23 @@
 'use client';
 
-import type { PointerEvent, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 interface CanvasInteractionProps {
   children: ReactNode;
   onBackgroundClick: () => void;
 }
 
+/**
+ * Envuelve el contenido interactivo del canvas (grilla + elementos).
+ * No corta la propagación del pointerdown: necesita seguir subiendo
+ * hasta el <svg> para que startPan() pueda iniciar el arrastre del
+ * fondo. Los elementos que sí consumen el clic (formas del diagrama)
+ * cortan su propia propagación en CanvasLayers antes de llegar acá.
+ */
 export function CanvasInteraction({ children, onBackgroundClick }: CanvasInteractionProps) {
-  function handleBackgroundClick(event: PointerEvent<SVGGElement>) {
-    event.stopPropagation();
+  function handleBackgroundClick() {
     onBackgroundClick();
   }
 
-  return <g onPointerDown={handleBackgroundClick}>{children}</g>;
+  return <g onClick={handleBackgroundClick}>{children}</g>;
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { type RefObject } from 'react';
+import { useCallback, type RefObject } from 'react';
 
 import type { Diagram } from '@/domain/models';
 import { findElementById } from '@/domain/queries/elements';
@@ -9,9 +9,11 @@ import { useDiagramStore } from '@/state/diagram-store';
 import { CanvasGrid } from './CanvasGrid';
 import { CanvasInteraction } from './CanvasInteraction';
 import { CanvasLayers } from './CanvasLayers';
+import { ZoomControls } from './ZoomControls';
 
 import { useCanvasDrag } from './hooks/useCanvasDrag';
 import { useCanvasKeyboard } from './hooks/useCanvasKeyboard';
+import { useCanvasViewport } from './hooks/useCanvasViewport';
 import { useSvgCoordinates } from './hooks/useSvgCoordinates';
 
 interface CanvasProps {
@@ -38,7 +40,39 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
 
   useCanvasKeyboard();
 
-  const { getSvgPoint } = useSvgCoordinates(svgRef);
+  const {
+    canvasSize,
+    camera,
+    panning,
+    handleWheel,
+    startPan,
+    pan,
+    stopPan,
+    zoomIn,
+    zoomOut,
+    resetView,
+    zoomPercentage,
+    canZoomIn,
+    canZoomOut,
+  } = useCanvasViewport(svgRef);
+
+  const { getSvgPoint: getScreenPoint } = useSvgCoordinates(svgRef);
+
+  const getSvgPoint = useCallback(
+    (event: globalThis.PointerEvent) => {
+      const point = getScreenPoint(event);
+
+      if (!point) {
+        return null;
+      }
+
+      return {
+        x: (point.x - camera.x) / camera.zoom,
+        y: (point.y - camera.y) / camera.zoom,
+      };
+    },
+    [camera, getScreenPoint],
+  );
 
   const { startDrag, drag, stopDrag } = useCanvasDrag({
     diagram,
@@ -56,32 +90,56 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
     diagram.connections.some((connection) => connection.id === selectedElementId);
 
   return (
-    <main className="relative h-full min-h-0 min-w-0 overflow-hidden">
+    <main className="relative h-full min-h-0 min-w-0 overflow-hidden bg-background">
       <svg
         ref={svgRef}
-        className="h-full w-full"
-        onPointerMove={drag}
-        onPointerUp={stopDrag}
+        className={`block h-full w-full touch-none ${panning ? 'cursor-grabbing' : 'cursor-grab'}`}
+        viewBox={`0 0 ${canvasSize.width} ${canvasSize.height}`}
+        onWheel={handleWheel}
+        onPointerDown={startPan}
+        onPointerMove={(event) => {
+          pan(event);
+          drag(event);
+        }}
+        onPointerUp={() => {
+          stopPan();
+          stopDrag();
+        }}
+        onPointerCancel={() => {
+          stopPan();
+          stopDrag();
+        }}
         role="application"
         aria-label="Lienzo del diagrama Entidad-Relación"
       >
         <CanvasInteraction onBackgroundClick={clearSelection}>
-          <CanvasGrid />
+          <CanvasGrid camera={camera} canvasSize={canvasSize} />
 
-          <CanvasLayers
-            diagram={diagram}
-            selectedElementId={selectedElementId}
-            connectionSourceId={connectionSourceId}
-            activeTool={activeTool}
-            onSelectElement={setSelectedElement}
-            onDeleteElement={removeElement}
-            onElementPointerDown={startDrag}
-            onConnectClick={handleConnectClick}
-          />
+          <g transform={`translate(${camera.x} ${camera.y}) scale(${camera.zoom})`}>
+            <CanvasLayers
+              diagram={diagram}
+              selectedElementId={selectedElementId}
+              connectionSourceId={connectionSourceId}
+              activeTool={activeTool}
+              onSelectElement={setSelectedElement}
+              onDeleteElement={removeElement}
+              onElementPointerDown={startDrag}
+              onConnectClick={handleConnectClick}
+            />
+          </g>
         </CanvasInteraction>
       </svg>
 
-      <div className="pointer-events-none absolute bottom-4 right-4 rounded-lg border border-border bg-background/90 px-3 py-2 text-xs text-text-muted shadow-sm backdrop-blur">
+      <ZoomControls
+        zoomPercentage={zoomPercentage}
+        onZoomIn={zoomIn}
+        onZoomOut={zoomOut}
+        onReset={resetView}
+        canZoomIn={canZoomIn}
+        canZoomOut={canZoomOut}
+      />
+
+      <div className="pointer-events-none absolute bottom-5 right-5 rounded-lg border border-border bg-background/90 px-3 py-2 text-xs text-text-muted shadow-sm backdrop-blur">
         {selectedElement ? (
           <span>
             <span className="font-semibold text-text">
