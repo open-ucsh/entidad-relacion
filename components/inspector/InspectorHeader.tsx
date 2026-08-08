@@ -1,11 +1,11 @@
 'use client';
 
-import { useRef, useState } from 'react';
 import { X } from 'lucide-react';
-
-import { INSPECTOR_TYPE_CONFIG } from './inspector-config';
+import { useRef, useState } from 'react';
 
 import type { Attribute, Entity, Relationship } from '@/domain/models';
+
+import { INSPECTOR_TYPE_CONFIG } from './inspector-config';
 
 type InspectorElement = Entity | Relationship | Attribute;
 
@@ -40,15 +40,15 @@ export function InspectorHeader({ element, updateElement }: InspectorHeaderProps
   }
 
   return (
-    <div className="flex items-start gap-3">
+    <div className="flex items-center gap-3">
       <div
-        className={`flex size - 10 shrink - 0 items - center justify - center rounded - lg ring - 1 ${config.bg} ${config.ring} `}
+        className={`flex size-10 shrink-0 items-center justify-center rounded-lg ring-1 ${config.bg} ${config.ring}`}
       >
-        <Icon size={20} className={config.text} />
+        <Icon size={18} className={config.text} />
       </div>
 
       <div className="min-w-0 flex-1 pt-0.5">
-        <p className={`text - xs font - semibold uppercase tracking - wider ${config.text} `}>
+        <p className={`text-xs font-semibold uppercase tracking-wider ${config.text}`}>
           {config.label}
         </p>
 

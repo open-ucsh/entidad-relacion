@@ -1,11 +1,11 @@
 import type { ReactNode } from 'react';
 
-interface Option<T extends string> {
+interface Option<T> {
   label: string;
   value: T;
 }
 
-interface SegmentedProps<T extends string> {
+interface SegmentedProps<T> {
   value: T;
   options: Option<T>[];
   onChange: (value: T) => void;
@@ -19,24 +19,19 @@ interface SwitchProps {
 
 export function SectionTitle({ children }: { children: ReactNode }) {
   return (
-    <h4 className="border-t border-border pt-4 text-xs font-semibold uppercase tracking-wide text-text-muted">
-      {children}
-    </h4>
+    <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted">{children}</h3>
   );
 }
 
-export function SegmentedControl<T extends string>({
-  value,
-  options,
-  onChange,
-}: SegmentedProps<T>) {
+export function SegmentedControl<T>({ value, options, onChange }: SegmentedProps<T>) {
   return (
-    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+    <div className="flex flex-wrap gap-2">
       {options.map((option) => {
         const selected = value === option.value;
+
         return (
           <button
-            key={option.value}
+            key={String(option.value)}
             type="button"
             onClick={() => {
               onChange(option.value);
@@ -66,7 +61,8 @@ export function SwitchControl({ checked, label, onChange }: SwitchProps) {
       }}
       className="flex w-full items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-sm text-text hover:bg-surface-hover"
     >
-      <span>{label}</span>
+      {label}
+
       <span
         className={`relative h-5 w-9 rounded-full transition ${
           checked ? 'bg-brand-primary' : 'bg-surface-hover'
