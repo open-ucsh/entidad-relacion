@@ -22,7 +22,6 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
   },
 
   setActiveTool: (activeTool) => {
-    // al cambiar de herramienta cancelamos cualquier conexión a medio empezar
     set({ activeTool, connectionSourceId: null });
   },
 
@@ -66,7 +65,6 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
     }));
   },
 
-  // Herramienta 'connect': primer click = origen, segundo click en otro = destino.
   handleConnectClick: (id) => {
     const { connectionSourceId, diagram, addConnection } = get();
 
@@ -76,7 +74,6 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
     }
 
     if (connectionSourceId === id) {
-      // click sobre el mismo elemento otra vez: cancela
       set({ connectionSourceId: null });
       return;
     }
@@ -101,5 +98,10 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
 
   clearSelection: () => {
     set({ selectedElementId: null });
+  },
+  exportHandler: null,
+
+  setExportHandler: (exportHandler) => {
+    set({ exportHandler });
   },
 }));

@@ -11,7 +11,6 @@ interface AttributeShapeProps {
 }
 
 function estimateTextWidth(text: string): number {
-  // Estimación aproximada para texto text-xs font-semibold (~10px).
   const width = text.length * 5.6;
   return Math.min(Math.max(width, 24), RX * 2 - 14);
 }

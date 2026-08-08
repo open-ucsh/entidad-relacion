@@ -23,6 +23,7 @@ export function ToolbarGroup({ title, items, activeTool, onToolSelect }: Toolbar
             key={item.id}
             icon={item.icon}
             label={item.label}
+            shortcut={item.shortcut}
             active={activeTool === item.id}
             onClick={() => {
               onToolSelect(item.id);

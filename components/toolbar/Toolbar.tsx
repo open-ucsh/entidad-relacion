@@ -1,27 +1,14 @@
 'use client';
 
-import type { Tool } from '@/domain/models';
-
-import { useCanvasCreate } from '@/components/canvas/hooks/useCanvasCreate';
 import { useDiagramStore } from '@/state/diagram-store';
+import { useToolSelect } from '@/components/canvas/hooks/useToolSelect';
 
 import { ToolbarGroup } from './ToolbarGroup';
 import { TOOL_GROUPS } from './tools';
 
 export function Toolbar() {
   const activeTool = useDiagramStore((state) => state.activeTool);
-
-  const setActiveTool = useDiagramStore((state) => state.setActiveTool);
-
-  const { create } = useCanvasCreate();
-
-  function handleToolSelect(tool: Tool) {
-    setActiveTool(tool);
-
-    if (tool === 'entity' || tool === 'relationship' || tool === 'attribute') {
-      create(tool);
-    }
-  }
+  const { selectTool } = useToolSelect();
 
   return (
     <aside className="flex h-full min-h-0 flex-col border-r border-border">
@@ -35,7 +22,7 @@ export function Toolbar() {
                 title={group.title}
                 items={group.items}
                 activeTool={activeTool}
-                onToolSelect={handleToolSelect}
+                onToolSelect={selectTool}
               />
             </div>
           ))}
@@ -44,7 +31,7 @@ export function Toolbar() {
 
       <footer className="shrink-0 border-t border-border px-5 py-4">
         <p className="text-xs leading-relaxed text-text-muted">
-          Selecciona una herramienta para comenzar.
+          Selecciona una herramienta o usa su atajo de teclado.
         </p>
       </footer>
     </aside>
