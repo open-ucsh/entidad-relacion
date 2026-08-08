@@ -30,8 +30,7 @@ export function CanvasGrid({ camera, canvasSize }: CanvasGridProps) {
       </defs>
 
       <rect
-        x="0"
-        y="0"
+        data-canvas-grid
         width={canvasSize.width}
         height={canvasSize.height}
         fill="url(#canvas-grid)"

@@ -7,6 +7,7 @@ import { BRANDING } from '@/config/branding';
 
 import type { ExportFormat } from '../export/export.types';
 import { canvasToBlob, downloadBlob, renderDiagramToCanvas } from '../export/renderDiagram';
+import type { Diagram } from '@/domain/diagram/models/diagram';
 
 export type { ExportFormat } from '../export/export.types';
 
@@ -20,7 +21,10 @@ function getFileBaseName(): string {
   return BRANDING.applicationName.toLowerCase().replace(/\s+/g, '-');
 }
 
-export function useCanvasExport(svgRef: RefObject<SVGSVGElement | null>): UseCanvasExportResult {
+export function useCanvasExport(
+  svgRef: RefObject<SVGSVGElement | null>,
+  diagram: Diagram,
+): UseCanvasExportResult {
   const [isExporting, setIsExporting] = useState(false);
   const [exportError, setExportError] = useState<Error | null>(null);
 
@@ -36,7 +40,7 @@ export function useCanvasExport(svgRef: RefObject<SVGSVGElement | null>): UseCan
       setExportError(null);
 
       try {
-        const canvas = await renderDiagramToCanvas(svg);
+        const canvas = await renderDiagramToCanvas(svg, diagram);
         const fileBaseName = getFileBaseName();
 
         if (format === 'pdf') {
@@ -66,7 +70,7 @@ export function useCanvasExport(svgRef: RefObject<SVGSVGElement | null>): UseCan
         setIsExporting(false);
       }
     },
-    [svgRef],
+    [diagram, svgRef],
   );
 
   return {

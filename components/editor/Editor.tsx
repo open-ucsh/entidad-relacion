@@ -17,7 +17,7 @@ export function Editor() {
   const resetDiagram = useDiagramStore((state) => state.resetDiagram);
 
   const svgRef = useRef<SVGSVGElement | null>(null);
-  const { exportDiagram } = useCanvasExport(svgRef);
+  const { exportDiagram } = useCanvasExport(svgRef, diagram);
 
   const { isToolbarOpen, isInspectorOpen, workspaceColumns, toggleToolbar, toggleInspector } =
     useEditorPanels();

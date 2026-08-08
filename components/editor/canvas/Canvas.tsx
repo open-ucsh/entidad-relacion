@@ -108,7 +108,10 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
         <CanvasInteraction onBackgroundClick={clearSelection}>
           <CanvasGrid camera={camera} canvasSize={canvasSize} />
 
-          <g transform={`translate(${camera.x} ${camera.y}) scale(${camera.zoom})`}>
+          <g
+            id="diagram-world"
+            transform={`translate(${camera.x} ${camera.y}) scale(${camera.zoom})`}
+          >
             <CanvasLayers
               diagram={diagram}
               selectedElementIds={selectedElementIds}

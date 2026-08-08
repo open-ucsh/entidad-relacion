@@ -1,3 +1,6 @@
+import type { Diagram } from '@/domain/diagram/models';
+import { getDiagramExportBounds } from '@/domain/diagram/queries/elements';
+
 import { BRANDING } from '@/config/branding';
 
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
@@ -6,6 +9,9 @@ const EXPORT_SCALE = 2;
 const WATERMARK_WIDTH_RATIO = 0.16;
 const WATERMARK_MARGIN = 16 * EXPORT_SCALE;
 const WATERMARK_OPACITY = 0.55;
+
+const EMPTY_EXPORT_WIDTH = 1200;
+const EMPTY_EXPORT_HEIGHT = 800;
 
 const STYLE_PROPERTIES = [
   'fill',
@@ -18,6 +24,13 @@ const STYLE_PROPERTIES = [
   'font-weight',
   'text-anchor',
 ] as const;
+
+interface ExportViewport {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
 
 function inlineComputedStyles(source: SVGSVGElement, clone: SVGSVGElement): void {
   const sourceNodes = source.querySelectorAll('*');
@@ -63,6 +76,48 @@ function loadImage(source: string): Promise<HTMLImageElement> {
   });
 }
 
+function getExportViewport(diagram: Diagram): ExportViewport {
+  return (
+    getDiagramExportBounds(diagram) ?? {
+      x: 0,
+      y: 0,
+      width: EMPTY_EXPORT_WIDTH,
+      height: EMPTY_EXPORT_HEIGHT,
+    }
+  );
+}
+
+function prepareExportSvg(
+  source: SVGSVGElement,
+  diagram: Diagram,
+): { clone: SVGSVGElement; viewport: ExportViewport } {
+  const clone = source.cloneNode(true) as SVGSVGElement;
+  const viewport = getExportViewport(diagram);
+
+  inlineComputedStyles(source, clone);
+
+  clone.setAttribute('xmlns', SVG_NAMESPACE);
+  clone.setAttribute('viewBox', `${viewport.x} ${viewport.y} ${viewport.width} ${viewport.height}`);
+  clone.setAttribute('width', String(viewport.width));
+  clone.setAttribute('height', String(viewport.height));
+
+  clone.querySelector('#diagram-world')?.setAttribute('transform', '');
+
+  clone.querySelector('[data-canvas-grid]')?.remove();
+
+  const background = document.createElementNS(SVG_NAMESPACE, 'rect');
+
+  background.setAttribute('x', String(viewport.x));
+  background.setAttribute('y', String(viewport.y));
+  background.setAttribute('width', String(viewport.width));
+  background.setAttribute('height', String(viewport.height));
+  background.setAttribute('fill', '#ffffff');
+
+  clone.insertBefore(background, clone.firstChild);
+
+  return { clone, viewport };
+}
+
 function drawWatermark(
   context: CanvasRenderingContext2D,
   logo: HTMLImageElement,
@@ -85,21 +140,7 @@ function drawWatermark(
 }
 
 async function renderSvgImage(svg: SVGSVGElement): Promise<HTMLImageElement> {
-  const clone = svg.cloneNode(true) as SVGSVGElement;
-
-  inlineComputedStyles(svg, clone);
-
-  clone.setAttribute('xmlns', SVG_NAMESPACE);
-
-  const background = document.createElementNS(SVG_NAMESPACE, 'rect');
-
-  background.setAttribute('width', '100%');
-  background.setAttribute('height', '100%');
-  background.setAttribute('fill', '#ffffff');
-
-  clone.insertBefore(background, clone.firstChild);
-
-  const serializedSvg = new XMLSerializer().serializeToString(clone);
+  const serializedSvg = new XMLSerializer().serializeToString(svg);
   const blob = new Blob([serializedSvg], {
     type: 'image/svg+xml;charset=utf-8',
   });
@@ -113,16 +154,17 @@ async function renderSvgImage(svg: SVGSVGElement): Promise<HTMLImageElement> {
   }
 }
 
-export async function renderDiagramToCanvas(svg: SVGSVGElement): Promise<HTMLCanvasElement> {
-  const bounds = svg.getBoundingClientRect();
-  const width = Math.max(Math.round(bounds.width), 1);
-  const height = Math.max(Math.round(bounds.height), 1);
-
-  const image = await renderSvgImage(svg);
+export async function renderDiagramToCanvas(
+  svg: SVGSVGElement,
+  diagram: Diagram,
+): Promise<HTMLCanvasElement> {
+  const { clone, viewport } = prepareExportSvg(svg, diagram);
+  const image = await renderSvgImage(clone);
 
   const canvas = document.createElement('canvas');
-  canvas.width = width * EXPORT_SCALE;
-  canvas.height = height * EXPORT_SCALE;
+
+  canvas.width = Math.max(Math.round(viewport.width * EXPORT_SCALE), 1);
+  canvas.height = Math.max(Math.round(viewport.height * EXPORT_SCALE), 1);
 
   const context = canvas.getContext('2d');
 
