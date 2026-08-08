@@ -1,13 +1,15 @@
 'use client';
 
 import {
+  CircleHelp,
   ChevronDown,
   FileDown,
   FilePlus,
   FileUp,
-  History,
-  ImageDown,
   FolderOpen,
+  History,
+  Redo2,
+  Undo2,
   type LucideIcon,
 } from 'lucide-react';
 import { useEffect, useId, useRef, useState } from 'react';
@@ -25,12 +27,17 @@ const FORMAT_OPTIONS: ReadonlyArray<{
 ];
 
 interface HeaderActionsProps {
+  canRedo: boolean;
+  canUndo: boolean;
   onNewDiagram: () => void;
+  onUndo: () => void;
+  onRedo: () => void;
   onExport: (format: ExportFormat) => void;
   onExportJson: () => void;
   onImportJson: (file: File) => Promise<void>;
   onOpenHistory: () => void;
   onOpenDocuments: () => void;
+  onOpenShortcuts: () => void;
 }
 
 interface ExportMenuProps {
@@ -42,24 +49,23 @@ interface ToolbarButtonProps {
   icon: LucideIcon;
   label: string;
   onClick?: (() => void) | undefined;
-  disabled?: boolean;
+  disabled?: boolean | undefined;
 }
 
-/** Icon-only action with an accessible hover/focus tooltip — no label clutter. */
-function ToolbarButton({ icon: Icon, label, onClick, disabled }: ToolbarButtonProps) {
+function ToolbarButton({ icon: Icon, label, onClick, disabled = false }: ToolbarButtonProps) {
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
-      className="group relative flex size-9 items-center justify-center rounded-md text-white/80 transition-colors hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+      className="group relative flex size-9 items-center justify-center rounded-md text-white/80 transition-colors hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
     >
-      <Icon size={18} aria-hidden="true" />
+      <Icon size={17} aria-hidden="true" />
 
       <span
         role="tooltip"
-        className="pointer-events-none absolute top-full left-1/2 z-50 mt-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-text px-2 py-1 text-[11px] font-medium text-background opacity-0 shadow-lg transition-opacity delay-300 group-hover:opacity-100 group-focus-visible:opacity-100"
+        className="pointer-events-none absolute left-1/2 top-full z-50 mt-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-text px-2 py-1 text-[11px] font-medium text-background opacity-0 shadow-lg transition-opacity delay-300 group-hover:opacity-100 group-focus-visible:opacity-100"
       >
         {label}
       </span>
@@ -68,7 +74,7 @@ function ToolbarButton({ icon: Icon, label, onClick, disabled }: ToolbarButtonPr
 }
 
 function ToolbarDivider() {
-  return <div aria-hidden="true" className="mx-1.5 h-6 w-px bg-white/15" />;
+  return <span className="h-5 w-px bg-white/20" aria-hidden="true" />;
 }
 
 function ExportMenu({ onExport, onExportJson }: ExportMenuProps) {
@@ -114,7 +120,6 @@ function ExportMenu({ onExport, onExportJson }: ExportMenuProps) {
         aria-controls={menuId}
         className="flex items-center gap-2 rounded-md bg-white px-3.5 py-2 text-xs font-semibold text-brand-primary shadow-sm transition-colors hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-primary"
       >
-        <ImageDown size={16} aria-hidden="true" />
         Exportar
         <ChevronDown
           size={14}
@@ -171,12 +176,17 @@ function ExportMenu({ onExport, onExportJson }: ExportMenuProps) {
 }
 
 export function HeaderActions({
+  canRedo,
+  canUndo,
   onNewDiagram,
+  onUndo,
+  onRedo,
   onExport,
   onExportJson,
   onImportJson,
   onOpenHistory,
   onOpenDocuments,
+  onOpenShortcuts,
 }: HeaderActionsProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -192,9 +202,22 @@ export function HeaderActions({
   }
 
   return (
-    <div className="flex items-center gap-1">
-      <ToolbarButton icon={History} label="Historial del proyecto" onClick={onOpenHistory} />
+    <div className="flex items-center gap-1.5">
       <ToolbarButton icon={FilePlus} label="Nuevo diagrama" onClick={onNewDiagram} />
+
+      <ToolbarDivider />
+
+      <ToolbarButton icon={Undo2} label="Deshacer" onClick={onUndo} disabled={!canUndo} />
+      <ToolbarButton icon={Redo2} label="Rehacer" onClick={onRedo} disabled={!canRedo} />
+
+      <ToolbarDivider />
+
+      <ToolbarButton icon={History} label="Historial del proyecto" onClick={onOpenHistory} />
+      <ToolbarButton icon={FolderOpen} label="Mis documentos" onClick={onOpenDocuments} />
+      <ToolbarButton icon={CircleHelp} label="Ver atajos de teclado" onClick={onOpenShortcuts} />
+
+      <ToolbarDivider />
+
       <ToolbarButton
         icon={FileUp}
         label="Importar proyecto JSON"
@@ -218,9 +241,6 @@ export function HeaderActions({
           event.target.value = '';
         }}
       />
-      <ToolbarButton icon={FolderOpen} label="Mis documentos" onClick={onOpenDocuments} />
-
-      <ToolbarDivider />
 
       <ExportMenu onExport={onExport} onExportJson={onExportJson} />
     </div>

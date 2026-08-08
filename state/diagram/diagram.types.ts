@@ -44,6 +44,7 @@ export interface SelectionSlice {
   toggleSelectedElement: (id: string) => void;
   selectAllElements: () => void;
   clearSelection: () => void;
+  setSelectedElements: (ids: string[]) => void;
 
   setActiveTool: (tool: Tool) => void;
 }
@@ -54,7 +55,7 @@ export interface ElementSlice {
   addAttribute: (attribute: Attribute) => void;
 
   updateElement: (id: string, updates: Partial<Entity | Relationship | Attribute>) => void;
-
+  duplicateSelectedElements: () => void;
   moveElements: (updates: ElementPositionUpdate[]) => void;
 
   removeElement: (id: string) => void;

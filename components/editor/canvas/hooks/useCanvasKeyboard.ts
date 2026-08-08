@@ -17,6 +17,7 @@ function isTypingTarget(target: EventTarget | null): boolean {
 export function useCanvasKeyboard() {
   const selectedElementIds = useDiagramStore((state) => state.selectedElementIds);
   const removeElements = useDiagramStore((state) => state.removeElements);
+  const duplicateSelectedElements = useDiagramStore((state) => state.duplicateSelectedElements);
   const selectAllElements = useDiagramStore((state) => state.selectAllElements);
   const setActiveTool = useDiagramStore((state) => state.setActiveTool);
   const undo = useDiagramStore((state) => state.undo);
@@ -56,6 +57,12 @@ export function useCanvasKeyboard() {
         return;
       }
 
+      if (hasModifier && key === 'd') {
+        event.preventDefault();
+        duplicateSelectedElements();
+        return;
+      }
+
       if (event.key === 'Escape') {
         setActiveTool('select');
         return;
@@ -85,6 +92,7 @@ export function useCanvasKeyboard() {
     };
   }, [
     activateTool,
+    duplicateSelectedElements,
     redo,
     removeElements,
     selectAllElements,

@@ -1,6 +1,6 @@
 'use client';
 
-import type { RefObject } from 'react';
+import type { PointerEvent, RefObject } from 'react';
 
 import type { Diagram } from '@/domain/diagram/models';
 import { findDiagramElement } from '@/domain/diagram/queries/elements';
@@ -16,6 +16,7 @@ import { ZoomControls } from './ZoomControls';
 import { useCanvasCamera } from './hooks/useCanvasCamera';
 import { useCanvasDrag } from './hooks/useCanvasDrag';
 import { useCanvasKeyboard } from './hooks/useCanvasKeyboard';
+import { useCanvasSelectionBox } from './hooks/useCanvasSelectionBox';
 import { useInlineElementNameEditing } from './hooks/useInlineElementNameEditing';
 import { useWorldCoordinates } from './hooks/useWorldCoordinates';
 
@@ -32,6 +33,7 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
 
   const removeElement = useDiagramStore((state) => state.removeElement);
   const setSelectedElement = useDiagramStore((state) => state.setSelectedElement);
+  const setSelectedElements = useDiagramStore((state) => state.setSelectedElements);
   const toggleSelectedElement = useDiagramStore((state) => state.toggleSelectedElement);
   const clearSelection = useDiagramStore((state) => state.clearSelection);
   const updateElement = useDiagramStore((state) => state.updateElement);
@@ -54,10 +56,10 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
     zoomIn,
     zoomOut,
     resetView,
+    fitToDiagram,
     zoomPercentage,
     canZoomIn,
     canZoomOut,
-    fitToDiagram,
   } = useCanvasCamera(svgRef);
 
   const { getWorldPoint } = useWorldCoordinates(svgRef, camera);
@@ -77,6 +79,17 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
     onMoveCancelled: cancelHistoryTransaction,
   });
 
+  const { selectionBox, startSelection, updateSelection, finishSelection, cancelSelection } =
+    useCanvasSelectionBox({
+      diagram,
+      svgRef,
+      canvasSize,
+      camera,
+      selectedElementIds,
+      setSelectedElements,
+      clearSelection,
+    });
+
   const { editingElement, editingName, setEditingName, startEditing, cancelEditing, saveEditing } =
     useInlineElementNameEditing({
       diagram,
@@ -92,32 +105,51 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
     selectedElementId !== null &&
     diagram.connections.some((connection) => connection.id === selectedElementId);
 
+  function handlePointerDown(event: PointerEvent<SVGSVGElement>) {
+    const shouldStartSelection = activeTool === 'select' && event.button === 0 && !event.shiftKey;
+
+    if (shouldStartSelection && startSelection(event)) {
+      return;
+    }
+
+    startPan(event);
+  }
+
+  function handlePointerMove(event: PointerEvent<SVGSVGElement>) {
+    pan(event);
+    drag(event);
+    updateSelection(event);
+  }
+
+  function handlePointerUp(event: PointerEvent<SVGSVGElement>) {
+    stopPan();
+    stopDrag();
+    finishSelection(event);
+  }
+
+  function handlePointerCancel() {
+    stopPan();
+    stopDrag();
+    cancelSelection();
+  }
+
   return (
-    <main className="relative h-full min-h-0 min-w-0 overflow-hidden">
+    <main className="relative h-full min-h-0 overflow-hidden">
       <svg
         ref={svgRef}
         className={`block h-full w-full touch-none ${
-          isPanning ? 'cursor-grabbing' : 'cursor-grab'
+          isPanning ? 'cursor-grabbing' : activeTool === 'select' ? 'cursor-default' : 'cursor-grab'
         }`}
         viewBox={`0 0 ${canvasSize.width} ${canvasSize.height}`}
         onWheel={handleWheel}
-        onPointerDown={startPan}
-        onPointerMove={(event) => {
-          pan(event);
-          drag(event);
-        }}
-        onPointerUp={() => {
-          stopPan();
-          stopDrag();
-        }}
-        onPointerCancel={() => {
-          stopPan();
-          stopDrag();
-        }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
         role="application"
         aria-label="Lienzo del diagrama Entidad-Relación"
       >
-        <CanvasInteraction onBackgroundClick={clearSelection}>
+        <CanvasInteraction>
           <CanvasGrid camera={camera} canvasSize={canvasSize} />
 
           <g
@@ -147,6 +179,21 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
               />
             )}
           </g>
+
+          {selectionBox && (
+            <rect
+              x={selectionBox.x}
+              y={selectionBox.y}
+              width={selectionBox.width}
+              height={selectionBox.height}
+              fill="var(--color-brand-primary)"
+              fillOpacity={0.1}
+              stroke="var(--color-brand-primary)"
+              strokeWidth={1}
+              strokeDasharray="5 4"
+              pointerEvents="none"
+            />
+          )}
         </CanvasInteraction>
       </svg>
 

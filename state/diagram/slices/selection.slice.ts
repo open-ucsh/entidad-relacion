@@ -1,4 +1,4 @@
-import type { SelectionSlice, DiagramStoreSlice } from '../diagram.types';
+import type { DiagramStoreSlice, SelectionSlice } from '../diagram.types';
 
 export const createSelectionSlice: DiagramStoreSlice<SelectionSlice> = (set) => ({
   selectedElementId: null,
@@ -13,6 +13,15 @@ export const createSelectionSlice: DiagramStoreSlice<SelectionSlice> = (set) => 
     });
   },
 
+  setSelectedElements: (ids) => {
+    const selectedElementIds = [...new Set(ids)];
+
+    set({
+      selectedElementIds,
+      selectedElementId: selectedElementIds.at(-1) ?? null,
+    });
+  },
+
   toggleSelectedElement: (id) => {
     set((state) => {
       const isSelected = state.selectedElementIds.includes(id);
@@ -23,7 +32,7 @@ export const createSelectionSlice: DiagramStoreSlice<SelectionSlice> = (set) => 
 
       return {
         selectedElementIds,
-        selectedElementId: isSelected ? (selectedElementIds.at(-1) ?? null) : id,
+        selectedElementId: selectedElementIds.at(-1) ?? null,
       };
     });
   },

@@ -1,8 +1,11 @@
+import { createId } from '@/domain/diagram/lib/id';
 import { findDiagramElement } from '@/domain/diagram/queries/elements';
 
 import { appendDiagramActivity, replaceActiveDiagram } from '../diagram.helpers';
 import { moveDiagramElements, removeDiagramElements, updateDiagram } from '../diagram.mutations';
 import type { DiagramStoreSlice, ElementSlice } from '../diagram.types';
+
+const DUPLICATE_OFFSET = 32;
 
 export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) => ({
   addEntity: (entity) => {
@@ -80,6 +83,81 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
         recordHistory: false,
       }),
     );
+  },
+
+  duplicateSelectedElements: () => {
+    const selectedElementIds = get().selectedElementIds;
+
+    if (selectedElementIds.length === 0) {
+      return;
+    }
+
+    const selectedIds = new Set(selectedElementIds);
+
+    set((state) => {
+      const duplicatedEntities = state.diagram.entities
+        .filter((entity) => selectedIds.has(entity.id))
+        .map((entity) => ({
+          ...entity,
+          id: createId('entity'),
+          name: `${entity.name} copia`,
+          position: {
+            x: entity.position.x + DUPLICATE_OFFSET,
+            y: entity.position.y + DUPLICATE_OFFSET,
+          },
+        }));
+
+      const duplicatedRelationships = state.diagram.relationships
+        .filter((relationship) => selectedIds.has(relationship.id))
+        .map((relationship) => ({
+          ...relationship,
+          id: createId('relationship'),
+          name: `${relationship.name} copia`,
+          position: {
+            x: relationship.position.x + DUPLICATE_OFFSET,
+            y: relationship.position.y + DUPLICATE_OFFSET,
+          },
+        }));
+
+      const duplicatedAttributes = state.diagram.attributes
+        .filter((attribute) => selectedIds.has(attribute.id))
+        .map((attribute) => ({
+          ...attribute,
+          id: createId('attribute'),
+          name: `${attribute.name} copia`,
+          position: {
+            x: attribute.position.x + DUPLICATE_OFFSET,
+            y: attribute.position.y + DUPLICATE_OFFSET,
+          },
+        }));
+
+      const duplicatedIds = [
+        ...duplicatedEntities.map((entity) => entity.id),
+        ...duplicatedRelationships.map((relationship) => relationship.id),
+        ...duplicatedAttributes.map((attribute) => attribute.id),
+      ];
+
+      if (duplicatedIds.length === 0) {
+        return state;
+      }
+
+      const diagram = appendDiagramActivity(
+        {
+          ...state.diagram,
+          entities: [...state.diagram.entities, ...duplicatedEntities],
+          relationships: [...state.diagram.relationships, ...duplicatedRelationships],
+          attributes: [...state.diagram.attributes, ...duplicatedAttributes],
+        },
+        'element-created',
+        `Se duplicó ${duplicatedIds.length} elemento${duplicatedIds.length === 1 ? '' : 's'}.`,
+      );
+
+      return {
+        ...replaceActiveDiagram(state, diagram),
+        selectedElementIds: duplicatedIds,
+        selectedElementId: duplicatedIds.at(-1) ?? null,
+      };
+    });
   },
 
   removeElement: (id) => {
