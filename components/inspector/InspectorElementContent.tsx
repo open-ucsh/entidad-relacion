@@ -1,6 +1,6 @@
 import type { AttributeKeyType, Diagram, EntityKind, RelationshipKind } from '@/domain/models';
 
-import type { DiagramElement } from '@/domain/queries';
+import type { DiagramElement } from '@/domain/queries/elements';
 
 import { InspectorField } from './InspectorField';
 import { SectionTitle, SegmentedControl, SwitchControl } from './InspectorControls';

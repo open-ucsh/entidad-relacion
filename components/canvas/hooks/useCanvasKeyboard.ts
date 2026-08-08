@@ -6,7 +6,7 @@ import type { Tool } from '@/domain/models';
 import { TOOL_GROUPS } from '@/components/toolbar/tools';
 import { useDiagramStore } from '@/state/diagram-store';
 
-import { useToolSelect } from './useToolSelect';
+import { useToolSelect } from '../../editor/hooks/useToolSelect';
 
 const SHORTCUT_MAP = new Map<string, Tool>();
 

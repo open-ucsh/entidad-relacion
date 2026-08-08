@@ -1,7 +1,7 @@
 import { useState, type PointerEvent } from 'react';
 
 import type { Diagram } from '@/domain/models';
-import { getElementPosition } from '@/domain/queries';
+import { getElementPosition } from '@/domain/queries/elements';
 
 interface DragOffset {
   x: number;

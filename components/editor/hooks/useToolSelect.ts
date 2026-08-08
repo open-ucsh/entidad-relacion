@@ -2,7 +2,7 @@
 
 import type { Tool } from '@/domain/models';
 
-import { useCanvasCreate } from './useCanvasCreate';
+import { useCanvasCreate } from './useToolCreate';
 import { useDiagramStore } from '@/state/diagram-store';
 
 export function useToolSelect() {

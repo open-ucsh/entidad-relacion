@@ -2,7 +2,7 @@ import type { Attribute, Entity, Relationship, Tool } from '@/domain/models';
 
 import { createId } from '@/lib/id';
 import { distance } from '@/lib/geometry';
-import { getElements } from '@/domain/queries';
+import { getElements } from '@/domain/queries/elements';
 import { useDiagramStore } from '@/state/diagram-store';
 
 type CanvasElement = Entity | Relationship | Attribute;

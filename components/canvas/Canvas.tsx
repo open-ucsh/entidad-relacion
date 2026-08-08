@@ -3,7 +3,7 @@
 import { type RefObject } from 'react';
 
 import type { Diagram } from '@/domain/models';
-import { findElementById } from '@/domain/queries';
+import { findElementById } from '@/domain/queries/elements';
 import { useDiagramStore } from '@/state/diagram-store';
 
 import { CanvasGrid } from './CanvasGrid';

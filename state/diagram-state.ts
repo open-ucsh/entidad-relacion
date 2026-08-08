@@ -17,7 +17,7 @@ export interface DiagramState {
 
   updateElement: (
     id: string,
-    updates: Partial<Entity> | Partial<Relationship> | Partial<Attribute> | Partial<Connection>,
+    updates: Partial<Entity | Relationship | Attribute | Connection>,
   ) => void;
 
   removeElement: (id: string) => void;

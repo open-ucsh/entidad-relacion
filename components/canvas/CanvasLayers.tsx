@@ -5,7 +5,7 @@ import { ConnectionShape } from '@/components/elements/ConnectionShape';
 import { EntityShape } from '@/components/elements/EntityShape';
 import { RelationshipShape } from '@/components/elements/RelationshipShape';
 import type { Diagram, Tool } from '@/domain/models';
-import { getConnectionEndpoints } from '@/domain/queries';
+import { getConnectionEndpoints } from '@/domain/queries/connections';
 
 interface CanvasLayersProps {
   diagram: Diagram;

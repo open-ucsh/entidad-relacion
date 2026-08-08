@@ -1,7 +1,7 @@
 'use client';
 
 import { Panel, PanelHeader } from '@/components/ui';
-import { findElementById } from '@/domain/queries';
+import { findElementById } from '@/domain/queries/elements';
 import { useDiagramStore } from '@/state/diagram-store';
 
 import { InspectorElementContent } from './InspectorElementContent';

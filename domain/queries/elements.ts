@@ -1,4 +1,4 @@
-import type { Attribute, BaseElement, Connection, Diagram, Entity, Relationship } from './models';
+import type { BaseElement, Diagram, Entity, Relationship, Attribute } from '@/domain/models';
 
 export type DiagramElement = Entity | Relationship | Attribute;
 
@@ -15,15 +15,4 @@ export function getElementPosition(
   id: string,
 ): BaseElement['position'] | undefined {
   return findElementById(diagram, id)?.position;
-}
-
-export function getConnectionEndpoints(diagram: Diagram, connection: Connection) {
-  const from = getElementPosition(diagram, connection.fromId);
-  const to = getElementPosition(diagram, connection.toId);
-
-  if (!from || !to) {
-    return null;
-  }
-
-  return { from, to };
 }

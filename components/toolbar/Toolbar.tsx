@@ -1,7 +1,7 @@
 'use client';
 
 import { useDiagramStore } from '@/state/diagram-store';
-import { useToolSelect } from '@/components/canvas/hooks/useToolSelect';
+import { useToolSelect } from '@/components/editor/hooks/useToolSelect';
 
 import { ToolbarGroup } from './ToolbarGroup';
 import { TOOL_GROUPS } from './tools';

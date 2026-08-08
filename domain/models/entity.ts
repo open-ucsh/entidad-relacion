@@ -1,6 +1,6 @@
 import type { BaseElement } from './base';
 
-export type EntityKind = 'regular' | 'weak' | 'superentity' | 'associative';
+export type EntityKind = 'regular' | 'weak' | 'associative';
 
 export interface Entity extends BaseElement {
   type: 'entity';
