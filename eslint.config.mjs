@@ -17,6 +17,7 @@ const eslintConfig = defineConfig([
     },
     rules: {
       '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
+      '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true }],
     },
   },
   eslintConfigPrettier,

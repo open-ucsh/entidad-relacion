@@ -1,12 +1,11 @@
 import type { PointerEvent } from 'react';
 
-import type { Diagram, Tool } from '@/domain/models';
-import { getConnectionEndpoints } from '@/domain/queries';
-
 import { AttributeShape } from '@/components/elements/AttributeShape';
 import { ConnectionShape } from '@/components/elements/ConnectionShape';
 import { EntityShape } from '@/components/elements/EntityShape';
 import { RelationshipShape } from '@/components/elements/RelationshipShape';
+import type { Diagram, Tool } from '@/domain/models';
+import { getConnectionEndpoints } from '@/domain/queries';
 
 interface CanvasLayersProps {
   diagram: Diagram;
@@ -15,7 +14,7 @@ interface CanvasLayersProps {
   activeTool: Tool;
   onSelectElement: (id: string) => void;
   onDeleteElement: (id: string) => void;
-  onElementPointerDown: (event: PointerEvent, id: string) => void;
+  onElementPointerDown: (event: PointerEvent<SVGGElement>, id: string) => void;
   onConnectClick: (id: string) => void;
 }
 
@@ -30,25 +29,32 @@ export function CanvasLayers({
   onConnectClick,
 }: CanvasLayersProps) {
   function handleElementClick(id: string) {
-    if (activeTool === 'delete') {
-      onDeleteElement(id);
-      return;
-    }
+    switch (activeTool) {
+      case 'delete':
+        onDeleteElement(id);
+        break;
 
-    if (activeTool === 'connect') {
-      onConnectClick(id);
-      return;
-    }
+      case 'connect':
+        onConnectClick(id);
+        break;
 
-    onSelectElement(id);
+      default:
+        onSelectElement(id);
+    }
   }
 
-  function handleElementPointerDown(event: PointerEvent, id: string) {
+  function handleElementPointerDown(event: PointerEvent<SVGGElement>, id: string) {
+    event.stopPropagation();
+
     if (activeTool === 'delete' || activeTool === 'connect') {
       return;
     }
 
     onElementPointerDown(event, id);
+  }
+
+  function isSelected(id: string) {
+    return selectedElementId === id || connectionSourceId === id;
   }
 
   return (
@@ -80,7 +86,7 @@ export function CanvasLayers({
           <EntityShape
             key={entity.id}
             entity={entity}
-            selected={selectedElementId === entity.id || connectionSourceId === entity.id}
+            selected={isSelected(entity.id)}
             onClick={() => {
               handleElementClick(entity.id);
             }}
@@ -94,9 +100,7 @@ export function CanvasLayers({
           <RelationshipShape
             key={relationship.id}
             relationship={relationship}
-            selected={
-              selectedElementId === relationship.id || connectionSourceId === relationship.id
-            }
+            selected={isSelected(relationship.id)}
             onClick={() => {
               handleElementClick(relationship.id);
             }}
@@ -110,7 +114,7 @@ export function CanvasLayers({
           <AttributeShape
             key={attribute.id}
             attribute={attribute}
-            selected={selectedElementId === attribute.id || connectionSourceId === attribute.id}
+            selected={isSelected(attribute.id)}
             onClick={() => {
               handleElementClick(attribute.id);
             }}

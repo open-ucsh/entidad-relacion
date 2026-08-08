@@ -1,3 +1,4 @@
+import type { PointerEvent } from 'react';
 import type { Relationship } from '@/domain/models';
 
 const WIDTH = 120;
@@ -7,7 +8,7 @@ interface RelationshipShapeProps {
   relationship: Relationship;
   selected: boolean;
   onClick: () => void;
-  onPointerDown?: (event: React.PointerEvent) => void;
+  onPointerDown?: (event: PointerEvent<SVGGElement>) => void;
 }
 
 export function RelationshipShape({
@@ -19,10 +20,10 @@ export function RelationshipShape({
   const { x, y } = relationship.position;
 
   const points = [
-    `${String(x)},${String(y - HEIGHT / 2)} `,
-    `${String(x + WIDTH / 2)},${String(y)} `,
-    `${String(x)},${String(y + HEIGHT / 2)} `,
-    `${String(x - WIDTH / 2)},${String(y)} `,
+    `${x},${y - HEIGHT / 2}`,
+    `${x + WIDTH / 2},${y}`,
+    `${x},${y + HEIGHT / 2}`,
+    `${x - WIDTH / 2},${y}`,
   ].join(' ');
 
   const stroke = selected ? 'var(--color-brand-primary)' : 'var(--color-border)';
@@ -40,14 +41,13 @@ export function RelationshipShape({
       }}
       className={selected ? 'cursor-grabbing' : 'cursor-pointer'}
     >
-      {/* Relación identificadora */}
       {isIdentifying && (
         <polygon
           points={[
-            `${String(x)},${String(y - HEIGHT / 2 - 5)} `,
-            `${String(x + WIDTH / 2 + 5)},${String(y)} `,
-            `${String(x)},${String(y + HEIGHT / 2 + 5)} `,
-            `${String(x - WIDTH / 2 - 5)},${String(y)} `,
+            `${x},${y - HEIGHT / 2 - 5}`,
+            `${x + WIDTH / 2 + 5},${y}`,
+            `${x},${y + HEIGHT / 2 + 5}`,
+            `${x - WIDTH / 2 - 5},${y}`,
           ].join(' ')}
           fill="none"
           stroke={stroke}

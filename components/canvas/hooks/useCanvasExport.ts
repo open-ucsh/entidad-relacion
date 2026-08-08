@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, type RefObject } from 'react';
+import { useCallback, useState, type RefObject } from 'react';
 import { jsPDF } from 'jspdf';
 
 import { BRANDING } from '@/config/branding';
@@ -24,6 +24,11 @@ const STYLE_PROPERTIES = [
   'text-anchor',
 ] as const;
 
+/**
+ * Copia los estilos computados del SVG original a un clon, para que la
+ * imagen exportada preserve los estilos aplicados por CSS (que de otro
+ * modo se pierden al serializar el SVG fuera del DOM).
+ */
 function inlineComputedStyles(source: SVGSVGElement, clone: SVGSVGElement) {
   const sourceNodes = source.querySelectorAll('*');
   const cloneNodes = clone.querySelectorAll('*');
@@ -40,8 +45,9 @@ function inlineComputedStyles(source: SVGSVGElement, clone: SVGSVGElement) {
 
     STYLE_PROPERTIES.forEach((property) => {
       const value = computed.getPropertyValue(property);
+
       if (value) {
-        style += `${property}:${value};`;
+        style += `${property}:${value}; `;
       }
     });
 
@@ -54,13 +60,17 @@ function inlineComputedStyles(source: SVGSVGElement, clone: SVGSVGElement) {
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const image = new Image();
+
     image.crossOrigin = 'anonymous';
+
     image.onload = () => {
       resolve(image);
     };
+
     image.onerror = () => {
       reject(new Error(`No se pudo cargar la imagen: ${src}`));
     };
+
     image.src = src;
   });
 }
@@ -83,6 +93,15 @@ function drawWatermark(
   ctx.restore();
 }
 
+/**
+ * Rasteriza un elemento SVG a un canvas para exportar como imagen o PDF.
+ *
+ * Si el SVG llegara a incluir <image> embebidas sin CORS habilitado
+ * (ej. iconos custom por entidad), el canvas quedará "tainted" y
+ * toBlob/toDataURL lanzarán SecurityError. Hoy no aplica porque el
+ * diagrama es solo formas vectoriales, pero revisar si se agregan
+ * imágenes a las entidades.
+ */
 function renderToCanvas(svg: SVGSVGElement): Promise<HTMLCanvasElement> {
   return new Promise((resolve, reject) => {
     const { width, height } = svg.getBoundingClientRect();
@@ -95,11 +114,13 @@ function renderToCanvas(svg: SVGSVGElement): Promise<HTMLCanvasElement> {
     clone.setAttribute('height', String(height));
 
     const background = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+
     background.setAttribute('x', '0');
     background.setAttribute('y', '0');
     background.setAttribute('width', '100%');
     background.setAttribute('height', '100%');
     background.setAttribute('fill', '#ffffff');
+
     clone.insertBefore(background, clone.firstChild);
 
     const svgString = new XMLSerializer().serializeToString(clone);
@@ -124,7 +145,6 @@ function renderToCanvas(svg: SVGSVGElement): Promise<HTMLCanvasElement> {
 
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-
       ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
       loadImage(BRANDING.logo)
@@ -149,9 +169,11 @@ function renderToCanvas(svg: SVGSVGElement): Promise<HTMLCanvasElement> {
 function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
+
   link.href = url;
   link.download = filename;
   link.click();
+
   URL.revokeObjectURL(url);
 }
 
@@ -159,7 +181,20 @@ function fileBaseName(): string {
   return BRANDING.applicationName.toLowerCase().replace(/\s+/g, '-');
 }
 
-export function useCanvasExport(svgRef: RefObject<SVGSVGElement | null>) {
+interface UseCanvasExportResult {
+  exportDiagram: (format: ExportFormat) => Promise<void>;
+  isExporting: boolean;
+  exportError: Error | null;
+}
+
+/**
+ * Exporta el SVG referenciado como PNG, JPEG o PDF, con marca de agua
+ * del logo de la app superpuesta en la esquina inferior derecha.
+ */
+export function useCanvasExport(svgRef: RefObject<SVGSVGElement | null>): UseCanvasExportResult {
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportError, setExportError] = useState<Error | null>(null);
+
   const exportDiagram = useCallback(
     async (format: ExportFormat) => {
       const svg = svgRef.current;
@@ -168,34 +203,52 @@ export function useCanvasExport(svgRef: RefObject<SVGSVGElement | null>) {
         return;
       }
 
-      const canvas = await renderToCanvas(svg);
+      setIsExporting(true);
+      setExportError(null);
 
-      if (format === 'pdf') {
-        const orientation = canvas.width >= canvas.height ? 'landscape' : 'portrait';
-        const pdf = new jsPDF({ orientation, unit: 'px', format: [canvas.width, canvas.height] });
+      try {
+        const canvas = await renderToCanvas(svg);
 
-        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, canvas.width, canvas.height);
-        pdf.save(`${fileBaseName()}-diagrama.pdf`);
-        return;
+        if (format === 'pdf') {
+          const orientation = canvas.width >= canvas.height ? 'landscape' : 'portrait';
+
+          const pdf = new jsPDF({
+            orientation,
+            unit: 'px',
+            format: [canvas.width, canvas.height],
+          });
+
+          pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, canvas.width, canvas.height);
+          pdf.save(`${fileBaseName()}-diagrama.pdf`);
+          return;
+        }
+
+        const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
+        const quality = format === 'jpeg' ? 0.92 : undefined;
+
+        await new Promise<void>((resolve, reject) => {
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) {
+                reject(new Error('No se pudo generar el archivo de imagen'));
+                return;
+              }
+
+              downloadBlob(blob, `${fileBaseName()}-diagrama.${format}`);
+              resolve();
+            },
+            mimeType,
+            quality,
+          );
+        });
+      } catch (error) {
+        setExportError(error instanceof Error ? error : new Error('Error al exportar el diagrama'));
+      } finally {
+        setIsExporting(false);
       }
-
-      const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
-      const quality = format === 'jpeg' ? 0.92 : undefined;
-
-      canvas.toBlob(
-        (blob) => {
-          if (!blob) {
-            return;
-          }
-
-          downloadBlob(blob, `${fileBaseName()}-diagrama.${format}`);
-        },
-        mimeType,
-        quality,
-      );
     },
     [svgRef],
   );
 
-  return { exportDiagram };
+  return { exportDiagram, isExporting, exportError };
 }

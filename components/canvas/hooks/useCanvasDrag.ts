@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type PointerEvent } from 'react';
 
 import type { Diagram } from '@/domain/models';
 import { getElementPosition } from '@/domain/queries';
@@ -10,9 +10,10 @@ interface DragOffset {
 
 interface UseCanvasDragProps {
   diagram: Diagram;
-
-  getSvgPoint: (event: PointerEvent) => { x: number; y: number } | null;
-
+  getSvgPoint: (event: globalThis.PointerEvent) => {
+    x: number;
+    y: number;
+  } | null;
   updateElement: (
     id: string,
     updates: {
@@ -26,10 +27,11 @@ interface UseCanvasDragProps {
 
 export function useCanvasDrag({ diagram, getSvgPoint, updateElement }: UseCanvasDragProps) {
   const [draggingId, setDraggingId] = useState<string | null>(null);
-
   const [dragOffset, setDragOffset] = useState<DragOffset | null>(null);
 
-  function startDrag(event: React.PointerEvent, id: string) {
+  function startDrag(event: PointerEvent<SVGGElement>, id: string) {
+    event.stopPropagation();
+
     const position = getElementPosition(diagram, id);
 
     if (!position) {
@@ -52,7 +54,7 @@ export function useCanvasDrag({ diagram, getSvgPoint, updateElement }: UseCanvas
     event.currentTarget.setPointerCapture(event.pointerId);
   }
 
-  function drag(event: React.PointerEvent<SVGSVGElement>) {
+  function drag(event: PointerEvent<SVGSVGElement>) {
     if (!draggingId || !dragOffset) {
       return;
     }

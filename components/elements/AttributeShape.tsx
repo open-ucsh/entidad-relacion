@@ -1,3 +1,4 @@
+import type { PointerEvent } from 'react';
 import type { Attribute } from '@/domain/models';
 
 const RX = 55;
@@ -7,7 +8,7 @@ interface AttributeShapeProps {
   attribute: Attribute;
   selected: boolean;
   onClick: () => void;
-  onPointerDown?: (event: React.PointerEvent) => void;
+  onPointerDown?: (event: PointerEvent<SVGGElement>) => void;
 }
 
 function estimateTextWidth(text: string): number {
@@ -68,7 +69,6 @@ export function AttributeShape({
         {attribute.optional && <tspan className="fill-text-muted font-normal"> (O)</tspan>}
       </text>
 
-      {/* Clave primaria: subrayado sólido grueso */}
       {isPrimary && (
         <line
           x1={x - halfWidth}
@@ -80,7 +80,6 @@ export function AttributeShape({
         />
       )}
 
-      {/* Clave parcial: subrayado punteado grueso */}
       {isPartial && (
         <line
           x1={x - halfWidth}

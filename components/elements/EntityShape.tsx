@@ -1,3 +1,4 @@
+import type { PointerEvent } from 'react';
 import type { Entity } from '@/domain/models';
 
 const WIDTH = 120;
@@ -10,7 +11,7 @@ interface EntityShapeProps {
   entity: Entity;
   selected: boolean;
   onClick: () => void;
-  onPointerDown?: (event: React.PointerEvent) => void;
+  onPointerDown?: (event: PointerEvent<SVGGElement>) => void;
 }
 
 export function EntityShape({ entity, selected, onClick, onPointerDown }: EntityShapeProps) {
@@ -24,10 +25,10 @@ export function EntityShape({ entity, selected, onClick, onPointerDown }: Entity
   const diamondHeight = HEIGHT - DIAMOND_MARGIN_Y * 2;
 
   const diamondPoints = [
-    `${String(entity.position.x)},${String(entity.position.y - diamondHeight / 2)} `,
-    `${String(entity.position.x + diamondWidth / 2)},${String(entity.position.y)} `,
-    `${String(entity.position.x)},${String(entity.position.y + diamondHeight / 2)} `,
-    `${String(entity.position.x - diamondWidth / 2)},${String(entity.position.y)} `,
+    `${entity.position.x},${entity.position.y - diamondHeight / 2}`,
+    `${entity.position.x + diamondWidth / 2},${entity.position.y}`,
+    `${entity.position.x},${entity.position.y + diamondHeight / 2}`,
+    `${entity.position.x - diamondWidth / 2},${entity.position.y}`,
   ].join(' ');
 
   return (
@@ -39,7 +40,6 @@ export function EntityShape({ entity, selected, onClick, onPointerDown }: Entity
       }}
       className={selected ? 'cursor-grabbing' : 'cursor-pointer'}
     >
-      {/* Entidad débil: segundo rectángulo */}
       {isWeak && (
         <rect
           x={x + 4}
@@ -52,7 +52,6 @@ export function EntityShape({ entity, selected, onClick, onPointerDown }: Entity
         />
       )}
 
-      {/* Entidad principal */}
       <rect
         x={x}
         y={y}
@@ -64,7 +63,6 @@ export function EntityShape({ entity, selected, onClick, onPointerDown }: Entity
         strokeWidth={selected ? 3 : 1.5}
       />
 
-      {/* Entidad asociativa */}
       {isAssociative && (
         <polygon
           points={diamondPoints}

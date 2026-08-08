@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactNode, PointerEvent } from 'react';
+import type { PointerEvent, ReactNode } from 'react';
 
 interface CanvasInteractionProps {
   children: ReactNode;
@@ -8,24 +8,10 @@ interface CanvasInteractionProps {
 }
 
 export function CanvasInteraction({ children, onBackgroundClick }: CanvasInteractionProps) {
-  function handleBackgroundClick(event: PointerEvent<SVGRectElement>) {
+  function handleBackgroundClick(event: PointerEvent<SVGGElement>) {
     event.stopPropagation();
-
     onBackgroundClick();
   }
 
-  return (
-    <>
-      <rect
-        x="0"
-        y="0"
-        width="100%"
-        height="100%"
-        fill="transparent"
-        onClick={handleBackgroundClick}
-      />
-
-      {children}
-    </>
-  );
+  return <g onPointerDown={handleBackgroundClick}>{children}</g>;
 }

@@ -65,9 +65,9 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
         role="application"
         aria-label="Lienzo del diagrama Entidad-Relación"
       >
-        <CanvasGrid />
-
         <CanvasInteraction onBackgroundClick={clearSelection}>
+          <CanvasGrid />
+
           <CanvasLayers
             diagram={diagram}
             selectedElementId={selectedElementId}
