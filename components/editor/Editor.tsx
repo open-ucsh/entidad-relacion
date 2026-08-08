@@ -13,6 +13,7 @@ import { useDiagramFile } from './hooks/useDiagramFile';
 import { useEditorPanels } from './hooks/useEditorPanels';
 import { Inspector } from './inspector/Inspector';
 import { Toolbar } from './toolbar/Toolbar';
+import { DocumentGallery } from './documents/DocumentGallery';
 
 export function Editor() {
   const diagram = useDiagramStore((state) => state.diagram);
@@ -21,6 +22,7 @@ export function Editor() {
   const importDiagram = useDiagramStore((state) => state.importDiagram);
 
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isDocumentGalleryOpen, setIsDocumentGalleryOpen] = useState(false);
 
   const svgRef = useRef<SVGSVGElement | null>(null);
   const { exportDiagram } = useCanvasExport(svgRef, diagram);
@@ -56,6 +58,9 @@ export function Editor() {
         }}
         onExportJson={exportJson}
         onImportJson={importJson}
+        onOpenDocuments={() => {
+          setIsDocumentGalleryOpen(true);
+        }}
       />
 
       <main className="relative min-h-0 flex-1 overflow-hidden">
@@ -93,6 +98,12 @@ export function Editor() {
         isOpen={isHistoryOpen}
         onClose={() => {
           setIsHistoryOpen(false);
+        }}
+      />
+      <DocumentGallery
+        isOpen={isDocumentGalleryOpen}
+        onClose={() => {
+          setIsDocumentGalleryOpen(false);
         }}
       />
     </div>

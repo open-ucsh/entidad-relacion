@@ -12,6 +12,7 @@ interface HeaderProps {
   onExport: (format: ExportFormat) => void;
   onExportJson: () => void;
   onImportJson: (file: File) => Promise<void>;
+  onOpenDocuments: () => void;
 }
 
 export function Header({
@@ -22,6 +23,7 @@ export function Header({
   onExport,
   onExportJson,
   onImportJson,
+  onOpenDocuments,
 }: HeaderProps) {
   return (
     <header className="relative flex h-27 shrink-0 items-center justify-between bg-brand-primary px-6">
@@ -41,6 +43,7 @@ export function Header({
         onExport={onExport}
         onExportJson={onExportJson}
         onImportJson={onImportJson}
+        onOpenDocuments={onOpenDocuments}
       />
 
       <div

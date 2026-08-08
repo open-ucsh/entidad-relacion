@@ -7,6 +7,7 @@ import {
   FileUp,
   History,
   ImageDown,
+  FolderOpen,
   type LucideIcon,
 } from 'lucide-react';
 import { useEffect, useId, useRef, useState } from 'react';
@@ -29,6 +30,7 @@ interface HeaderActionsProps {
   onExportJson: () => void;
   onImportJson: (file: File) => Promise<void>;
   onOpenHistory: () => void;
+  onOpenDocuments: () => void;
 }
 
 interface ExportMenuProps {
@@ -174,6 +176,7 @@ export function HeaderActions({
   onExportJson,
   onImportJson,
   onOpenHistory,
+  onOpenDocuments,
 }: HeaderActionsProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -215,6 +218,7 @@ export function HeaderActions({
           event.target.value = '';
         }}
       />
+      <ToolbarButton icon={FolderOpen} label="Mis documentos" onClick={onOpenDocuments} />
 
       <ToolbarDivider />
 
