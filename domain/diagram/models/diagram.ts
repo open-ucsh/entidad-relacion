@@ -1,3 +1,4 @@
+import type { DiagramActivity, DiagramMetadata } from './activity';
 import type { Attribute } from './attribute';
 import type { Connection } from './connection';
 import type { Entity } from './entity';
@@ -8,4 +9,6 @@ export interface Diagram {
   relationships: Relationship[];
   attributes: Attribute[];
   connections: Connection[];
+  metadata: DiagramMetadata;
+  activity: DiagramActivity[];
 }

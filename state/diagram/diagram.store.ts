@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 
 import { createId } from '@/domain/diagram/lib/id';
+import type { Diagram, DiagramActivityType } from '@/domain/diagram/models';
+import { findDiagramElement } from '@/domain/diagram/queries/elements';
 
 import { createInitialDiagram } from './diagram.initial';
 import {
@@ -10,6 +12,27 @@ import {
   updateDiagramConnection,
 } from './diagram.mutations';
 import type { DiagramState } from './diagram.types';
+
+function appendActivity(diagram: Diagram, type: DiagramActivityType, details: string): Diagram {
+  const occurredAt = new Date().toISOString();
+
+  return {
+    ...diagram,
+    metadata: {
+      ...diagram.metadata,
+      updatedAt: occurredAt,
+    },
+    activity: [
+      ...diagram.activity,
+      {
+        id: createId('activity'),
+        type,
+        occurredAt,
+        details,
+      },
+    ],
+  };
+}
 
 export const useDiagramStore = create<DiagramState>((set, get) => ({
   diagram: createInitialDiagram(),
@@ -90,49 +113,83 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
 
   addEntity: (entity) => {
     set((state) => ({
-      diagram: {
-        ...state.diagram,
-        entities: [...state.diagram.entities, entity],
-      },
+      diagram: appendActivity(
+        {
+          ...state.diagram,
+          entities: [...state.diagram.entities, entity],
+        },
+        'element-created',
+        `Se creó la entidad “${entity.name}”.`,
+      ),
     }));
   },
 
   addRelationship: (relationship) => {
     set((state) => ({
-      diagram: {
-        ...state.diagram,
-        relationships: [...state.diagram.relationships, relationship],
-      },
+      diagram: appendActivity(
+        {
+          ...state.diagram,
+          relationships: [...state.diagram.relationships, relationship],
+        },
+        'element-created',
+        `Se creó la relación “${relationship.name}”.`,
+      ),
     }));
   },
 
   addAttribute: (attribute) => {
     set((state) => ({
-      diagram: {
-        ...state.diagram,
-        attributes: [...state.diagram.attributes, attribute],
-      },
+      diagram: appendActivity(
+        {
+          ...state.diagram,
+          attributes: [...state.diagram.attributes, attribute],
+        },
+        'element-created',
+        `Se creó el atributo “${attribute.name}”.`,
+      ),
     }));
   },
 
   addConnection: (connection) => {
     set((state) => ({
-      diagram: {
-        ...state.diagram,
-        connections: [...state.diagram.connections, connection],
-      },
+      diagram: appendActivity(
+        {
+          ...state.diagram,
+          connections: [...state.diagram.connections, connection],
+        },
+        'connection-created',
+        'Se creó una conexión.',
+      ),
     }));
   },
 
   updateElement: (id, updates) => {
-    set((state) => ({
-      diagram: updateDiagram(state.diagram, id, updates),
-    }));
+    set((state) => {
+      const element = findDiagramElement(state.diagram, id);
+      const diagram = updateDiagram(state.diagram, id, updates);
+
+      const details =
+        typeof updates.name === 'string' && element
+          ? `Se renombró “${element.name}” a “${updates.name}”.`
+          : 'Se actualizaron las propiedades de un elemento.';
+
+      return {
+        diagram: appendActivity(
+          diagram,
+          typeof updates.name === 'string' ? 'element-renamed' : 'element-updated',
+          details,
+        ),
+      };
+    });
   },
 
   updateConnection: (id, updates) => {
     set((state) => ({
-      diagram: updateDiagramConnection(state.diagram, id, updates),
+      diagram: appendActivity(
+        updateDiagramConnection(state.diagram, id, updates),
+        'connection-updated',
+        'Se actualizó la cardinalidad de una conexión.',
+      ),
     }));
   },
 
@@ -161,7 +218,11 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
       const selectedElementIds = state.selectedElementIds.filter((id) => !removedIds.has(id));
 
       return {
-        diagram: removeDiagramElements(state.diagram, ids),
+        diagram: appendActivity(
+          removeDiagramElements(state.diagram, ids),
+          'elements-removed',
+          `Se eliminaron ${ids.length} elemento${ids.length === 1 ? '' : 's'}.`,
+        ),
         selectedElementIds,
         selectedElementId: selectedElementIds.at(-1) ?? null,
         connectionSourceId:
@@ -170,6 +231,12 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
             : state.connectionSourceId,
       };
     });
+  },
+
+  recordActivity: (type, details) => {
+    set((state) => ({
+      diagram: appendActivity(state.diagram, type, details),
+    }));
   },
 
   handleConnectClick: (id) => {

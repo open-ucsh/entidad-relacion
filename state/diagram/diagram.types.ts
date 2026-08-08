@@ -2,6 +2,7 @@ import type {
   Attribute,
   Connection,
   Diagram,
+  DiagramActivityType,
   Entity,
   Point,
   Relationship,
@@ -36,12 +37,15 @@ export interface DiagramState {
   addConnection: (connection: Connection) => void;
 
   updateElement: (id: string, updates: Partial<Entity | Relationship | Attribute>) => void;
+
   updateConnection: (id: string, updates: Partial<Connection>) => void;
 
   moveElements: (updates: ElementPositionUpdate[]) => void;
 
   removeElement: (id: string) => void;
   removeElements: (ids: string[]) => void;
+
+  recordActivity: (type: DiagramActivityType, details: string) => void;
 
   handleConnectClick: (id: string) => void;
 }
