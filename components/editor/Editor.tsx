@@ -1,55 +1,55 @@
 'use client';
 
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 
-import { useCanvasExport } from '@/components/canvas/hooks/useCanvasExport';
-import { Canvas } from '@/components/canvas/Canvas';
-import { Header } from '@/components/header/Header';
-import { Inspector } from '@/components/inspector/Inspector';
-import { Toolbar } from '@/components/toolbar/Toolbar';
-import { useDiagramStore } from '@/state/diagram-store';
+import { useDiagramStore } from '@/state/diagram/diagram.store';
 
-const TOOLBAR_WIDTH = '240px';
-const INSPECTOR_WIDTH = '320px';
-
-function getWorkspaceColumns(toolbarOpen: boolean, inspectorOpen: boolean): string {
-  const toolbarWidth = toolbarOpen ? TOOLBAR_WIDTH : '0px';
-  const inspectorWidth = inspectorOpen ? INSPECTOR_WIDTH : '0px';
-
-  return `${toolbarWidth} minmax(0, 1fr) ${inspectorWidth} `;
-}
+import { Canvas } from './canvas/Canvas';
+import { useCanvasExport } from './canvas/hooks/useCanvasExport';
+import { EditorPanelToggle } from './EditorPanelToggle';
+import { Header } from './header/Header';
+import { useEditorPanels } from './hooks/useEditorPanels';
+import { Inspector } from './inspector/Inspector';
+import { Toolbar } from './toolbar/Toolbar';
 
 export function Editor() {
   const diagram = useDiagramStore((state) => state.diagram);
+  const resetDiagram = useDiagramStore((state) => state.resetDiagram);
 
   const svgRef = useRef<SVGSVGElement | null>(null);
   const { exportDiagram } = useCanvasExport(svgRef);
 
-  const [toolbarOpen, setToolbarOpen] = useState(true);
-  const [inspectorOpen, setInspectorOpen] = useState(true);
+  const { isToolbarOpen, isInspectorOpen, workspaceColumns, toggleToolbar, toggleInspector } =
+    useEditorPanels();
 
-  const workspaceColumns = getWorkspaceColumns(toolbarOpen, inspectorOpen);
+  function handleNewDiagram() {
+    const shouldReset = window.confirm(
+      'Se eliminarán los elementos actuales del diagrama. ¿Deseas continuar?',
+    );
+
+    if (shouldReset) {
+      resetDiagram();
+    }
+  }
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+    <div className="flex h-dvh min-h-0 flex-col overflow-hidden">
       <Header
+        onNewDiagram={handleNewDiagram}
         onExport={(format) => {
           void exportDiagram(format);
         }}
       />
 
-      <main className="relative flex min-h-0 flex-1 overflow-hidden">
+      <main className="relative min-h-0 flex-1 overflow-hidden">
         <div
-          className="grid h-full min-h-0 min-w-0 flex-1 overflow-hidden transition-[grid-template-columns] duration-200 ease-out"
+          className="grid h-full min-h-0 min-w-0 overflow-hidden transition-[grid-template-columns] duration-200 ease-out"
           style={{ gridTemplateColumns: workspaceColumns }}
         >
           <div
-            className={[
-              'h-full min-h-0 min-w-0 overflow-hidden',
-              'transition-opacity duration-150',
-              toolbarOpen ? 'opacity-100' : 'pointer-events-none opacity-0',
-            ].join(' ')}
+            className={`h-full min-h-0 min-w-0 overflow-hidden transition-opacity duration-150 ${
+              isToolbarOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
+            }`}
           >
             <Toolbar />
           </div>
@@ -59,59 +59,17 @@ export function Editor() {
           </div>
 
           <div
-            className={[
-              'h-full min-h-0 min-w-0 overflow-hidden',
-              'transition-opacity duration-150',
-              inspectorOpen ? 'opacity-100' : 'pointer-events-none opacity-0',
-            ].join(' ')}
+            className={`h-full min-h-0 min-w-0 overflow-hidden transition-opacity duration-150 ${
+              isInspectorOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
+            }`}
           >
             <Inspector />
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => {
-            setToolbarOpen((open) => !open);
-          }}
-          aria-label={toolbarOpen ? 'Ocultar herramientas' : 'Mostrar herramientas'}
-          className={[
-            'absolute top-1/2 z-30',
-            'flex h-10 w-7 -translate-y-1/2',
-            'items-center justify-center',
-            'border border-border bg-background',
-            'text-text-muted shadow-sm',
-            'transition-[left] duration-200',
-            'hover:bg-surface-hover hover:text-text',
-            'focus-visible:outline-none',
-            'focus-visible:ring-2 focus-visible:ring-brand-primary/40',
-            toolbarOpen ? 'left-60 rounded-r-md' : 'left-0 rounded-r-md',
-          ].join(' ')}
-        >
-          {toolbarOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
-        </button>
+        <EditorPanelToggle side="left" isOpen={isToolbarOpen} onToggle={toggleToolbar} />
 
-        <button
-          type="button"
-          onClick={() => {
-            setInspectorOpen((open) => !open);
-          }}
-          aria-label={inspectorOpen ? 'Ocultar inspector' : 'Mostrar inspector'}
-          className={[
-            'absolute top-1/2 z-30',
-            'flex h-10 w-7 -translate-y-1/2',
-            'items-center justify-center',
-            'border border-border bg-background',
-            'text-text-muted shadow-sm',
-            'transition-[right] duration-200',
-            'hover:bg-surface-hover hover:text-text',
-            'focus-visible:outline-none',
-            'focus-visible:ring-2 focus-visible:ring-brand-primary/40',
-            inspectorOpen ? 'right-80 rounded-l-md' : 'right-0 rounded-l-md',
-          ].join(' ')}
-        >
-          {inspectorOpen ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-        </button>
+        <EditorPanelToggle side="right" isOpen={isInspectorOpen} onToggle={toggleInspector} />
       </main>
     </div>
   );

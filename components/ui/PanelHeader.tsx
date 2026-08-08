@@ -1,13 +1,14 @@
-import type { PropsWithChildren } from 'react';
+import type { ReactNode } from 'react';
 
-interface PanelHeaderProps extends PropsWithChildren {
+interface PanelHeaderProps {
   title: string;
+  children?: ReactNode | undefined;
 }
 
 export function PanelHeader({ title, children }: PanelHeaderProps) {
   return (
-    <header className="flex items-center justify-between border-b border-border px-4 py-3">
-      <h2 className="text-xs font-semibold uppercase tracking-wide text-text-muted">{title}</h2>
+    <header className="flex h-15 shrink-0 items-center justify-between border-b border-border px-5">
+      <h2 className="text-sm font-semibold uppercase tracking-wider text-text-muted">{title}</h2>
 
       {children}
     </header>

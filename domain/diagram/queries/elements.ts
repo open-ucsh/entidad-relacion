@@ -1,0 +1,24 @@
+import type {
+  Attribute,
+  BaseElement,
+  Diagram,
+  Entity,
+  Relationship,
+} from '@/domain/diagram/models';
+
+export type DiagramElement = Entity | Relationship | Attribute;
+
+export function getDiagramElements(diagram: Diagram): DiagramElement[] {
+  return [...diagram.entities, ...diagram.relationships, ...diagram.attributes];
+}
+
+export function findDiagramElement(diagram: Diagram, id: string): DiagramElement | undefined {
+  return getDiagramElements(diagram).find((element) => element.id === id);
+}
+
+export function getElementPosition(
+  diagram: Diagram,
+  id: string,
+): BaseElement['position'] | undefined {
+  return findDiagramElement(diagram, id)?.position;
+}
