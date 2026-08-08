@@ -5,18 +5,26 @@ import { HeaderBrand } from './HeaderBrand';
 
 interface HeaderProps {
   onNewDiagram: () => void;
+  onOpenHistory: () => void;
   onExport: (format: ExportFormat) => void;
   onExportJson: () => void;
   onImportJson: (file: File) => Promise<void>;
 }
 
-export function Header({ onNewDiagram, onExport, onExportJson, onImportJson }: HeaderProps) {
+export function Header({
+  onNewDiagram,
+  onOpenHistory,
+  onExport,
+  onExportJson,
+  onImportJson,
+}: HeaderProps) {
   return (
     <header className="relative flex h-27 shrink-0 items-center justify-between bg-brand-primary px-6">
       <HeaderBrand />
 
       <HeaderActions
         onNewDiagram={onNewDiagram}
+        onOpenHistory={onOpenHistory}
         onExport={onExport}
         onExportJson={onExportJson}
         onImportJson={onImportJson}

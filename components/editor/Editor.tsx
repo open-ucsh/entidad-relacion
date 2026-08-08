@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 
 import { useDiagramStore } from '@/state/diagram/diagram.store';
 
@@ -8,6 +8,7 @@ import { Canvas } from './canvas/Canvas';
 import { useCanvasExport } from './canvas/hooks/useCanvasExport';
 import { EditorPanelToggle } from './EditorPanelToggle';
 import { Header } from './header/Header';
+import { HistoryPanel } from './history/HistoryPanel';
 import { useDiagramFile } from './hooks/useDiagramFile';
 import { useEditorPanels } from './hooks/useEditorPanels';
 import { Inspector } from './inspector/Inspector';
@@ -17,6 +18,8 @@ export function Editor() {
   const diagram = useDiagramStore((state) => state.diagram);
   const resetDiagram = useDiagramStore((state) => state.resetDiagram);
   const importDiagram = useDiagramStore((state) => state.importDiagram);
+
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   const svgRef = useRef<SVGSVGElement | null>(null);
   const { exportDiagram } = useCanvasExport(svgRef, diagram);
@@ -42,6 +45,9 @@ export function Editor() {
     <div className="flex h-full min-h-0 flex-col">
       <Header
         onNewDiagram={handleNewDiagram}
+        onOpenHistory={() => {
+          setIsHistoryOpen(true);
+        }}
         onExport={(format) => {
           void exportDiagram(format);
         }}
@@ -79,6 +85,13 @@ export function Editor() {
 
         <EditorPanelToggle side="right" isOpen={isInspectorOpen} onToggle={toggleInspector} />
       </main>
+
+      <HistoryPanel
+        isOpen={isHistoryOpen}
+        onClose={() => {
+          setIsHistoryOpen(false);
+        }}
+      />
     </div>
   );
 }

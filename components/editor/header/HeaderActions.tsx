@@ -1,6 +1,14 @@
 'use client';
 
-import { ChevronDown, FileDown, FilePlus, FileUp, ImageDown, type LucideIcon } from 'lucide-react';
+import {
+  ChevronDown,
+  FileDown,
+  FilePlus,
+  FileUp,
+  History,
+  ImageDown,
+  type LucideIcon,
+} from 'lucide-react';
 import { useEffect, useId, useRef, useState } from 'react';
 
 import type { ExportFormat } from '@/components/editor/canvas/hooks/useCanvasExport';
@@ -8,20 +16,19 @@ import type { ExportFormat } from '@/components/editor/canvas/hooks/useCanvasExp
 const FORMAT_OPTIONS: ReadonlyArray<{
   format: ExportFormat;
   label: string;
+  hint: string;
 }> = [
-  { format: 'png', label: 'PNG' },
-  { format: 'jpeg', label: 'JPEG' },
-  { format: 'pdf', label: 'PDF' },
+  { format: 'png', label: 'PNG', hint: 'Fondo transparente, ideal para diagramas' },
+  { format: 'jpeg', label: 'JPEG', hint: 'Imagen comprimida, menor peso' },
+  { format: 'pdf', label: 'PDF', hint: 'Listo para imprimir o compartir' },
 ];
-
-const ACTION_BUTTON_CLASS_NAME =
-  'flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white/85 transition-colors hover:border-white/20 hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary';
 
 interface HeaderActionsProps {
   onNewDiagram: () => void;
   onExport: (format: ExportFormat) => void;
   onExportJson: () => void;
   onImportJson: (file: File) => Promise<void>;
+  onOpenHistory: () => void;
 }
 
 interface ExportMenuProps {
@@ -29,20 +36,37 @@ interface ExportMenuProps {
   onExportJson: () => void;
 }
 
-interface ActionButtonProps {
+interface ToolbarButtonProps {
   icon: LucideIcon;
   label: string;
   onClick?: (() => void) | undefined;
-  title?: string | undefined;
+  disabled?: boolean;
 }
 
-function ActionButton({ icon: Icon, label, onClick, title }: ActionButtonProps) {
+/** Icon-only action with an accessible hover/focus tooltip — no label clutter. */
+function ToolbarButton({ icon: Icon, label, onClick, disabled }: ToolbarButtonProps) {
   return (
-    <button type="button" onClick={onClick} title={title} className={ACTION_BUTTON_CLASS_NAME}>
-      <Icon size={16} aria-hidden="true" />
-      {label}
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+      className="group relative flex size-9 items-center justify-center rounded-md text-white/80 transition-colors hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+    >
+      <Icon size={18} aria-hidden="true" />
+
+      <span
+        role="tooltip"
+        className="pointer-events-none absolute top-full left-1/2 z-50 mt-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-text px-2 py-1 text-[11px] font-medium text-background opacity-0 shadow-lg transition-opacity delay-300 group-hover:opacity-100 group-focus-visible:opacity-100"
+      >
+        {label}
+      </span>
     </button>
   );
+}
+
+function ToolbarDivider() {
+  return <div aria-hidden="true" className="mx-1.5 h-6 w-px bg-white/15" />;
 }
 
 function ExportMenu({ onExport, onExportJson }: ExportMenuProps) {
@@ -86,7 +110,7 @@ function ExportMenu({ onExport, onExportJson }: ExportMenuProps) {
         aria-expanded={isOpen}
         aria-haspopup="menu"
         aria-controls={menuId}
-        className={ACTION_BUTTON_CLASS_NAME}
+        className="flex items-center gap-2 rounded-md bg-white px-3.5 py-2 text-xs font-semibold text-brand-primary shadow-sm transition-colors hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-primary"
       >
         <ImageDown size={16} aria-hidden="true" />
         Exportar
@@ -102,8 +126,12 @@ function ExportMenu({ onExport, onExportJson }: ExportMenuProps) {
           id={menuId}
           role="menu"
           aria-label="Formatos de exportación"
-          className="absolute right-0 top-full z-40 mt-1 w-44 overflow-hidden rounded-md border border-border bg-background py-1 shadow-lg"
+          className="absolute right-0 top-full z-40 mt-2 w-60 overflow-hidden rounded-lg border border-border bg-background py-1.5 shadow-xl"
         >
+          <p className="px-3 pb-1.5 pt-1 text-[10px] font-semibold uppercase tracking-wide text-text-muted">
+            Descargar imagen
+          </p>
+
           {FORMAT_OPTIONS.map((option) => (
             <button
               key={option.format}
@@ -113,13 +141,14 @@ function ExportMenu({ onExport, onExportJson }: ExportMenuProps) {
                 onExport(option.format);
                 setIsOpen(false);
               }}
-              className="block w-full px-3 py-2 text-left text-xs font-medium text-text transition-colors hover:bg-surface-hover"
+              className="flex w-full flex-col items-start px-3 py-2 text-left transition-colors hover:bg-surface-hover"
             >
-              Exportar como {option.label}
+              <span className="text-xs font-medium text-text">{option.label}</span>
+              <span className="text-[11px] text-text-muted">{option.hint}</span>
             </button>
           ))}
 
-          <div className="my-1 border-t border-border" />
+          <div className="my-1.5 border-t border-border" />
 
           <button
             type="button"
@@ -144,6 +173,7 @@ export function HeaderActions({
   onExport,
   onExportJson,
   onImportJson,
+  onOpenHistory,
 }: HeaderActionsProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -159,21 +189,15 @@ export function HeaderActions({
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <ActionButton
-        icon={FilePlus}
-        label="Nuevo"
-        onClick={onNewDiagram}
-        title="Crear un nuevo diagrama"
-      />
-
-      <ActionButton
+    <div className="flex items-center gap-1">
+      <ToolbarButton icon={History} label="Historial del proyecto" onClick={onOpenHistory} />
+      <ToolbarButton icon={FilePlus} label="Nuevo diagrama" onClick={onNewDiagram} />
+      <ToolbarButton
         icon={FileUp}
-        label="Importar"
+        label="Importar proyecto JSON"
         onClick={() => {
           inputRef.current?.click();
         }}
-        title="Importar proyecto JSON"
       />
 
       <input
@@ -191,6 +215,8 @@ export function HeaderActions({
           event.target.value = '';
         }}
       />
+
+      <ToolbarDivider />
 
       <ExportMenu onExport={onExport} onExportJson={onExportJson} />
     </div>
