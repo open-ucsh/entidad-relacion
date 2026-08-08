@@ -57,6 +57,7 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
     zoomPercentage,
     canZoomIn,
     canZoomOut,
+    fitToDiagram,
   } = useCanvasCamera(svgRef);
 
   const { getWorldPoint } = useWorldCoordinates(svgRef, camera);
@@ -154,6 +155,9 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
         onZoomIn={zoomIn}
         onZoomOut={zoomOut}
         onReset={resetView}
+        onFitToView={() => {
+          fitToDiagram(diagram);
+        }}
         canZoomIn={canZoomIn}
         canZoomOut={canZoomOut}
       />

@@ -23,4 +23,4 @@ export function getElementPosition(
   return findDiagramElement(diagram, id)?.position;
 }
 
-export { getDiagramExportBounds } from './bounds';
+export { getDiagramContentBounds } from './bounds';

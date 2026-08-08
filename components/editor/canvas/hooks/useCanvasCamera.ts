@@ -10,6 +10,9 @@ import {
   type WheelEvent,
 } from 'react';
 
+import type { Diagram } from '@/domain/diagram/models';
+import { getDiagramContentBounds } from '@/domain/diagram/queries/bounds';
+
 export interface CanvasSize {
   width: number;
   height: number;
@@ -32,9 +35,10 @@ const INITIAL_CAMERA: CanvasCamera = {
   zoom: 1,
 };
 
-const MIN_ZOOM = 1;
+const MIN_ZOOM = 0.25;
 const MAX_ZOOM = 3;
 const ZOOM_STEP = 1.1;
+const FIT_PADDING = 72;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
@@ -83,7 +87,7 @@ export function useCanvasCamera(svgRef: RefObject<SVGSVGElement | null>) {
   }, [svgRef]);
 
   const getCanvasPoint = useCallback(
-    (clientX: number, clientY: number) => {
+    (clientX: number, clientY: number): ClientPoint | null => {
       const svg = svgRef.current;
 
       if (!svg) {
@@ -117,7 +121,7 @@ export function useCanvasCamera(svgRef: RefObject<SVGSVGElement | null>) {
   }, []);
 
   const handleWheel = useCallback(
-    (event: WheelEvent<SVGSVGElement>) => {
+    (event: WheelEvent) => {
       event.preventDefault();
 
       const point = getCanvasPoint(event.clientX, event.clientY);
@@ -149,7 +153,37 @@ export function useCanvasCamera(svgRef: RefObject<SVGSVGElement | null>) {
     setCamera(INITIAL_CAMERA);
   }, []);
 
-  const startPan = useCallback((event: PointerEvent<SVGSVGElement>) => {
+  const fitToDiagram = useCallback(
+    (diagram: Diagram) => {
+      const bounds = getDiagramContentBounds(diagram);
+
+      if (!bounds) {
+        resetView();
+        return;
+      }
+
+      const availableWidth = Math.max(canvasSize.width - FIT_PADDING * 2, 1);
+      const availableHeight = Math.max(canvasSize.height - FIT_PADDING * 2, 1);
+
+      const zoom = clamp(
+        Math.min(availableWidth / bounds.width, availableHeight / bounds.height),
+        MIN_ZOOM,
+        MAX_ZOOM,
+      );
+
+      const diagramCenterX = bounds.x + bounds.width / 2;
+      const diagramCenterY = bounds.y + bounds.height / 2;
+
+      setCamera({
+        zoom,
+        x: canvasSize.width / 2 - diagramCenterX * zoom,
+        y: canvasSize.height / 2 - diagramCenterY * zoom,
+      });
+    },
+    [canvasSize, resetView],
+  );
+
+  const startPan = useCallback((event: PointerEvent) => {
     if (event.button !== 0 && event.button !== 1) {
       return;
     }
@@ -164,7 +198,7 @@ export function useCanvasCamera(svgRef: RefObject<SVGSVGElement | null>) {
   }, []);
 
   const pan = useCallback(
-    (event: PointerEvent<SVGSVGElement>) => {
+    (event: PointerEvent) => {
       const panStart = panStartRef.current;
 
       if (!panStart) {
@@ -210,6 +244,7 @@ export function useCanvasCamera(svgRef: RefObject<SVGSVGElement | null>) {
     zoomIn,
     zoomOut,
     resetView,
+    fitToDiagram,
     zoomPercentage: Math.round(camera.zoom * 100),
     canZoomIn: camera.zoom < MAX_ZOOM,
     canZoomOut: camera.zoom > MIN_ZOOM,

@@ -1,5 +1,5 @@
 import type { Diagram } from '@/domain/diagram/models';
-import { getDiagramExportBounds } from '@/domain/diagram/queries/elements';
+import { getDiagramContentBounds } from '@/domain/diagram/queries/elements';
 
 import { BRANDING } from '@/config/branding';
 
@@ -78,7 +78,7 @@ function loadImage(source: string): Promise<HTMLImageElement> {
 
 function getExportViewport(diagram: Diagram): ExportViewport {
   return (
-    getDiagramExportBounds(diagram) ?? {
+    getDiagramContentBounds(diagram) ?? {
       x: 0,
       y: 0,
       width: EMPTY_EXPORT_WIDTH,
