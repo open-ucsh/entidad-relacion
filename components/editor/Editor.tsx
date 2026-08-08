@@ -9,35 +9,33 @@ import { Inspector } from '@/components/inspector/Inspector';
 import { Toolbar } from '@/components/toolbar/Toolbar';
 import { useDiagramStore } from '@/state/diagram-store';
 
+const TOOLBAR_WIDTH = '240px';
+const INSPECTOR_WIDTH = '320px';
+
+function getWorkspaceColumns(toolbarOpen: boolean, inspectorOpen: boolean) {
+  const toolbarWidth = toolbarOpen ? TOOLBAR_WIDTH : '0px';
+  const inspectorWidth = inspectorOpen ? INSPECTOR_WIDTH : '0px';
+
+  return `${toolbarWidth} minmax(0, 1fr) ${inspectorWidth}`;
+}
+
 export function Editor() {
   const diagram = useDiagramStore((state) => state.diagram);
 
   const [toolbarOpen, setToolbarOpen] = useState(true);
   const [inspectorOpen, setInspectorOpen] = useState(true);
 
+  const workspaceColumns = getWorkspaceColumns(toolbarOpen, inspectorOpen);
+
   return (
     <div className="flex h-screen min-h-0 flex-col overflow-hidden">
-      {/* Header */}
-      <div className="shrink-0">
-        <Header />
-      </div>
+      <Header />
 
-      {/* Editor */}
       <main className="relative flex min-h-0 flex-1 overflow-hidden">
         <div
-          className={[
-            'grid h-full min-h-0 min-w-0 flex-1 overflow-hidden',
-            'transition-[grid-template-columns] duration-200 ease-out',
-            toolbarOpen && inspectorOpen
-              ? 'grid-cols-[240px_minmax(0,1fr)_320px]'
-              : toolbarOpen
-                ? 'grid-cols-[240px_minmax(0,1fr)_0px]'
-                : inspectorOpen
-                  ? 'grid-cols-[0px_minmax(0,1fr)_320px]'
-                  : 'grid-cols-[0px_minmax(0,1fr)_0px]',
-          ].join(' ')}
+          className="grid h-full min-h-0 min-w-0 flex-1 overflow-hidden transition-[grid-template-columns] duration-200 ease-out"
+          style={{ gridTemplateColumns: workspaceColumns }}
         >
-          {/* Toolbar */}
           <div
             className={[
               'h-full min-h-0 min-w-0 overflow-hidden',
@@ -48,12 +46,10 @@ export function Editor() {
             <Toolbar />
           </div>
 
-          {/* Canvas */}
           <div className="relative h-full min-h-0 min-w-0 overflow-hidden">
             <Canvas diagram={diagram} />
           </div>
 
-          {/* Inspector */}
           <div
             className={[
               'h-full min-h-0 min-w-0 overflow-hidden',
@@ -65,7 +61,6 @@ export function Editor() {
           </div>
         </div>
 
-        {/* Toggle toolbar */}
         <button
           type="button"
           onClick={() => {
@@ -79,9 +74,9 @@ export function Editor() {
             'border border-border bg-background',
             'text-text-muted shadow-sm',
             'transition-[left] duration-200',
-            'hover:bg-muted hover:text-text',
+            'hover:bg-surface-hover hover:text-text',
             'focus-visible:outline-none',
-            'focus-visible:ring-2 focus-visible:ring-ring/40',
+            'focus-visible:ring-2 focus-visible:ring-brand-primary/40',
             toolbarOpen ? 'left-60 rounded-r-md' : 'left-0 rounded-r-md',
           ].join(' ')}
         >
@@ -101,9 +96,9 @@ export function Editor() {
             'border border-border bg-background',
             'text-text-muted shadow-sm',
             'transition-[right] duration-200',
-            'hover:bg-muted hover:text-text',
+            'hover:bg-surface-hover hover:text-text',
             'focus-visible:outline-none',
-            'focus-visible:ring-2 focus-visible:ring-ring/40',
+            'focus-visible:ring-2 focus-visible:ring-brand-primary/40',
             inspectorOpen ? 'right-80 rounded-l-md' : 'right-0 rounded-l-md',
           ].join(' ')}
         >
