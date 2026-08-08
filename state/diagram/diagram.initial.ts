@@ -1,7 +1,7 @@
 import { createId } from '@/domain/diagram/lib/id';
 import type { Diagram } from '@/domain/diagram/models';
 
-export function createInitialDiagram(): Diagram {
+export function createInitialDiagram(name = 'Diagrama sin título'): Diagram {
   const createdAt = new Date().toISOString();
 
   return {
@@ -10,7 +10,7 @@ export function createInitialDiagram(): Diagram {
     attributes: [],
     connections: [],
     metadata: {
-      name: 'Diagrama sin título',
+      name,
       createdAt,
       updatedAt: createdAt,
       origin: 'created-in-app',

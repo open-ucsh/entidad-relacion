@@ -3,6 +3,7 @@ import type {
   Connection,
   Diagram,
   DiagramActivityType,
+  DiagramDocument,
   Entity,
   Point,
   Relationship,
@@ -16,6 +17,9 @@ export interface ElementPositionUpdate {
 
 export interface DiagramState {
   diagram: Diagram;
+  documents: DiagramDocument[];
+  activeDocumentId: string;
+
   selectedElementId: string | null;
   selectedElementIds: string[];
   connectionSourceId: string | null;
@@ -24,6 +28,12 @@ export interface DiagramState {
   setDiagram: (diagram: Diagram) => void;
   importDiagram: (diagram: Diagram) => void;
   resetDiagram: () => void;
+
+  createDocument: (name?: string) => void;
+  openDocument: (id: string) => void;
+  duplicateDocument: (id: string) => void;
+  deleteDocument: (id: string) => void;
+
   setDiagramName: (name: string) => void;
 
   setSelectedElement: (id: string | null) => void;

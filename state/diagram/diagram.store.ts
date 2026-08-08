@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { createId } from '@/domain/diagram/lib/id';
-import type { Diagram, DiagramActivityType } from '@/domain/diagram/models';
+import type { Diagram, DiagramActivityType, DiagramDocument } from '@/domain/diagram/models';
 import { findDiagramElement } from '@/domain/diagram/queries/elements';
 
 import { createInitialDiagram } from './diagram.initial';
@@ -13,6 +13,21 @@ import {
   updateDiagramConnection,
 } from './diagram.mutations';
 import type { DiagramState } from './diagram.types';
+
+interface PersistedDocumentLibrary {
+  diagram: Diagram;
+  documents: DiagramDocument[];
+  activeDocumentId: string;
+}
+
+function createDocument(name = 'Diagrama sin título'): DiagramDocument {
+  return {
+    id: createId('document'),
+    diagram: createInitialDiagram(name),
+  };
+}
+
+const initialDocument = createDocument();
 
 function appendActivity(diagram: Diagram, type: DiagramActivityType, details: string): Diagram {
   const occurredAt = new Date().toISOString();
@@ -35,47 +50,142 @@ function appendActivity(diagram: Diagram, type: DiagramActivityType, details: st
   };
 }
 
+function withActiveDiagram(
+  state: Pick<DiagramState, 'activeDocumentId' | 'documents'>,
+  diagram: Diagram,
+) {
+  return {
+    diagram,
+    documents: state.documents.map((document) =>
+      document.id === state.activeDocumentId
+        ? {
+            ...document,
+            diagram,
+          }
+        : document,
+    ),
+  };
+}
+
+function migratePersistedState(persistedState: unknown, version: number): PersistedDocumentLibrary {
+  if (version < 2) {
+    const previousState = persistedState as Partial<PersistedDocumentLibrary>;
+
+    if (previousState.diagram) {
+      const migratedDocument: DiagramDocument = {
+        id: createId('document'),
+        diagram: previousState.diagram,
+      };
+
+      return {
+        diagram: previousState.diagram,
+        documents: [migratedDocument],
+        activeDocumentId: migratedDocument.id,
+      };
+    }
+  }
+
+  return persistedState as PersistedDocumentLibrary;
+}
+
 export const useDiagramStore = create<DiagramState>()(
   persist(
     (set, get) => ({
-      diagram: createInitialDiagram(),
+      diagram: initialDocument.diagram,
+      documents: [initialDocument],
+      activeDocumentId: initialDocument.id,
+
       selectedElementId: null,
       selectedElementIds: [],
       connectionSourceId: null,
       activeTool: 'select',
 
       setDiagram: (diagram) => {
-        set({
-          diagram,
+        set((state) => ({
+          ...withActiveDiagram(state, diagram),
           selectedElementId: null,
           selectedElementIds: [],
           connectionSourceId: null,
-        });
+        }));
       },
 
       importDiagram: (diagram) => {
         const importedAt = new Date().toISOString();
 
-        set({
-          diagram: {
-            ...diagram,
-            metadata: {
-              ...diagram.metadata,
-              name: diagram.metadata.name || 'Diagrama importado',
-              origin: 'imported',
-              importedAt,
-              updatedAt: importedAt,
-            },
-            activity: [
-              ...diagram.activity,
-              {
-                id: createId('activity'),
-                type: 'diagram-imported',
-                occurredAt: importedAt,
-                details: 'Se importó un proyecto JSON en ER Designer.',
-              },
-            ],
+        const importedDiagram = {
+          ...diagram,
+          metadata: {
+            ...diagram.metadata,
+            name: diagram.metadata.name || 'Diagrama importado',
+            origin: 'imported' as const,
+            importedAt,
+            updatedAt: importedAt,
           },
+          activity: [
+            ...diagram.activity,
+            {
+              id: createId('activity'),
+              type: 'diagram-imported' as const,
+              occurredAt: importedAt,
+              details: 'Se importó un proyecto JSON en ER Designer.',
+            },
+          ],
+        };
+
+        const importedDocument: DiagramDocument = {
+          id: createId('document'),
+          diagram: importedDiagram,
+        };
+
+        set((state) => ({
+          diagram: importedDiagram,
+          documents: [...state.documents, importedDocument],
+          activeDocumentId: importedDocument.id,
+          selectedElementId: null,
+          selectedElementIds: [],
+          connectionSourceId: null,
+          activeTool: 'select',
+        }));
+      },
+
+      resetDiagram: () => {
+        set((state) => {
+          const diagram = createInitialDiagram(state.diagram.metadata.name);
+
+          return {
+            ...withActiveDiagram(state, diagram),
+            selectedElementId: null,
+            selectedElementIds: [],
+            connectionSourceId: null,
+            activeTool: 'select',
+          };
+        });
+      },
+
+      createDocument: (name) => {
+        const document = createDocument(name);
+
+        set((state) => ({
+          diagram: document.diagram,
+          documents: [...state.documents, document],
+          activeDocumentId: document.id,
+          selectedElementId: null,
+          selectedElementIds: [],
+          connectionSourceId: null,
+          activeTool: 'select',
+        }));
+      },
+
+      openDocument: (id) => {
+        const document = get().documents.find((item) => item.id === id);
+
+        if (!document) {
+          return;
+        }
+
+        set({
+          diagram: document.diagram,
+          activeDocumentId: document.id,
           selectedElementId: null,
           selectedElementIds: [],
           connectionSourceId: null,
@@ -83,9 +193,72 @@ export const useDiagramStore = create<DiagramState>()(
         });
       },
 
-      resetDiagram: () => {
+      duplicateDocument: (id) => {
+        const source = get().documents.find((document) => document.id === id);
+
+        if (!source) {
+          return;
+        }
+
+        const createdAt = new Date().toISOString();
+        const duplicatedName = `${source.diagram.metadata.name} copia`;
+
+        const duplicatedDiagram = appendActivity(
+          {
+            ...source.diagram,
+            metadata: {
+              ...source.diagram.metadata,
+              name: duplicatedName,
+              createdAt,
+              updatedAt: createdAt,
+              origin: 'created-in-app',
+              importedAt: null,
+            },
+          },
+          'diagram-created',
+          `Se creó una copia de “${source.diagram.metadata.name}”.`,
+        );
+
+        const duplicatedDocument: DiagramDocument = {
+          id: createId('document'),
+          diagram: duplicatedDiagram,
+        };
+
+        set((state) => ({
+          diagram: duplicatedDocument.diagram,
+          documents: [...state.documents, duplicatedDocument],
+          activeDocumentId: duplicatedDocument.id,
+          selectedElementId: null,
+          selectedElementIds: [],
+          connectionSourceId: null,
+          activeTool: 'select',
+        }));
+      },
+
+      deleteDocument: (id) => {
+        const documents = get().documents;
+
+        if (documents.length <= 1) {
+          return;
+        }
+
+        const remainingDocuments = documents.filter((document) => document.id !== id);
+
+        if (id !== get().activeDocumentId) {
+          set({ documents: remainingDocuments });
+          return;
+        }
+
+        const nextDocument = remainingDocuments[0];
+
+        if (!nextDocument) {
+          return;
+        }
+
         set({
-          diagram: createInitialDiagram(),
+          documents: remainingDocuments,
+          activeDocumentId: nextDocument.id,
+          diagram: nextDocument.diagram,
           selectedElementId: null,
           selectedElementIds: [],
           connectionSourceId: null,
@@ -105,19 +278,19 @@ export const useDiagramStore = create<DiagramState>()(
             return state;
           }
 
-          return {
-            diagram: appendActivity(
-              {
-                ...state.diagram,
-                metadata: {
-                  ...state.diagram.metadata,
-                  name: trimmedName,
-                },
+          const diagram = appendActivity(
+            {
+              ...state.diagram,
+              metadata: {
+                ...state.diagram.metadata,
+                name: trimmedName,
               },
-              'diagram-renamed',
-              `Se renombró el proyecto a “${trimmedName}”.`,
-            ),
-          };
+            },
+            'diagram-renamed',
+            `Se renombró el proyecto a “${trimmedName}”.`,
+          );
+
+          return withActiveDiagram(state, diagram);
         });
       },
 
@@ -173,85 +346,95 @@ export const useDiagramStore = create<DiagramState>()(
       },
 
       addEntity: (entity) => {
-        set((state) => ({
-          diagram: appendActivity(
+        set((state) => {
+          const diagram = appendActivity(
             {
               ...state.diagram,
               entities: [...state.diagram.entities, entity],
             },
             'element-created',
             `Se creó la entidad “${entity.name}”.`,
-          ),
-        }));
+          );
+
+          return withActiveDiagram(state, diagram);
+        });
       },
 
       addRelationship: (relationship) => {
-        set((state) => ({
-          diagram: appendActivity(
+        set((state) => {
+          const diagram = appendActivity(
             {
               ...state.diagram,
               relationships: [...state.diagram.relationships, relationship],
             },
             'element-created',
             `Se creó la relación “${relationship.name}”.`,
-          ),
-        }));
+          );
+
+          return withActiveDiagram(state, diagram);
+        });
       },
 
       addAttribute: (attribute) => {
-        set((state) => ({
-          diagram: appendActivity(
+        set((state) => {
+          const diagram = appendActivity(
             {
               ...state.diagram,
               attributes: [...state.diagram.attributes, attribute],
             },
             'element-created',
             `Se creó el atributo “${attribute.name}”.`,
-          ),
-        }));
+          );
+
+          return withActiveDiagram(state, diagram);
+        });
       },
 
       addConnection: (connection) => {
-        set((state) => ({
-          diagram: appendActivity(
+        set((state) => {
+          const diagram = appendActivity(
             {
               ...state.diagram,
               connections: [...state.diagram.connections, connection],
             },
             'connection-created',
             'Se creó una conexión.',
-          ),
-        }));
+          );
+
+          return withActiveDiagram(state, diagram);
+        });
       },
 
       updateElement: (id, updates) => {
         set((state) => {
           const element = findDiagramElement(state.diagram, id);
-          const diagram = updateDiagram(state.diagram, id, updates);
+          const updatedDiagram = updateDiagram(state.diagram, id, updates);
 
           const details =
             typeof updates.name === 'string' && element
               ? `Se renombró “${element.name}” a “${updates.name}”.`
               : 'Se actualizaron las propiedades de un elemento.';
 
-          return {
-            diagram: appendActivity(
-              diagram,
-              typeof updates.name === 'string' ? 'element-renamed' : 'element-updated',
-              details,
-            ),
-          };
+          const diagram = appendActivity(
+            updatedDiagram,
+            typeof updates.name === 'string' ? 'element-renamed' : 'element-updated',
+            details,
+          );
+
+          return withActiveDiagram(state, diagram);
         });
       },
 
       updateConnection: (id, updates) => {
-        set((state) => ({
-          diagram: appendActivity(
+        set((state) => {
+          const diagram = appendActivity(
             updateDiagramConnection(state.diagram, id, updates),
             'connection-updated',
             'Se actualizó la cardinalidad de una conexión.',
-          ),
-        }));
+          );
+
+          return withActiveDiagram(state, diagram);
+        });
       },
 
       moveElements: (updates) => {
@@ -259,9 +442,7 @@ export const useDiagramStore = create<DiagramState>()(
           return;
         }
 
-        set((state) => ({
-          diagram: moveDiagramElements(state.diagram, updates),
-        }));
+        set((state) => withActiveDiagram(state, moveDiagramElements(state.diagram, updates)));
       },
 
       removeElement: (id) => {
@@ -276,14 +457,18 @@ export const useDiagramStore = create<DiagramState>()(
         const removedIds = new Set(ids);
 
         set((state) => {
-          const selectedElementIds = state.selectedElementIds.filter((id) => !removedIds.has(id));
+          const selectedElementIds = state.selectedElementIds.filter(
+            (selectedId) => !removedIds.has(selectedId),
+          );
+
+          const diagram = appendActivity(
+            removeDiagramElements(state.diagram, ids),
+            'elements-removed',
+            `Se eliminaron ${ids.length} elemento${ids.length === 1 ? '' : 's'}.`,
+          );
 
           return {
-            diagram: appendActivity(
-              removeDiagramElements(state.diagram, ids),
-              'elements-removed',
-              `Se eliminaron ${ids.length} elemento${ids.length === 1 ? '' : 's'}.`,
-            ),
+            ...withActiveDiagram(state, diagram),
             selectedElementIds,
             selectedElementId: selectedElementIds.at(-1) ?? null,
             connectionSourceId:
@@ -295,9 +480,7 @@ export const useDiagramStore = create<DiagramState>()(
       },
 
       recordActivity: (type, details) => {
-        set((state) => ({
-          diagram: appendActivity(state.diagram, type, details),
-        }));
+        set((state) => withActiveDiagram(state, appendActivity(state.diagram, type, details)));
       },
 
       handleConnectClick: (id) => {
@@ -334,12 +517,15 @@ export const useDiagramStore = create<DiagramState>()(
       },
     }),
     {
-      name: 'er-designer-active-project',
-      version: 1,
+      name: 'er-designer-documents',
+      version: 2,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         diagram: state.diagram,
+        documents: state.documents,
+        activeDocumentId: state.activeDocumentId,
       }),
+      migrate: migratePersistedState,
     },
   ),
 );

@@ -6,3 +6,4 @@ export * from './entity';
 export * from './relationship';
 export * from './tool';
 export * from './activity';
+export * from './document';
