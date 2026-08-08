@@ -99,9 +99,4 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
   clearSelection: () => {
     set({ selectedElementId: null });
   },
-  exportHandler: null,
-
-  setExportHandler: (exportHandler) => {
-    set({ exportHandler });
-  },
 }));

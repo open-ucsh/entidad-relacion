@@ -1,5 +1,4 @@
 import type { Attribute, Connection, Diagram, Entity, Relationship, Tool } from '@/domain/models';
-import type { ExportFormat } from '@/components/canvas/hooks/useCanvasExport';
 
 export interface DiagramState {
   diagram: Diagram;
@@ -28,8 +27,6 @@ export interface DiagramState {
   handleConnectClick: (id: string) => void;
 
   clearSelection: () => void;
-  exportHandler: ((format: ExportFormat) => void) | null;
-  setExportHandler: (handler: ((format: ExportFormat) => void) | null) => void;
 }
 
 export const initialDiagram: Diagram = {
