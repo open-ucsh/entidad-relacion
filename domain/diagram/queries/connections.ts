@@ -18,10 +18,11 @@ export function getConnectionEndpoints(
     return null;
   }
 
-  return {
-    from,
-    to,
-  };
+  return { from, to };
+}
+
+export function findDiagramConnection(diagram: Diagram, id: string): Connection | undefined {
+  return diagram.connections.find((connection) => connection.id === id);
 }
 
 export function formatConnectionCardinality(connection: Connection): string | null {

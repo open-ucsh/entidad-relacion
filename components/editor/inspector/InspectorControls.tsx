@@ -1,11 +1,11 @@
 import type { ReactNode } from 'react';
 
-interface Option<T extends string> {
+interface Option<T extends string | number> {
   label: string;
   value: T;
 }
 
-interface SegmentedControlProps<T extends string> {
+interface SegmentedControlProps<T extends string | number> {
   value: T;
   options: readonly Option<T>[];
   onChange: (value: T) => void;
@@ -27,7 +27,7 @@ export function SectionTitle({ children }: SectionTitleProps) {
   );
 }
 
-export function SegmentedControl<T extends string>({
+export function SegmentedControl<T extends string | number>({
   value,
   options,
   onChange,
@@ -39,7 +39,7 @@ export function SegmentedControl<T extends string>({
 
         return (
           <button
-            key={option.value}
+            key={String(option.value)}
             type="button"
             onClick={() => {
               onChange(option.value);

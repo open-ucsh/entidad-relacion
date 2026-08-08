@@ -1,12 +1,15 @@
 import type { PointerEvent } from 'react';
 
+import type { Diagram, Tool } from '@/domain/diagram/models';
+import {
+  formatConnectionCardinality,
+  getConnectionEndpoints,
+} from '@/domain/diagram/queries/connections';
+
 import { AttributeShape } from './elements/AttributeShape';
 import { ConnectionShape } from './elements/ConnectionShape';
 import { EntityShape } from './elements/EntityShape';
 import { RelationshipShape } from './elements/RelationshipShape';
-import type { Diagram, Tool } from '@/domain/diagram/models';
-import { getConnectionEndpoints } from '@/domain/diagram/queries/connections';
-
 import { useCanvasElementInteraction } from './hooks/useCanvasElementInteraction';
 
 interface CanvasLayersProps {
@@ -68,6 +71,7 @@ export function CanvasLayers({
               from={endpoints.from}
               to={endpoints.to}
               selected={selectedElementIds.includes(connection.id)}
+              cardinalityLabel={formatConnectionCardinality(connection)}
               onClick={(event) => {
                 handleConnectionClick(event, connection.id);
               }}
