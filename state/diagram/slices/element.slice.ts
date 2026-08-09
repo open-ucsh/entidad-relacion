@@ -1,11 +1,62 @@
 import { createId } from '@/domain/diagram/lib/id';
-import { findDiagramElement } from '@/domain/diagram/queries/elements';
+import { distance } from '@/domain/diagram/lib/geometry';
+import { findDiagramElement, getDiagramElements } from '@/domain/diagram/queries/elements';
 
 import { appendDiagramActivity, replaceActiveDiagram } from '../diagram.helpers';
 import { moveDiagramElements, removeDiagramElements, updateDiagram } from '../diagram.mutations';
 import type { DiagramStoreSlice, ElementSlice } from '../diagram.types';
 
 const DUPLICATE_OFFSET = 32;
+const ATTRIBUTE_DISTANCE = 120;
+const MIN_ATTRIBUTE_DISTANCE = 85;
+
+const ATTRIBUTE_DIRECTIONS = [
+  { x: 1, y: 0 },
+  { x: 0.7, y: 0.7 },
+  { x: 0, y: 1 },
+  { x: -0.7, y: 0.7 },
+  { x: -1, y: 0 },
+  { x: -0.7, y: -0.7 },
+  { x: 0, y: -1 },
+  { x: 0.7, y: -0.7 },
+] as const;
+
+function getConnectedAttributePosition(
+  diagram: Parameters<typeof getDiagramElements>[0],
+  parentId: string,
+) {
+  const parent = findDiagramElement(diagram, parentId);
+
+  if (!parent) {
+    return null;
+  }
+
+  const occupiedPositions = getDiagramElements(diagram).map((element) => element.position);
+
+  for (let ring = 1; ring <= 4; ring += 1) {
+    const distanceFromParent = ATTRIBUTE_DISTANCE * ring;
+
+    for (const direction of ATTRIBUTE_DIRECTIONS) {
+      const position = {
+        x: parent.position.x + direction.x * distanceFromParent,
+        y: parent.position.y + direction.y * distanceFromParent,
+      };
+
+      const isFree = occupiedPositions.every(
+        (occupiedPosition) => distance(occupiedPosition, position) > MIN_ATTRIBUTE_DISTANCE,
+      );
+
+      if (isFree) {
+        return position;
+      }
+    }
+  }
+
+  return {
+    x: parent.position.x + ATTRIBUTE_DISTANCE,
+    y: parent.position.y,
+  };
+}
 
 export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) => ({
   addEntity: (entity) => {
@@ -50,6 +101,60 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
       );
 
       return replaceActiveDiagram(state, diagram);
+    });
+  },
+
+  createConnectedAttribute: (parentId) => {
+    set((state) => {
+      const parent = findDiagramElement(state.diagram, parentId);
+
+      if (!parent || parent.type === 'attribute') {
+        return state;
+      }
+
+      const position = getConnectedAttributePosition(state.diagram, parentId);
+
+      if (!position) {
+        return state;
+      }
+
+      const attribute = {
+        id: createId('attribute'),
+        type: 'attribute' as const,
+        name: 'Nuevo Atributo',
+        position,
+        keyType: 'normal' as const,
+        unique: false,
+        multivalued: false,
+        optional: false,
+        composite: false,
+        derived: false,
+      };
+
+      const connection = {
+        id: createId('connection'),
+        type: 'connection' as const,
+        fromId: parent.id,
+        toId: attribute.id,
+        minimum: 'unspecified' as const,
+        maximum: 'unspecified' as const,
+      };
+
+      const diagram = appendDiagramActivity(
+        {
+          ...state.diagram,
+          attributes: [...state.diagram.attributes, attribute],
+          connections: [...state.diagram.connections, connection],
+        },
+        'element-created',
+        `Se agregó el atributo “${attribute.name}” a “${parent.name}”.`,
+      );
+
+      return {
+        ...replaceActiveDiagram(state, diagram),
+        selectedElementId: attribute.id,
+        selectedElementIds: [attribute.id],
+      };
     });
   },
 

@@ -1,3 +1,5 @@
+import { Plus } from 'lucide-react';
+
 import type { AttributeKeyType, EntityKind, RelationshipKind } from '@/domain/diagram/models';
 import type { DiagramElement } from '@/domain/diagram/queries/elements';
 
@@ -24,9 +26,35 @@ const RELATIONSHIP_KIND_OPTIONS = [
 interface InspectorElementContentProps {
   element: DiagramElement;
   updateElement: (id: string, updates: Partial<DiagramElement>) => void;
+  onAddAttribute: (parentId: string) => void;
 }
 
-export function InspectorElementContent({ element, updateElement }: InspectorElementContentProps) {
+function AddAttributeButton({
+  parentId,
+  onAddAttribute,
+}: {
+  parentId: string;
+  onAddAttribute: (parentId: string) => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        onAddAttribute(parentId);
+      }}
+      className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-brand-primary/40 bg-brand-primary/5 px-3 py-2.5 text-sm font-medium text-brand-primary transition-colors hover:bg-brand-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40"
+    >
+      <Plus size={16} aria-hidden="true" />
+      Agregar atributo
+    </button>
+  );
+}
+
+export function InspectorElementContent({
+  element,
+  updateElement,
+  onAddAttribute,
+}: InspectorElementContentProps) {
   if (element.type === 'entity') {
     return (
       <>
@@ -40,6 +68,12 @@ export function InspectorElementContent({ element, updateElement }: InspectorEle
               updateElement(element.id, { kind });
             }}
           />
+        </InspectorField>
+
+        <SectionTitle>Atributos</SectionTitle>
+
+        <InspectorField label="Añadir a esta entidad">
+          <AddAttributeButton parentId={element.id} onAddAttribute={onAddAttribute} />
         </InspectorField>
       </>
     );
@@ -119,6 +153,12 @@ export function InspectorElementContent({ element, updateElement }: InspectorEle
             updateElement(element.id, { kind });
           }}
         />
+      </InspectorField>
+
+      <SectionTitle>Atributos</SectionTitle>
+
+      <InspectorField label="Añadir a esta relación">
+        <AddAttributeButton parentId={element.id} onAddAttribute={onAddAttribute} />
       </InspectorField>
     </>
   );

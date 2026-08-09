@@ -53,9 +53,12 @@ export interface ElementSlice {
   addEntity: (entity: Entity) => void;
   addRelationship: (relationship: Relationship) => void;
   addAttribute: (attribute: Attribute) => void;
+  createConnectedAttribute: (parentId: string) => void;
 
   updateElement: (id: string, updates: Partial<Entity | Relationship | Attribute>) => void;
+
   duplicateSelectedElements: () => void;
+
   moveElements: (updates: ElementPositionUpdate[]) => void;
 
   removeElement: (id: string) => void;
