@@ -68,6 +68,7 @@ export function Editor() {
     <div className="flex h-full min-h-0 flex-col">
       <Header
         diagramName={diagram.metadata.name}
+        updatedAt={diagram.metadata.updatedAt}
         canUndo={canUndo}
         canRedo={canRedo}
         onRenameDiagram={setDiagramName}

@@ -41,8 +41,8 @@ export function ProjectNameEditor({ name, onCommit }: ProjectNameEditorProps) {
 
   if (isEditing) {
     return (
-      <div className="flex min-w-0 items-center gap-2">
-        <FileText size={15} className="shrink-0 text-white/65" aria-hidden="true" />
+      <div className="flex items-center gap-2">
+        <FileText size={15} className="shrink-0 text-white/60" aria-hidden="true" />
 
         <input
           ref={inputRef}
@@ -62,7 +62,7 @@ export function ProjectNameEditor({ name, onCommit }: ProjectNameEditorProps) {
             }
           }}
           aria-label="Nombre del proyecto"
-          className="w-52 rounded-md border border-white/25 bg-white/10 px-2 py-1 text-sm font-medium text-white outline-none placeholder:text-white/50 focus:border-white/60 focus:ring-2 focus:ring-white/20"
+          className="w-52 rounded-md border border-white/25 bg-white/10 px-2 py-1 text-sm font-medium text-white outline-none focus:border-white/60 focus:ring-2 focus:ring-white/20"
         />
       </div>
     );
@@ -73,11 +73,11 @@ export function ProjectNameEditor({ name, onCommit }: ProjectNameEditorProps) {
       type="button"
       onClick={startEditing}
       title="Cambiar nombre del proyecto"
-      className="group flex min-w-0 items-center gap-2 rounded-md px-2 py-1 text-left transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+      className="group flex max-w-52 items-center gap-2 rounded-md px-1 py-0.5 text-left transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
     >
-      <FileText size={15} className="shrink-0 text-white/65" aria-hidden="true" />
+      <FileText size={15} className="shrink-0 text-white/60" aria-hidden="true" />
 
-      <span className="max-w-52 truncate text-sm font-medium text-white">{name}</span>
+      <span className="truncate text-sm font-medium text-white">{name}</span>
 
       <Pencil
         size={13}
