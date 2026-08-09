@@ -5,6 +5,8 @@ import type { PointerEvent, RefObject } from 'react';
 import type { Diagram } from '@/domain/diagram/models';
 import { findDiagramElement } from '@/domain/diagram/queries/elements';
 import { useDiagramStore } from '@/state/diagram/diagram.store';
+import { useCreateDiagramElement } from '@/components/editor/hooks/useCreateDiagramElement';
+import type { Tool } from '@/domain/diagram/models';
 
 import { CanvasGrid } from './CanvasGrid';
 import { CanvasInteraction } from './CanvasInteraction';
@@ -25,11 +27,17 @@ interface CanvasProps {
   svgRef: RefObject<SVGSVGElement | null>;
 }
 
+function isCreatableTool(tool: Tool): tool is 'entity' | 'relationship' | 'attribute' {
+  return tool === 'entity' || tool === 'relationship' || tool === 'attribute';
+}
+
 export function Canvas({ diagram, svgRef }: CanvasProps) {
   const activeTool = useDiagramStore((state) => state.activeTool);
   const selectedElementId = useDiagramStore((state) => state.selectedElementId);
   const selectedElementIds = useDiagramStore((state) => state.selectedElementIds);
   const connectionSourceId = useDiagramStore((state) => state.connectionSourceId);
+  const setActiveTool = useDiagramStore((state) => state.setActiveTool);
+  const { createDiagramElementAt } = useCreateDiagramElement();
 
   const removeElement = useDiagramStore((state) => state.removeElement);
   const setSelectedElement = useDiagramStore((state) => state.setSelectedElement);
@@ -90,12 +98,19 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
       clearSelection,
     });
 
-  const { editingElement, editingName, setEditingName, startEditing, cancelEditing, saveEditing } =
-    useInlineElementNameEditing({
-      diagram,
-      onSelectElement: setSelectedElement,
-      updateElement,
-    });
+  const {
+    editingElement,
+    editingName,
+    setEditingName,
+    startEditing,
+    startEditingElement,
+    cancelEditing,
+    saveEditing,
+  } = useInlineElementNameEditing({
+    diagram,
+    onSelectElement: setSelectedElement,
+    updateElement,
+  });
 
   const selectedElement = selectedElementId
     ? findDiagramElement(diagram, selectedElementId)
@@ -106,6 +121,21 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
     diagram.connections.some((connection) => connection.id === selectedElementId);
 
   function handlePointerDown(event: PointerEvent<SVGSVGElement>) {
+    if (isCreatableTool(activeTool) && event.button === 0) {
+      const point = getWorldPoint(event.nativeEvent);
+
+      if (!point) {
+        return;
+      }
+
+      const element = createDiagramElementAt(activeTool, point);
+
+      startEditingElement(element);
+      setActiveTool('select');
+
+      return;
+    }
+
     const shouldStartSelection = activeTool === 'select' && event.button === 0 && !event.shiftKey;
 
     if (shouldStartSelection && startSelection(event)) {
@@ -138,7 +168,13 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
       <svg
         ref={svgRef}
         className={`block h-full w-full touch-none ${
-          isPanning ? 'cursor-grabbing' : activeTool === 'select' ? 'cursor-default' : 'cursor-grab'
+          isPanning
+            ? 'cursor-grabbing'
+            : isCreatableTool(activeTool)
+              ? 'cursor-crosshair'
+              : activeTool === 'select'
+                ? 'cursor-default'
+                : 'cursor-grab'
         }`}
         viewBox={`0 0 ${canvasSize.width} ${canvasSize.height}`}
         onWheel={handleWheel}

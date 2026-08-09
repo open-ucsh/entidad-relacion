@@ -24,20 +24,25 @@ export function useInlineElementNameEditing({
     ? findDiagramElement(diagram, editingElementId)
     : undefined;
 
+  const startEditingElement = useCallback(
+    (element: DiagramElement) => {
+      skipCommitRef.current = false;
+      onSelectElement(element.id);
+      setEditingName(element.name);
+      setEditingElementId(element.id);
+    },
+    [onSelectElement],
+  );
+
   const startEditing = useCallback(
     (id: string) => {
       const element = findDiagramElement(diagram, id);
 
-      if (!element) {
-        return;
+      if (element) {
+        startEditingElement(element);
       }
-
-      skipCommitRef.current = false;
-      onSelectElement(id);
-      setEditingName(element.name);
-      setEditingElementId(id);
     },
-    [diagram, onSelectElement],
+    [diagram, startEditingElement],
   );
 
   const cancelEditing = useCallback(() => {
@@ -65,6 +70,7 @@ export function useInlineElementNameEditing({
     editingName,
     setEditingName,
     startEditing,
+    startEditingElement,
     cancelEditing,
     saveEditing,
   };
