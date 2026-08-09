@@ -32,36 +32,59 @@ export const createConnectionSlice: DiagramStoreSlice<ConnectionSlice> = (set, g
     });
   },
 
+  beginConnection: (sourceId) => {
+    set({
+      connectionSourceId: sourceId,
+    });
+  },
+
+  cancelConnection: () => {
+    set({
+      connectionSourceId: null,
+    });
+  },
+
+  connectElements: (fromId, toId) => {
+    if (fromId === toId) {
+      return;
+    }
+
+    const { addConnection, diagram } = get();
+
+    const alreadyExists = diagram.connections.some(
+      (connection) =>
+        (connection.fromId === fromId && connection.toId === toId) ||
+        (connection.fromId === toId && connection.toId === fromId),
+    );
+
+    if (alreadyExists) {
+      return;
+    }
+
+    addConnection({
+      id: createId('connection'),
+      type: 'connection',
+      fromId,
+      toId,
+      minimum: 'unspecified',
+      maximum: 'unspecified',
+    });
+  },
+
   handleConnectClick: (id) => {
-    const { addConnection, connectionSourceId, diagram } = get();
+    const { beginConnection, cancelConnection, connectElements, connectionSourceId } = get();
 
     if (!connectionSourceId) {
-      set({ connectionSourceId: id });
+      beginConnection(id);
       return;
     }
 
     if (connectionSourceId === id) {
-      set({ connectionSourceId: null });
+      cancelConnection();
       return;
     }
 
-    const alreadyExists = diagram.connections.some(
-      (connection) =>
-        (connection.fromId === connectionSourceId && connection.toId === id) ||
-        (connection.fromId === id && connection.toId === connectionSourceId),
-    );
-
-    if (!alreadyExists) {
-      addConnection({
-        id: createId('connection'),
-        type: 'connection',
-        fromId: connectionSourceId,
-        toId: id,
-        minimum: 'unspecified',
-        maximum: 'unspecified',
-      });
-    }
-
-    set({ connectionSourceId: null });
+    connectElements(connectionSourceId, id);
+    cancelConnection();
   },
 });

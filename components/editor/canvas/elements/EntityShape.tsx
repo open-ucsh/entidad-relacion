@@ -2,6 +2,7 @@ import type { MouseEvent, PointerEvent } from 'react';
 
 import type { Entity } from '@/domain/diagram/models';
 
+import { ConnectionHandle } from './ConnectionHandle';
 import { ElementInteractionGroup } from './ElementInteractionGroup';
 
 const WIDTH = 120;
@@ -12,17 +13,21 @@ const DIAMOND_MARGIN_Y = 10;
 interface EntityShapeProps {
   entity: Entity;
   selected: boolean;
+  showConnectionHandle: boolean;
   onClick: (event: MouseEvent<SVGGElement>) => void;
   onDoubleClick: () => void;
-  onPointerDown?: (event: PointerEvent<SVGGElement>) => void;
+  onPointerDown?: ((event: PointerEvent<SVGGElement>) => void) | undefined;
+  onConnectionPointerDown: (event: PointerEvent<SVGGElement>) => void;
 }
 
 export function EntityShape({
   entity,
   selected,
+  showConnectionHandle,
   onClick,
   onDoubleClick,
   onPointerDown,
+  onConnectionPointerDown,
 }: EntityShapeProps) {
   const { x: centerX, y: centerY } = entity.position;
   const x = centerX - WIDTH / 2;
@@ -43,9 +48,10 @@ export function EntityShape({
 
   return (
     <ElementInteractionGroup
+      elementId={entity.id}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
-      onPointerDown={onPointerDown}
+      {...(onPointerDown ? { onPointerDown } : {})}
     >
       {isWeak && (
         <rect
@@ -86,6 +92,14 @@ export function EntityShape({
       >
         {entity.name}
       </text>
+
+      {selected && showConnectionHandle && (
+        <ConnectionHandle
+          x={centerX + WIDTH / 2 + 10}
+          y={centerY}
+          onPointerDown={onConnectionPointerDown}
+        />
+      )}
     </ElementInteractionGroup>
   );
 }

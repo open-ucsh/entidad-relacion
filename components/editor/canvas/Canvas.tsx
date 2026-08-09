@@ -1,12 +1,11 @@
 'use client';
 
-import type { PointerEvent, RefObject } from 'react';
+import { useRef, useState, type PointerEvent, type RefObject } from 'react';
 
-import type { Diagram } from '@/domain/diagram/models';
-import { findDiagramElement } from '@/domain/diagram/queries/elements';
-import { useDiagramStore } from '@/state/diagram/diagram.store';
 import { useCreateDiagramElement } from '@/components/editor/hooks/useCreateDiagramElement';
-import type { Tool } from '@/domain/diagram/models';
+import type { Diagram, Point, Tool } from '@/domain/diagram/models';
+import { findDiagramElement, getElementPosition } from '@/domain/diagram/queries/elements';
+import { useDiagramStore } from '@/state/diagram/diagram.store';
 
 import { CanvasGrid } from './CanvasGrid';
 import { CanvasInteraction } from './CanvasInteraction';
@@ -27,8 +26,25 @@ interface CanvasProps {
   svgRef: RefObject<SVGSVGElement | null>;
 }
 
+interface ConnectionPreview {
+  from: Point;
+  to: Point;
+}
+
 function isCreatableTool(tool: Tool): tool is 'entity' | 'relationship' | 'attribute' {
   return tool === 'entity' || tool === 'relationship' || tool === 'attribute';
+}
+
+function getElementIdAtPoint(clientX: number, clientY: number): string | null {
+  const target = document.elementFromPoint(clientX, clientY);
+
+  if (!(target instanceof Element)) {
+    return null;
+  }
+
+  return (
+    target.closest('[data-diagram-element-id]')?.getAttribute('data-diagram-element-id') ?? null
+  );
 }
 
 export function Canvas({ diagram, svgRef }: CanvasProps) {
@@ -36,9 +52,8 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
   const selectedElementId = useDiagramStore((state) => state.selectedElementId);
   const selectedElementIds = useDiagramStore((state) => state.selectedElementIds);
   const connectionSourceId = useDiagramStore((state) => state.connectionSourceId);
-  const setActiveTool = useDiagramStore((state) => state.setActiveTool);
-  const { createDiagramElementAt } = useCreateDiagramElement();
 
+  const setActiveTool = useDiagramStore((state) => state.setActiveTool);
   const removeElement = useDiagramStore((state) => state.removeElement);
   const setSelectedElement = useDiagramStore((state) => state.setSelectedElement);
   const setSelectedElements = useDiagramStore((state) => state.setSelectedElements);
@@ -46,10 +61,20 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
   const clearSelection = useDiagramStore((state) => state.clearSelection);
   const updateElement = useDiagramStore((state) => state.updateElement);
   const moveElements = useDiagramStore((state) => state.moveElements);
+
   const beginHistoryTransaction = useDiagramStore((state) => state.beginHistoryTransaction);
   const completeHistoryTransaction = useDiagramStore((state) => state.completeHistoryTransaction);
   const cancelHistoryTransaction = useDiagramStore((state) => state.cancelHistoryTransaction);
+
+  const beginConnection = useDiagramStore((state) => state.beginConnection);
+  const cancelConnection = useDiagramStore((state) => state.cancelConnection);
+  const connectElements = useDiagramStore((state) => state.connectElements);
   const handleConnectClick = useDiagramStore((state) => state.handleConnectClick);
+
+  const { createDiagramElementAt } = useCreateDiagramElement();
+
+  const directConnectionSourceRef = useRef<string | null>(null);
+  const [connectionPreview, setConnectionPreview] = useState<ConnectionPreview | null>(null);
 
   useCanvasKeyboard();
 
@@ -120,6 +145,24 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
     selectedElementId !== null &&
     diagram.connections.some((connection) => connection.id === selectedElementId);
 
+  function handleConnectionHandlePointerDown(event: PointerEvent<SVGGElement>, sourceId: string) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const from = getElementPosition(diagram, sourceId);
+    const to = getWorldPoint(event.nativeEvent);
+
+    if (!from || !to) {
+      return;
+    }
+
+    directConnectionSourceRef.current = sourceId;
+    setConnectionPreview({ from, to });
+    beginConnection(sourceId);
+
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
   function handlePointerDown(event: PointerEvent<SVGSVGElement>) {
     if (isCreatableTool(activeTool) && event.button === 0) {
       const point = getWorldPoint(event.nativeEvent);
@@ -146,25 +189,60 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
   }
 
   function handlePointerMove(event: PointerEvent<SVGSVGElement>) {
+    const sourceId = directConnectionSourceRef.current;
+
+    if (sourceId) {
+      const from = getElementPosition(diagram, sourceId);
+      const to = getWorldPoint(event.nativeEvent);
+
+      if (from && to) {
+        setConnectionPreview({ from, to });
+      }
+
+      return;
+    }
+
     pan(event);
     drag(event);
     updateSelection(event);
   }
 
   function handlePointerUp(event: PointerEvent<SVGSVGElement>) {
+    const sourceId = directConnectionSourceRef.current;
+
+    if (sourceId) {
+      const targetId = getElementIdAtPoint(event.clientX, event.clientY);
+
+      if (targetId && targetId !== sourceId) {
+        connectElements(sourceId, targetId);
+      }
+
+      directConnectionSourceRef.current = null;
+      setConnectionPreview(null);
+      cancelConnection();
+
+      return;
+    }
+
     stopPan();
     stopDrag();
     finishSelection(event);
   }
 
   function handlePointerCancel() {
+    if (directConnectionSourceRef.current) {
+      directConnectionSourceRef.current = null;
+      setConnectionPreview(null);
+      cancelConnection();
+    }
+
     stopPan();
     stopDrag();
     cancelSelection();
   }
 
   return (
-    <main className="relative h-full min-h-0 overflow-hidden">
+    <main className="relative min-h-0 flex-1 overflow-hidden">
       <svg
         ref={svgRef}
         className={`block h-full w-full touch-none ${
@@ -185,13 +263,37 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
         role="application"
         aria-label="Lienzo del diagrama Entidad-Relación"
       >
-        <CanvasInteraction>
-          <CanvasGrid camera={camera} canvasSize={canvasSize} />
+        <CanvasGrid camera={camera} canvasSize={canvasSize} />
 
+        <CanvasInteraction>
           <g
             id="diagram-world"
             transform={`translate(${camera.x} ${camera.y}) scale(${camera.zoom})`}
           >
+            {connectionPreview && (
+              <g pointerEvents="none">
+                <line
+                  x1={connectionPreview.from.x}
+                  y1={connectionPreview.from.y}
+                  x2={connectionPreview.to.x}
+                  y2={connectionPreview.to.y}
+                  stroke="var(--color-brand-primary)"
+                  strokeWidth={2}
+                  strokeDasharray="7 5"
+                  strokeLinecap="round"
+                  opacity={0.9}
+                />
+
+                <circle
+                  cx={connectionPreview.to.x}
+                  cy={connectionPreview.to.y}
+                  r={5}
+                  fill="var(--color-brand-primary)"
+                  opacity={0.9}
+                />
+              </g>
+            )}
+
             <CanvasLayers
               diagram={diagram}
               selectedElementIds={selectedElementIds}
@@ -201,6 +303,7 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
               onToggleElement={toggleSelectedElement}
               onDeleteElement={removeElement}
               onElementPointerDown={startDrag}
+              onConnectionHandlePointerDown={handleConnectionHandlePointerDown}
               onConnectClick={handleConnectClick}
               onEditElement={startEditing}
             />

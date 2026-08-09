@@ -2,6 +2,7 @@ import type { MouseEvent, PointerEvent } from 'react';
 
 import type { Relationship } from '@/domain/diagram/models';
 
+import { ConnectionHandle } from './ConnectionHandle';
 import { ElementInteractionGroup } from './ElementInteractionGroup';
 
 const WIDTH = 120;
@@ -10,17 +11,21 @@ const HEIGHT = 60;
 interface RelationshipShapeProps {
   relationship: Relationship;
   selected: boolean;
+  showConnectionHandle: boolean;
   onClick: (event: MouseEvent<SVGGElement>) => void;
   onDoubleClick: () => void;
-  onPointerDown?: (event: PointerEvent<SVGGElement>) => void;
+  onPointerDown?: ((event: PointerEvent<SVGGElement>) => void) | undefined;
+  onConnectionPointerDown: (event: PointerEvent<SVGGElement>) => void;
 }
 
 export function RelationshipShape({
   relationship,
   selected,
+  showConnectionHandle,
   onClick,
   onDoubleClick,
   onPointerDown,
+  onConnectionPointerDown,
 }: RelationshipShapeProps) {
   const { x, y } = relationship.position;
 
@@ -36,9 +41,10 @@ export function RelationshipShape({
 
   return (
     <ElementInteractionGroup
+      elementId={relationship.id}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
-      onPointerDown={onPointerDown}
+      {...(onPointerDown ? { onPointerDown } : {})}
     >
       {relationship.kind === 'identifying' && (
         <polygon
@@ -64,6 +70,10 @@ export function RelationshipShape({
       <text x={x} y={y + 4} textAnchor="middle" className="fill-text text-xs font-semibold">
         {relationship.name}
       </text>
+
+      {selected && showConnectionHandle && (
+        <ConnectionHandle x={x + WIDTH / 2 + 10} y={y} onPointerDown={onConnectionPointerDown} />
+      )}
     </ElementInteractionGroup>
   );
 }

@@ -20,7 +20,8 @@ interface CanvasLayersProps {
   onSelectElement: (id: string) => void;
   onToggleElement: (id: string) => void;
   onDeleteElement: (id: string) => void;
-  onElementPointerDown: (event: PointerEvent, id: string) => void;
+  onElementPointerDown: (event: PointerEvent<SVGGElement>, id: string) => void;
+  onConnectionHandlePointerDown: (event: PointerEvent<SVGGElement>, id: string) => void;
   onConnectClick: (id: string) => void;
   onEditElement: (id: string) => void;
 }
@@ -34,6 +35,7 @@ export function CanvasLayers({
   onToggleElement,
   onDeleteElement,
   onElementPointerDown,
+  onConnectionHandlePointerDown,
   onConnectClick,
   onEditElement,
 }: CanvasLayersProps) {
@@ -54,6 +56,8 @@ export function CanvasLayers({
     onConnectClick,
     onEditElement,
   });
+
+  const showConnectionHandles = activeTool === 'select';
 
   return (
     <>
@@ -86,6 +90,7 @@ export function CanvasLayers({
             key={entity.id}
             entity={entity}
             selected={isSelected(entity.id)}
+            showConnectionHandle={showConnectionHandles}
             onClick={(event) => {
               handleElementClick(event, entity.id);
             }}
@@ -95,6 +100,9 @@ export function CanvasLayers({
             onPointerDown={(event) => {
               handleElementPointerDown(event, entity.id);
             }}
+            onConnectionPointerDown={(event) => {
+              onConnectionHandlePointerDown(event, entity.id);
+            }}
           />
         ))}
 
@@ -103,6 +111,7 @@ export function CanvasLayers({
             key={relationship.id}
             relationship={relationship}
             selected={isSelected(relationship.id)}
+            showConnectionHandle={showConnectionHandles}
             onClick={(event) => {
               handleElementClick(event, relationship.id);
             }}
@@ -112,6 +121,9 @@ export function CanvasLayers({
             onPointerDown={(event) => {
               handleElementPointerDown(event, relationship.id);
             }}
+            onConnectionPointerDown={(event) => {
+              onConnectionHandlePointerDown(event, relationship.id);
+            }}
           />
         ))}
 
@@ -120,6 +132,7 @@ export function CanvasLayers({
             key={attribute.id}
             attribute={attribute}
             selected={isSelected(attribute.id)}
+            showConnectionHandle={showConnectionHandles}
             onClick={(event) => {
               handleElementClick(event, attribute.id);
             }}
@@ -128,6 +141,9 @@ export function CanvasLayers({
             }}
             onPointerDown={(event) => {
               handleElementPointerDown(event, attribute.id);
+            }}
+            onConnectionPointerDown={(event) => {
+              onConnectionHandlePointerDown(event, attribute.id);
             }}
           />
         ))}

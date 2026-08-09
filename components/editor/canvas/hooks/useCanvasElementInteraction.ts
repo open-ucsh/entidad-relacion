@@ -9,7 +9,7 @@ interface UseCanvasElementInteractionProps {
   onSelectElement: (id: string) => void;
   onToggleElement: (id: string) => void;
   onDeleteElement: (id: string) => void;
-  onElementPointerDown: (event: PointerEvent, id: string) => void;
+  onElementPointerDown: (event: PointerEvent<SVGGElement>, id: string) => void;
   onConnectClick: (id: string) => void;
   onEditElement: (id: string) => void;
 }
@@ -62,7 +62,7 @@ export function useCanvasElementInteraction({
     onSelectElement(id);
   }
 
-  function handleElementPointerDown(event: PointerEvent, id: string) {
+  function handleElementPointerDown(event: PointerEvent<SVGGElement>, id: string) {
     event.stopPropagation();
 
     if (activeTool === 'delete' || activeTool === 'connect') {

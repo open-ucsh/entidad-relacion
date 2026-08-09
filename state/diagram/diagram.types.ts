@@ -70,6 +70,10 @@ export interface ConnectionSlice {
 
   updateConnection: (id: string, updates: Partial<Connection>) => void;
 
+  beginConnection: (sourceId: string) => void;
+  cancelConnection: () => void;
+  connectElements: (fromId: string, toId: string) => void;
+
   handleConnectClick: (id: string) => void;
 }
 
