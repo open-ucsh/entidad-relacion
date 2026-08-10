@@ -1,4 +1,4 @@
-import { createId } from '@/domain/diagram/lib/id';
+import { createConnection } from '@/domain/diagram/factories/connection';
 import { canConnectElementsById } from '@/domain/diagram/validation/connections';
 
 import { appendDiagramActivity, replaceActiveDiagram } from '../helpers';
@@ -81,14 +81,7 @@ export const createConnectionSlice: DiagramStoreSlice<ConnectionSlice> = (set, g
       return;
     }
 
-    addConnection({
-      id: createId('connection'),
-      type: 'connection',
-      fromId,
-      toId,
-      minimum: 'unspecified',
-      maximum: 'unspecified',
-    });
+    addConnection(createConnection(fromId, toId));
   },
 
   handleConnectClick: (id) => {

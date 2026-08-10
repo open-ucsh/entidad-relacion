@@ -1,5 +1,8 @@
+import { createAttribute } from '@/domain/diagram/factories/element';
+import { createConnection } from '@/domain/diagram/factories/connection';
 import { createId } from '@/domain/diagram/lib/id';
 import { distance } from '@/domain/diagram/lib/geometry';
+import type { Diagram } from '@/domain/diagram/models';
 import { findDiagramElement, getDiagramElements } from '@/domain/diagram/queries/elements';
 
 import { appendDiagramActivity, replaceActiveDiagram } from '../helpers';
@@ -21,10 +24,7 @@ const ATTRIBUTE_DIRECTIONS = [
   { x: 0.7, y: -0.7 },
 ] as const;
 
-function getConnectedAttributePosition(
-  diagram: Parameters<typeof getDiagramElements>[0],
-  parentId: string,
-) {
+function getConnectedAttributePosition(diagram: Diagram, parentId: string) {
   const parent = findDiagramElement(diagram, parentId);
 
   if (!parent) {
@@ -118,27 +118,8 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
         return state;
       }
 
-      const attribute = {
-        id: createId('attribute'),
-        type: 'attribute' as const,
-        name: 'Nuevo Atributo',
-        position,
-        keyType: 'normal' as const,
-        unique: false,
-        multivalued: false,
-        optional: false,
-        composite: false,
-        derived: false,
-      };
-
-      const connection = {
-        id: createId('connection'),
-        type: 'connection' as const,
-        fromId: parent.id,
-        toId: attribute.id,
-        minimum: 'unspecified' as const,
-        maximum: 'unspecified' as const,
-      };
+      const attribute = createAttribute(position);
+      const connection = createConnection(parent.id, attribute.id);
 
       const diagram = appendDiagramActivity(
         {
