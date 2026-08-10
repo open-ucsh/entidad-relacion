@@ -1,5 +1,5 @@
 import type { Diagram } from '@/domain/diagram/models';
-import type { DiagramElement } from '@/domain/diagram/queries/elements';
+import type { DiagramElement } from '@/domain/diagram/models';
 
 interface CanvasStatusProps {
   diagram: Diagram;

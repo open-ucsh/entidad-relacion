@@ -3,7 +3,7 @@
 import { X } from 'lucide-react';
 import { useRef, useState } from 'react';
 
-import type { DiagramElement } from '@/domain/diagram/queries/elements';
+import type { DiagramElement } from '@/domain/diagram/models';
 
 import { INSPECTOR_TYPE_CONFIG } from './inspector-config';
 

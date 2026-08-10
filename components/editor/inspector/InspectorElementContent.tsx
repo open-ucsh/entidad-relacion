@@ -1,7 +1,7 @@
 import { Plus } from 'lucide-react';
 
 import type { AttributeKeyType, EntityKind, RelationshipKind } from '@/domain/diagram/models';
-import type { DiagramElement } from '@/domain/diagram/queries/elements';
+import type { DiagramElement } from '@/domain/diagram/models';
 
 import { InspectorField } from './InspectorField';
 import { SectionTitle, SegmentedControl, SwitchControl } from './InspectorControls';

@@ -1,12 +1,4 @@
-import type {
-  Attribute,
-  BaseElement,
-  Diagram,
-  Entity,
-  Relationship,
-} from '@/domain/diagram/models';
-
-export type DiagramElement = Entity | Relationship | Attribute;
+import type { BaseElement, Diagram, DiagramElement } from '@/domain/diagram/models';
 
 export function getDiagramElements(diagram: Diagram): DiagramElement[] {
   return [...diagram.entities, ...diagram.relationships, ...diagram.attributes];
