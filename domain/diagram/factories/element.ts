@@ -9,7 +9,7 @@ import type {
 
 export type CreatableDiagramElementType = DiagramElement['type'];
 
-export function createEntity(position: Point): Entity {
+function createEntity(position: Point): Entity {
   return {
     id: createId('entity'),
     type: 'entity',
@@ -19,7 +19,7 @@ export function createEntity(position: Point): Entity {
   };
 }
 
-export function createRelationship(position: Point): Relationship {
+function createRelationship(position: Point): Relationship {
   return {
     id: createId('relationship'),
     type: 'relationship',

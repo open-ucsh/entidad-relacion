@@ -14,17 +14,17 @@ interface ElementBounds {
   halfHeight: number;
 }
 
-export const ENTITY_SHAPE = {
+const ENTITY_SHAPE = {
   width: 120,
   height: 56,
 } as const;
 
-export const RELATIONSHIP_SHAPE = {
+const RELATIONSHIP_SHAPE = {
   width: 120,
   height: 60,
 } as const;
 
-export const ATTRIBUTE_SHAPE = {
+const ATTRIBUTE_SHAPE = {
   radiusX: 55,
   radiusY: 28,
   outerOutlineOffset: 5,

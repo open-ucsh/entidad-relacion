@@ -6,7 +6,7 @@ export function selectActiveDiagram(state: DiagramState): Diagram {
   return state.diagram;
 }
 
-export function selectActiveDocument(state: DiagramState): DiagramDocument | undefined {
+function selectActiveDocument(state: DiagramState): DiagramDocument | undefined {
   return state.documents.find((document) => document.id === state.activeDocumentId);
 }
 
