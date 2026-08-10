@@ -1,5 +1,7 @@
 import type { Diagram } from '@/domain/diagram/models';
 
+import { createDownloadFileBaseName } from './file-name';
+
 const DIAGRAM_FILE_FORMAT = 'er-designer';
 const DIAGRAM_FILE_VERSION = 1;
 
@@ -66,18 +68,6 @@ export function parseDiagramFile(content: string): Diagram {
   return parsed.diagram;
 }
 
-function getProjectFileName(projectName: string): string {
-  const normalizedName = projectName
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-
-  return normalizedName || 'diagrama-er';
-}
-
 export function downloadDiagramFile(diagram: Diagram): void {
   const file = createDiagramFile(diagram);
   const content = JSON.stringify(file, null, 2);
@@ -89,7 +79,7 @@ export function downloadDiagramFile(diagram: Diagram): void {
   const link = document.createElement('a');
 
   link.href = objectUrl;
-  link.download = `${getProjectFileName(diagram.metadata.name)}.json`;
+  link.download = `${createDownloadFileBaseName(diagram.metadata.name)}.json`;
   link.click();
 
   window.setTimeout(() => {

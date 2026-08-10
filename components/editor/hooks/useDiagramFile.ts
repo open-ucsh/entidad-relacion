@@ -4,7 +4,7 @@ import { useCallback } from 'react';
 
 import type { Diagram } from '@/domain/diagram/models';
 
-import { downloadDiagramFile, parseDiagramFile } from '../project/diagram-file';
+import { downloadDiagramFile, parseDiagramFile } from '../files/diagram-file';
 
 interface UseDiagramFileProps {
   diagram: Diagram;
