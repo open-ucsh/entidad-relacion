@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import type { ReactNode } from 'react';
 
 import { BRANDING } from '@/config/branding';
 
@@ -9,7 +10,11 @@ export const metadata: Metadata = {
   description: 'Editor visual para crear y editar diagramas Entidad-Relación.',
 };
 
-export default function RootLayout({ children }: LayoutProps<'/'>) {
+interface RootLayoutProps {
+  children: ReactNode;
+}
+
+export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="es" className="h-full">
       <body className="h-full overflow-hidden">{children}</body>
