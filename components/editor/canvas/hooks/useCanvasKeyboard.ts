@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 
 import { useDiagramTool } from '@/components/editor/hooks/useDiagramTool';
-import { getToolFromShortcut } from '@/components/editor/tool-shortcuts';
+import { getToolFromShortcut } from '@/components/editor/toolbar/tool-config';
 import { useDiagramStore } from '@/state/diagram/store';
 
 function isTypingTarget(target: EventTarget | null): boolean {

@@ -1,5 +1,12 @@
-import type { LucideIcon } from 'lucide-react';
-import { Circle, Diamond, MousePointer2, MoveRight, Square, Trash2 } from 'lucide-react';
+import {
+  Circle,
+  Diamond,
+  MousePointer2,
+  MoveRight,
+  Square,
+  Trash2,
+  type LucideIcon,
+} from 'lucide-react';
 
 import type { Tool } from '@/domain/diagram/models';
 
@@ -63,3 +70,11 @@ export const TOOL_GROUPS: ToolbarToolGroup[] = [
     ],
   },
 ];
+
+const TOOLS = TOOL_GROUPS.flatMap((group) => group.items);
+
+export function getToolFromShortcut(key: string): Tool | undefined {
+  const normalizedKey = key.toUpperCase();
+
+  return TOOLS.find((tool) => tool.shortcut === normalizedKey)?.id;
+}
