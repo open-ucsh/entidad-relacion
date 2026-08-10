@@ -24,8 +24,8 @@ export function Inspector() {
     !element && selectedElementId ? findDiagramConnection(diagram, selectedElementId) : undefined;
 
   return (
-    <aside className="flex h-full min-h-0 flex-col border-l border-border bg-surface">
-      <PanelHeader title="Inspector" />
+    <aside className="flex h-full min-h-0 flex-col bg-surface">
+      <PanelHeader title="Propiedades" />
 
       <div className="min-h-0 flex-1 overflow-y-auto">
         {connection ? (
@@ -39,7 +39,11 @@ export function Inspector() {
           </div>
         ) : element ? (
           <div className="space-y-6 p-5">
-            <InspectorHeader key={element.id} element={element} updateElement={updateElement} />
+            <InspectorHeader
+              key={`${element.id}:${element.name}`}
+              element={element}
+              updateElement={updateElement}
+            />
 
             <InspectorElementContent
               element={element}

@@ -42,7 +42,7 @@ export function InspectorHeader({ element, updateElement }: InspectorHeaderProps
       <div
         className={`flex size-10 shrink-0 items-center justify-center rounded-lg ring-1 ${config.bg} ${config.ring}`}
       >
-        <Icon size={20} className={config.text} />
+        <Icon size={19} className={config.text} aria-hidden="true" />
       </div>
 
       <div className="min-w-0 flex-1 pt-0.5">
@@ -55,6 +55,7 @@ export function InspectorHeader({ element, updateElement }: InspectorHeaderProps
             ref={inputRef}
             type="text"
             value={draftName}
+            maxLength={80}
             onChange={(event) => {
               setDraftName(event.target.value);
             }}
