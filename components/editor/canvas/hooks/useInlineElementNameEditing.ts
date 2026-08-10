@@ -2,8 +2,8 @@
 
 import { useCallback, useRef, useState } from 'react';
 
-import type { Diagram } from '@/domain/diagram/models';
-import { findDiagramElement, type DiagramElement } from '@/domain/diagram/queries/elements';
+import type { Diagram, DiagramElement } from '@/domain/diagram/models';
+import { findDiagramElement } from '@/domain/diagram/queries/elements';
 
 interface UseInlineElementNameEditingProps {
   diagram: Diagram;
