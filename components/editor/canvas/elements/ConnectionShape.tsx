@@ -7,7 +7,7 @@ interface ConnectionShapeProps {
   to: Point;
   selected: boolean;
   cardinalityLabel: string | null;
-  onClick: (event: MouseEvent) => void;
+  onClick: (event: MouseEvent<SVGGElement>) => void;
 }
 
 const CARDINALITY_OFFSET = 88;
@@ -40,7 +40,7 @@ export function ConnectionShape({
 
   return (
     <g
-      onPointerDown={(event: PointerEvent) => {
+      onPointerDown={(event: PointerEvent<SVGGElement>) => {
         event.stopPropagation();
       }}
       onClick={(event) => {
