@@ -46,6 +46,7 @@ export function Editor() {
 
   const svgRef = useRef<SVGSVGElement | null>(null);
   const { exportDiagram } = useCanvasExport(svgRef, diagram);
+
   const { exportJson, importJson } = useDiagramFile({
     diagram,
     onImportDiagram: importDiagram,
@@ -92,9 +93,8 @@ export function Editor() {
       />
 
       <main className="relative h-full min-h-0 w-full overflow-hidden">
-        {' '}
         <div
-          className="grid h-full min-h-0 min-w-0 overflow-hidden transition-[grid-template-columns] duration-200 ease-out"
+          className="grid h-full min-h-0 min-w-0 overflow-hidden transition-all duration-200 ease-out"
           style={{ gridTemplateColumns: workspaceColumns }}
         >
           <div
@@ -117,6 +117,7 @@ export function Editor() {
             <Inspector />
           </div>
         </div>
+
         <EditorPanelToggle side="left" isOpen={isToolbarOpen} onToggle={toggleToolbar} />
         <EditorPanelToggle side="right" isOpen={isInspectorOpen} onToggle={toggleInspector} />
       </main>

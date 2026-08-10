@@ -2,23 +2,14 @@
 
 import { useMemo, useState } from 'react';
 
-const TOOLBAR_WIDTH = '240px';
-const INSPECTOR_WIDTH = '320px';
-
-function getWorkspaceColumns(toolbarOpen: boolean, inspectorOpen: boolean): string {
-  return [
-    toolbarOpen ? TOOLBAR_WIDTH : '0px',
-    'minmax(0, 1fr)',
-    inspectorOpen ? INSPECTOR_WIDTH : '0px',
-  ].join(' ');
-}
+import { getEditorWorkspaceColumns } from '../editor-layout';
 
 export function useEditorPanels() {
   const [isToolbarOpen, setIsToolbarOpen] = useState(true);
   const [isInspectorOpen, setIsInspectorOpen] = useState(true);
 
   const workspaceColumns = useMemo(
-    () => getWorkspaceColumns(isToolbarOpen, isInspectorOpen),
+    () => getEditorWorkspaceColumns(isToolbarOpen, isInspectorOpen),
     [isInspectorOpen, isToolbarOpen],
   );
 
