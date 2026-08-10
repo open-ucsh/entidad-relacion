@@ -1,3 +1,4 @@
+import { isValidDiagram } from '@/domain/diagram/validation/diagram';
 import type { Diagram } from '@/domain/diagram/models';
 
 import { createDownloadFileBaseName } from './file-name';
@@ -14,21 +15,6 @@ interface DiagramFile {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
-}
-
-function isDiagram(value: unknown): value is Diagram {
-  if (!isRecord(value)) {
-    return false;
-  }
-
-  return (
-    Array.isArray(value.entities) &&
-    Array.isArray(value.relationships) &&
-    Array.isArray(value.attributes) &&
-    Array.isArray(value.connections) &&
-    isRecord(value.metadata) &&
-    Array.isArray(value.activity)
-  );
 }
 
 function createDiagramFile(diagram: Diagram): DiagramFile {
@@ -61,8 +47,10 @@ export function parseDiagramFile(content: string): Diagram {
     throw new Error('La versión del archivo no es compatible.');
   }
 
-  if (!isDiagram(parsed.diagram)) {
-    throw new Error('El diagrama del archivo está incompleto o es inválido.');
+  if (!isValidDiagram(parsed.diagram)) {
+    throw new Error(
+      'El diagrama del archivo está incompleto, tiene referencias inválidas o no es compatible.',
+    );
   }
 
   return parsed.diagram;
