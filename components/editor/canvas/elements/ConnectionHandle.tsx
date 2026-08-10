@@ -16,14 +16,7 @@ export function ConnectionHandle({ x, y, onPointerDown }: ConnectionHandleProps)
         onPointerDown(event);
       }}
     >
-      <circle
-        cx={x}
-        cy={y}
-        r={9}
-        fill="var(--color-brand-primary)"
-        stroke="var(--color-background)"
-        strokeWidth={2}
-      />
+      <circle cx={x} cy={y} r={10} fill="transparent" />
 
       <path
         d={`M ${x - 3} ${y} H ${x + 3} M ${x} ${y - 3} V ${y + 3}`}

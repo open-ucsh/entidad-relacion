@@ -1,13 +1,40 @@
 import { createId } from '@/domain/diagram/lib/id';
+import { canConnectElementsById } from '@/domain/diagram/validation/connections';
 
 import { appendDiagramActivity, replaceActiveDiagram } from '../diagram.helpers';
 import { updateDiagramConnection } from '../diagram.mutations';
 import type { ConnectionSlice, DiagramStoreSlice } from '../diagram.types';
 
+function connectionAlreadyExists(
+  diagram: {
+    connections: Array<{
+      fromId: string;
+      toId: string;
+    }>;
+  },
+  fromId: string,
+  toId: string,
+): boolean {
+  return diagram.connections.some(
+    (connection) =>
+      (connection.fromId === fromId && connection.toId === toId) ||
+      (connection.fromId === toId && connection.toId === fromId),
+  );
+}
+
 export const createConnectionSlice: DiagramStoreSlice<ConnectionSlice> = (set, get) => ({
   addConnection: (connection) => {
+    const { diagram } = get();
+
+    if (
+      !canConnectElementsById(diagram, connection.fromId, connection.toId) ||
+      connectionAlreadyExists(diagram, connection.fromId, connection.toId)
+    ) {
+      return;
+    }
+
     set((state) => {
-      const diagram = appendDiagramActivity(
+      const nextDiagram = appendDiagramActivity(
         {
           ...state.diagram,
           connections: [...state.diagram.connections, connection],
@@ -16,7 +43,7 @@ export const createConnectionSlice: DiagramStoreSlice<ConnectionSlice> = (set, g
         'Se creó una conexión.',
       );
 
-      return replaceActiveDiagram(state, diagram);
+      return replaceActiveDiagram(state, nextDiagram);
     });
   },
 
@@ -45,19 +72,12 @@ export const createConnectionSlice: DiagramStoreSlice<ConnectionSlice> = (set, g
   },
 
   connectElements: (fromId, toId) => {
-    if (fromId === toId) {
-      return;
-    }
-
     const { addConnection, diagram } = get();
 
-    const alreadyExists = diagram.connections.some(
-      (connection) =>
-        (connection.fromId === fromId && connection.toId === toId) ||
-        (connection.fromId === toId && connection.toId === fromId),
-    );
-
-    if (alreadyExists) {
+    if (
+      !canConnectElementsById(diagram, fromId, toId) ||
+      connectionAlreadyExists(diagram, fromId, toId)
+    ) {
       return;
     }
 

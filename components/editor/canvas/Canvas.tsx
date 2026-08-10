@@ -6,6 +6,7 @@ import { useCreateDiagramElement } from '@/components/editor/hooks/useCreateDiag
 import type { Diagram, Point, Tool } from '@/domain/diagram/models';
 import { findDiagramElement, getElementPosition } from '@/domain/diagram/queries/elements';
 import { useDiagramStore } from '@/state/diagram/diagram.store';
+import { canConnectElementsById } from '@/domain/diagram/validation/connections';
 
 import { CanvasGrid } from './CanvasGrid';
 import { CanvasInteraction } from './CanvasInteraction';
@@ -30,7 +31,6 @@ interface ConnectionPreview {
   from: Point;
   to: Point;
 }
-
 function isCreatableTool(tool: Tool): tool is 'entity' | 'relationship' | 'attribute' {
   return tool === 'entity' || tool === 'relationship' || tool === 'attribute';
 }
@@ -52,6 +52,7 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
   const selectedElementId = useDiagramStore((state) => state.selectedElementId);
   const selectedElementIds = useDiagramStore((state) => state.selectedElementIds);
   const connectionSourceId = useDiagramStore((state) => state.connectionSourceId);
+  const [connectionDropTargetId, setConnectionDropTargetId] = useState<string | null>(null);
 
   const setActiveTool = useDiagramStore((state) => state.setActiveTool);
   const removeElement = useDiagramStore((state) => state.removeElement);
@@ -194,9 +195,16 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
     if (sourceId) {
       const from = getElementPosition(diagram, sourceId);
       const to = getWorldPoint(event.nativeEvent);
+      const targetId = getElementIdAtPoint(event.clientX, event.clientY);
 
       if (from && to) {
         setConnectionPreview({ from, to });
+      }
+
+      if (targetId && canConnectElementsById(diagram, sourceId, targetId)) {
+        setConnectionDropTargetId(targetId);
+      } else {
+        setConnectionDropTargetId(null);
       }
 
       return;
@@ -219,6 +227,7 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
 
       directConnectionSourceRef.current = null;
       setConnectionPreview(null);
+      setConnectionDropTargetId(null);
       cancelConnection();
 
       return;
@@ -298,6 +307,7 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
               diagram={diagram}
               selectedElementIds={selectedElementIds}
               connectionSourceId={connectionSourceId}
+              connectionDropTargetId={connectionDropTargetId}
               activeTool={activeTool}
               onSelectElement={setSelectedElement}
               onToggleElement={toggleSelectedElement}

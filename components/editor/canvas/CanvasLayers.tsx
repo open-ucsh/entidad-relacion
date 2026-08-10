@@ -1,6 +1,8 @@
 import type { PointerEvent } from 'react';
 
 import type { Diagram, Tool } from '@/domain/diagram/models';
+import { canConnectDiagramElements } from '@/domain/diagram/validation/connections';
+import { findDiagramElement } from '@/domain/diagram/queries/elements';
 import {
   formatConnectionCardinality,
   getConnectionEndpoints,
@@ -14,6 +16,7 @@ import { useCanvasElementInteraction } from './hooks/useCanvasElementInteraction
 
 interface CanvasLayersProps {
   diagram: Diagram;
+  connectionDropTargetId: string | null;
   selectedElementIds: string[];
   connectionSourceId: string | null;
   activeTool: Tool;
@@ -32,6 +35,7 @@ export function CanvasLayers({
   connectionSourceId,
   activeTool,
   onSelectElement,
+  connectionDropTargetId,
   onToggleElement,
   onDeleteElement,
   onElementPointerDown,
@@ -57,7 +61,29 @@ export function CanvasLayers({
     onEditElement,
   });
 
-  const showConnectionHandles = activeTool === 'select';
+  const connectionSource = connectionSourceId
+    ? findDiagramElement(diagram, connectionSourceId)
+    : undefined;
+
+  const showConnectionTargets = Boolean(connectionSource);
+
+  function getConnectionTargetState(id: string) {
+    const target = findDiagramElement(diagram, id);
+
+    if (!connectionSource || !target || connectionSource.id === target.id) {
+      return {
+        isConnectionTarget: false,
+        isConnectionTargetInvalid: false,
+      };
+    }
+
+    const isConnectionTarget = canConnectDiagramElements(connectionSource, target);
+
+    return {
+      isConnectionTarget,
+      isConnectionTargetInvalid: !isConnectionTarget,
+    };
+  }
 
   return (
     <>
@@ -85,68 +111,89 @@ export function CanvasLayers({
       </g>
 
       <g id="elements-layer">
-        {diagram.entities.map((entity) => (
-          <EntityShape
-            key={entity.id}
-            entity={entity}
-            selected={isSelected(entity.id)}
-            showConnectionHandle={showConnectionHandles}
-            onClick={(event) => {
-              handleElementClick(event, entity.id);
-            }}
-            onDoubleClick={() => {
-              handleElementDoubleClick(entity.id);
-            }}
-            onPointerDown={(event) => {
-              handleElementPointerDown(event, entity.id);
-            }}
-            onConnectionPointerDown={(event) => {
-              onConnectionHandlePointerDown(event, entity.id);
-            }}
-          />
-        ))}
+        {diagram.entities.map((entity) => {
+          const connectionTargetState = getConnectionTargetState(entity.id);
 
-        {diagram.relationships.map((relationship) => (
-          <RelationshipShape
-            key={relationship.id}
-            relationship={relationship}
-            selected={isSelected(relationship.id)}
-            showConnectionHandle={showConnectionHandles}
-            onClick={(event) => {
-              handleElementClick(event, relationship.id);
-            }}
-            onDoubleClick={() => {
-              handleElementDoubleClick(relationship.id);
-            }}
-            onPointerDown={(event) => {
-              handleElementPointerDown(event, relationship.id);
-            }}
-            onConnectionPointerDown={(event) => {
-              onConnectionHandlePointerDown(event, relationship.id);
-            }}
-          />
-        ))}
+          return (
+            <EntityShape
+              key={entity.id}
+              entity={entity}
+              selected={isSelected(entity.id)}
+              showConnectionHandle={activeTool === 'select'}
+              isConnectionDropTarget={connectionDropTargetId === entity.id}
+              showConnectionTargets={showConnectionTargets}
+              {...connectionTargetState}
+              onClick={(event) => {
+                handleElementClick(event, entity.id);
+              }}
+              onDoubleClick={() => {
+                handleElementDoubleClick(entity.id);
+              }}
+              onPointerDown={(event) => {
+                handleElementPointerDown(event, entity.id);
+              }}
+              onConnectionPointerDown={(event) => {
+                onConnectionHandlePointerDown(event, entity.id);
+              }}
+            />
+          );
+        })}
 
-        {diagram.attributes.map((attribute) => (
-          <AttributeShape
-            key={attribute.id}
-            attribute={attribute}
-            selected={isSelected(attribute.id)}
-            showConnectionHandle={showConnectionHandles}
-            onClick={(event) => {
-              handleElementClick(event, attribute.id);
-            }}
-            onDoubleClick={() => {
-              handleElementDoubleClick(attribute.id);
-            }}
-            onPointerDown={(event) => {
-              handleElementPointerDown(event, attribute.id);
-            }}
-            onConnectionPointerDown={(event) => {
-              onConnectionHandlePointerDown(event, attribute.id);
-            }}
-          />
-        ))}
+        {diagram.relationships.map((relationship) => {
+          const connectionTargetState = getConnectionTargetState(relationship.id);
+
+          return (
+            <RelationshipShape
+              isConnectionDropTarget={connectionDropTargetId === relationship.id}
+              key={relationship.id}
+              relationship={relationship}
+              selected={isSelected(relationship.id)}
+              showConnectionHandle={activeTool === 'select'}
+              showConnectionTargets={showConnectionTargets}
+              {...connectionTargetState}
+              onClick={(event) => {
+                handleElementClick(event, relationship.id);
+              }}
+              onDoubleClick={() => {
+                handleElementDoubleClick(relationship.id);
+              }}
+              onPointerDown={(event) => {
+                handleElementPointerDown(event, relationship.id);
+              }}
+              onConnectionPointerDown={(event) => {
+                onConnectionHandlePointerDown(event, relationship.id);
+              }}
+            />
+          );
+        })}
+
+        {diagram.attributes.map((attribute) => {
+          const connectionTargetState = getConnectionTargetState(attribute.id);
+
+          return (
+            <AttributeShape
+              key={attribute.id}
+              isConnectionDropTarget={connectionDropTargetId === attribute.id}
+              attribute={attribute}
+              selected={isSelected(attribute.id)}
+              showConnectionHandle={activeTool === 'select'}
+              showConnectionTargets={showConnectionTargets}
+              {...connectionTargetState}
+              onClick={(event) => {
+                handleElementClick(event, attribute.id);
+              }}
+              onDoubleClick={() => {
+                handleElementDoubleClick(attribute.id);
+              }}
+              onPointerDown={(event) => {
+                handleElementPointerDown(event, attribute.id);
+              }}
+              onConnectionPointerDown={(event) => {
+                onConnectionHandlePointerDown(event, attribute.id);
+              }}
+            />
+          );
+        })}
       </g>
     </>
   );
