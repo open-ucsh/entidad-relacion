@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react';
 
 import { useDiagramStore } from '@/state/diagram/store';
+import { selectCanRedo, selectCanUndo } from '@/state/diagram/selectors';
 
 import { Canvas } from './canvas/Canvas';
 import { useCanvasExport } from './canvas/hooks/useCanvasExport';
@@ -24,21 +25,8 @@ export function Editor() {
   const undo = useDiagramStore((state) => state.undo);
   const redo = useDiagramStore((state) => state.redo);
 
-  const canUndo = useDiagramStore((state) => {
-    const activeDocument = state.documents.find(
-      (document) => document.id === state.activeDocumentId,
-    );
-
-    return (activeDocument?.history.undoStack.length ?? 0) > 0;
-  });
-
-  const canRedo = useDiagramStore((state) => {
-    const activeDocument = state.documents.find(
-      (document) => document.id === state.activeDocumentId,
-    );
-
-    return (activeDocument?.history.redoStack.length ?? 0) > 0;
-  });
+  const canUndo = useDiagramStore(selectCanUndo);
+  const canRedo = useDiagramStore(selectCanRedo);
 
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isDocumentGalleryOpen, setIsDocumentGalleryOpen] = useState(false);
