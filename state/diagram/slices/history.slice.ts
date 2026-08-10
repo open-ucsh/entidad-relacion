@@ -1,4 +1,9 @@
-import { appendDiagramActivity, pushUndoSnapshot, replaceActiveDiagram } from '../helpers';
+import {
+  appendDiagramActivity,
+  getActiveDocument,
+  pushUndoSnapshot,
+  replaceActiveDiagram,
+} from '../helpers';
 import type { DiagramStoreSlice, HistorySlice } from '../types';
 
 export const createHistorySlice: DiagramStoreSlice<HistorySlice> = (set) => ({
@@ -19,9 +24,7 @@ export const createHistorySlice: DiagramStoreSlice<HistorySlice> = (set) => ({
   completeHistoryTransaction: (type, details) => {
     set((state) => {
       const snapshot = state.pendingHistorySnapshot;
-      const activeDocument = state.documents.find(
-        (document) => document.id === state.activeDocumentId,
-      );
+      const activeDocument = getActiveDocument(state);
 
       if (!snapshot || !activeDocument) {
         return {
@@ -48,10 +51,7 @@ export const createHistorySlice: DiagramStoreSlice<HistorySlice> = (set) => ({
 
   undo: () => {
     set((state) => {
-      const activeDocument = state.documents.find(
-        (document) => document.id === state.activeDocumentId,
-      );
-
+      const activeDocument = getActiveDocument(state);
       const previousDiagram = activeDocument?.history.undoStack.at(-1);
 
       if (!activeDocument || !previousDiagram) {
@@ -75,10 +75,7 @@ export const createHistorySlice: DiagramStoreSlice<HistorySlice> = (set) => ({
 
   redo: () => {
     set((state) => {
-      const activeDocument = state.documents.find(
-        (document) => document.id === state.activeDocumentId,
-      );
-
+      const activeDocument = getActiveDocument(state);
       const nextDiagram = activeDocument?.history.redoStack.at(0);
 
       if (!activeDocument || !nextDiagram) {

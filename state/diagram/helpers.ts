@@ -32,6 +32,12 @@ export function createDiagramDocument(name = 'Diagrama sin título'): DiagramDoc
   };
 }
 
+export function getActiveDocument(
+  state: Pick<DiagramState, 'activeDocumentId' | 'documents'>,
+): DiagramDocument | undefined {
+  return state.documents.find((document) => document.id === state.activeDocumentId);
+}
+
 export function appendDiagramActivity(
   diagram: Diagram,
   type: DiagramActivityType,
@@ -72,7 +78,7 @@ export function replaceActiveDiagram(
   diagram: Diagram,
   options: ReplaceDiagramOptions = {},
 ) {
-  const activeDocument = state.documents.find((document) => document.id === state.activeDocumentId);
+  const activeDocument = getActiveDocument(state);
 
   if (!activeDocument) {
     return {
