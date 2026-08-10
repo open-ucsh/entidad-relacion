@@ -1,26 +1,12 @@
 import { createConnection } from '@/domain/diagram/factories/connection';
-import { canConnectElementsById } from '@/domain/diagram/validation/connections';
+import {
+  canConnectElementsById,
+  hasDiagramConnection,
+} from '@/domain/diagram/validation/connections';
 
 import { appendDiagramActivity, replaceActiveDiagram } from '../helpers';
 import { updateDiagramConnection } from '../mutations';
 import type { ConnectionSlice, DiagramStoreSlice } from '../types';
-
-function connectionAlreadyExists(
-  diagram: {
-    connections: Array<{
-      fromId: string;
-      toId: string;
-    }>;
-  },
-  fromId: string,
-  toId: string,
-): boolean {
-  return diagram.connections.some(
-    (connection) =>
-      (connection.fromId === fromId && connection.toId === toId) ||
-      (connection.fromId === toId && connection.toId === fromId),
-  );
-}
 
 export const createConnectionSlice: DiagramStoreSlice<ConnectionSlice> = (set, get) => ({
   addConnection: (connection) => {
@@ -28,7 +14,7 @@ export const createConnectionSlice: DiagramStoreSlice<ConnectionSlice> = (set, g
 
     if (
       !canConnectElementsById(diagram, connection.fromId, connection.toId) ||
-      connectionAlreadyExists(diagram, connection.fromId, connection.toId)
+      hasDiagramConnection(diagram, connection.fromId, connection.toId)
     ) {
       return;
     }
@@ -76,7 +62,7 @@ export const createConnectionSlice: DiagramStoreSlice<ConnectionSlice> = (set, g
 
     if (
       !canConnectElementsById(diagram, fromId, toId) ||
-      connectionAlreadyExists(diagram, fromId, toId)
+      hasDiagramConnection(diagram, fromId, toId)
     ) {
       return;
     }

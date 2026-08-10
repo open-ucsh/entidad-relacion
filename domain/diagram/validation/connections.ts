@@ -1,6 +1,5 @@
-import type { Diagram } from '@/domain/diagram/models';
+import type { Diagram, DiagramElement } from '@/domain/diagram/models';
 import { findDiagramElement } from '@/domain/diagram/queries/elements';
-import type { DiagramElement } from '@/domain/diagram/models';
 
 function isEntityRelationshipPair(source: DiagramElement, target: DiagramElement): boolean {
   return (
@@ -16,13 +15,6 @@ function isAttributeOwnerPair(source: DiagramElement, target: DiagramElement): b
   );
 }
 
-/**
- * Reglas de conexión para diagramas ER con notación Chen:
- *
- * - Entidad ↔ Relación
- * - Atributo ↔ Entidad
- * - Atributo ↔ Relación
- */
 export function canConnectDiagramElements(source: DiagramElement, target: DiagramElement): boolean {
   if (source.id === target.id) {
     return false;
@@ -44,4 +36,16 @@ export function canConnectElementsById(
   }
 
   return canConnectDiagramElements(source, target);
+}
+
+export function hasDiagramConnection(
+  diagram: Diagram,
+  sourceId: string,
+  targetId: string,
+): boolean {
+  return diagram.connections.some(
+    (connection) =>
+      (connection.fromId === sourceId && connection.toId === targetId) ||
+      (connection.fromId === targetId && connection.toId === sourceId),
+  );
 }
