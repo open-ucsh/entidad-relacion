@@ -1,5 +1,6 @@
 'use client';
 
+import { selectActiveDiagram } from '@/state/diagram/selectors';
 import { useDiagramStore } from '@/state/diagram/store';
 
 import { HistoryActivityList } from './history-activity-list';
@@ -12,7 +13,7 @@ interface HistoryPanelProps {
 }
 
 export function HistoryPanel({ isOpen, onClose }: HistoryPanelProps) {
-  const diagram = useDiagramStore((state) => state.diagram);
+  const diagram = useDiagramStore(selectActiveDiagram);
 
   if (!isOpen) {
     return null;
@@ -23,14 +24,7 @@ export function HistoryPanel({ isOpen, onClose }: HistoryPanelProps) {
     diagram.metadata.origin === 'imported' ? 'Proyecto importado' : 'Creado en ER Designer';
 
   return (
-    <div className="fixed inset-0 z-50">
-      <button
-        type="button"
-        className="absolute inset-0 bg-text/20 backdrop-blur-[1px]"
-        aria-label="Cerrar historial"
-        onClick={onClose}
-      />
-
+    <div className="fixed inset-0 z-40 bg-text/20">
       <aside
         role="dialog"
         aria-modal="true"

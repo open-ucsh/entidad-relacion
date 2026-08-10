@@ -1,6 +1,10 @@
-import type { DiagramDocument } from '@/domain/diagram/models';
+import type { Diagram, DiagramDocument } from '@/domain/diagram/models';
 
 import type { DiagramState } from './types';
+
+export function selectActiveDiagram(state: DiagramState): Diagram {
+  return state.diagram;
+}
 
 export function selectActiveDocument(state: DiagramState): DiagramDocument | undefined {
   return state.documents.find((document) => document.id === state.activeDocumentId);

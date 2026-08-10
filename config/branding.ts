@@ -1,5 +1,5 @@
 export const BRANDING = {
-  applicationName: 'Diagramador ER',
+  applicationName: 'ER Designer',
   logo: '/logo.png',
   university: 'Universidad Católica Silva Henríquez',
 } as const;

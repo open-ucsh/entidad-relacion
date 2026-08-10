@@ -1,5 +1,6 @@
 import type { Diagram } from '@/domain/diagram/models';
-import { findDiagramElement, type DiagramElement } from '@/domain/diagram/queries/elements';
+import { findDiagramElement } from '@/domain/diagram/queries/elements';
+import type { DiagramElement } from '@/domain/diagram/models';
 
 function isEntityRelationshipPair(source: DiagramElement, target: DiagramElement): boolean {
   return (

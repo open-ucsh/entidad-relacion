@@ -3,6 +3,7 @@
 import { PanelHeader } from '@/components/ui';
 import { findDiagramConnection } from '@/domain/diagram/queries/connections';
 import { findDiagramElement } from '@/domain/diagram/queries/elements';
+import { selectActiveDiagram } from '@/state/diagram/selectors';
 import { useDiagramStore } from '@/state/diagram/store';
 
 import { InspectorConnectionContent } from './InspectorConnectionContent';
@@ -12,7 +13,7 @@ import { InspectorEmpty } from './InspectorEmpty';
 import { InspectorHeader } from './InspectorHeader';
 
 export function Inspector() {
-  const diagram = useDiagramStore((state) => state.diagram);
+  const diagram = useDiagramStore(selectActiveDiagram);
   const selectedElementId = useDiagramStore((state) => state.selectedElementId);
   const updateElement = useDiagramStore((state) => state.updateElement);
   const updateConnection = useDiagramStore((state) => state.updateConnection);

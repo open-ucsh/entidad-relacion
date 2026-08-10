@@ -2,8 +2,8 @@
 
 import { useRef, useState } from 'react';
 
+import { selectActiveDiagram, selectCanRedo, selectCanUndo } from '@/state/diagram/selectors';
 import { useDiagramStore } from '@/state/diagram/store';
-import { selectCanRedo, selectCanUndo } from '@/state/diagram/selectors';
 
 import { Canvas } from './canvas/Canvas';
 import { useCanvasExport } from './canvas/hooks/useCanvasExport';
@@ -18,7 +18,7 @@ import { Inspector } from './inspector/Inspector';
 import { Toolbar } from './toolbar/Toolbar';
 
 export function Editor() {
-  const diagram = useDiagramStore((state) => state.diagram);
+  const diagram = useDiagramStore(selectActiveDiagram);
   const resetDiagram = useDiagramStore((state) => state.resetDiagram);
   const setDiagramName = useDiagramStore((state) => state.setDiagramName);
   const importDiagram = useDiagramStore((state) => state.importDiagram);

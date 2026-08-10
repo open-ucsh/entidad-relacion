@@ -1,4 +1,4 @@
-import type { DiagramElement } from '@/domain/diagram/queries/elements';
+import type { DiagramElement } from '@/domain/diagram/models';
 
 interface InlineElementNameEditorProps {
   element: DiagramElement;
