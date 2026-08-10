@@ -3,39 +3,23 @@
 import { Keyboard, X } from 'lucide-react';
 import { useEffect } from 'react';
 
+import { TOOL_GROUPS } from '@/components/editor/toolbar/tool-config';
+
 interface KeyboardShortcutsDialogProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const SHORTCUT_GROUPS = [
-  {
-    category: 'Herramientas',
-    items: [
-      ['V', 'Seleccionar'],
-      ['E', 'Crear entidad'],
-      ['R', 'Crear relación'],
-      ['A', 'Crear atributo'],
-      ['C', 'Conectar'],
-      ['D', 'Borrar'],
-    ],
-  },
-  {
-    category: 'Edición',
-    items: [
-      ['Ctrl/Cmd + A', 'Seleccionar todo'],
-      ['Ctrl/Cmd + D', 'Duplicar selección'],
-      ['Supr', 'Borrar selección'],
-    ],
-  },
-  {
-    category: 'Historial',
-    items: [
-      ['Ctrl/Cmd + Z', 'Deshacer'],
-      ['Ctrl/Cmd + Shift + Z', 'Rehacer'],
-      ['Ctrl/Cmd + Y', 'Rehacer'],
-    ],
-  },
+const EDITING_SHORTCUTS = [
+  ['Ctrl/Cmd + A', 'Seleccionar todo'],
+  ['Ctrl/Cmd + D', 'Duplicar selección'],
+  ['Supr', 'Borrar selección'],
+] as const;
+
+const HISTORY_SHORTCUTS = [
+  ['Ctrl/Cmd + Z', 'Deshacer'],
+  ['Ctrl/Cmd + Shift + Z', 'Rehacer'],
+  ['Ctrl/Cmd + Y', 'Rehacer'],
 ] as const;
 
 export function KeyboardShortcutsDialog({ isOpen, onClose }: KeyboardShortcutsDialogProps) {
@@ -61,12 +45,25 @@ export function KeyboardShortcutsDialog({ isOpen, onClose }: KeyboardShortcutsDi
     return null;
   }
 
+  const shortcutGroups = [
+    {
+      category: 'Herramientas',
+      items: TOOL_GROUPS.flatMap((group) =>
+        group.items.map((tool) => [tool.shortcut, tool.label] as const),
+      ),
+    },
+    {
+      category: 'Edición',
+      items: EDITING_SHORTCUTS,
+    },
+    {
+      category: 'Historial',
+      items: HISTORY_SHORTCUTS,
+    },
+  ];
+
   return (
-    <div
-      role="presentation"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-text/30 p-4 backdrop-blur-sm"
-      onPointerDown={onClose}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-text/30 p-4 backdrop-blur-sm">
       <section
         role="dialog"
         aria-modal="true"
@@ -76,10 +73,10 @@ export function KeyboardShortcutsDialog({ isOpen, onClose }: KeyboardShortcutsDi
           event.stopPropagation();
         }}
       >
-        <header className="flex items-start justify-between gap-4 border-b border-border px-6 py-5">
-          <div className="flex items-center gap-3">
-            <span className="flex size-10 items-center justify-center rounded-xl bg-brand-primary/10 text-brand-primary">
-              <Keyboard size={19} aria-hidden="true" />
+        <header className="flex items-start justify-between border-b border-border px-6 py-5">
+          <div className="flex items-start gap-3">
+            <span className="flex size-9 items-center justify-center rounded-lg bg-brand-primary/10 text-brand-primary">
+              <Keyboard size={18} aria-hidden="true" />
             </span>
 
             <div>
@@ -106,7 +103,7 @@ export function KeyboardShortcutsDialog({ isOpen, onClose }: KeyboardShortcutsDi
 
         <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
           <div className="space-y-5">
-            {SHORTCUT_GROUPS.map((group) => (
+            {shortcutGroups.map((group) => (
               <section key={group.category}>
                 <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-muted">
                   {group.category}
