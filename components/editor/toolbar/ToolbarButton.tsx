@@ -20,14 +20,14 @@ export function ToolbarButton({
       type="button"
       onClick={onClick}
       title={`${label} (${shortcut})`}
-      className={`group relative flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-xl border transition-all duration-150 active:scale-[0.98] ${
+      className={`group relative flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-xl border transition-all duration-150 active:opacity-90 ${
         active
           ? 'border-brand-primary bg-brand-primary/10'
           : 'border-border bg-background hover:border-brand-primary/25 hover:bg-surface-hover hover:shadow-sm'
       }`}
     >
       <span
-        className={`absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded px-1 text-[10px] font-semibold leading-none ${
+        className={`absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded px-1 text-xs font-semibold leading-none ${
           active
             ? 'bg-brand-primary text-white'
             : 'bg-surface text-text-muted group-hover:text-brand-primary'

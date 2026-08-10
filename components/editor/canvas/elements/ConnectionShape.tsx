@@ -7,7 +7,7 @@ interface ConnectionShapeProps {
   to: Point;
   selected: boolean;
   cardinalityLabel: string | null;
-  onClick: (event: MouseEvent<SVGGElement>) => void;
+  onClick: (event: MouseEvent) => void;
 }
 
 const CARDINALITY_OFFSET = 88;
@@ -40,7 +40,7 @@ export function ConnectionShape({
 
   return (
     <g
-      onPointerDown={(event: PointerEvent<SVGGElement>) => {
+      onPointerDown={(event: PointerEvent) => {
         event.stopPropagation();
       }}
       onClick={(event) => {
@@ -49,7 +49,15 @@ export function ConnectionShape({
       }}
       className="cursor-pointer"
     >
-      <line x1={from.x} y1={from.y} x2={to.x} y2={to.y} stroke={stroke} strokeWidth={strokeWidth} />
+      <line
+        x1={from.x}
+        y1={from.y}
+        x2={to.x}
+        y2={to.y}
+        stroke={stroke}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+      />
 
       {cardinalityLabel && (
         <g pointerEvents="none">
@@ -67,7 +75,7 @@ export function ConnectionShape({
             x={labelPosition.x}
             y={labelPosition.y + 4}
             textAnchor="middle"
-            className="fill-text text-[10px] font-semibold"
+            className="fill-text text-xs font-semibold"
           >
             {cardinalityLabel}
           </text>
