@@ -19,31 +19,38 @@ interface PersistedDocumentLibrary {
   activeDocumentId: string;
 }
 
+function clearDocumentHistory(document: DiagramDocument): DiagramDocument {
+  return {
+    ...document,
+    history: createDocumentHistory(),
+  };
+}
+
 function migratePersistedState(persistedState: unknown, version: number): PersistedDocumentLibrary {
-  if (version < 2) {
-    const previousState = persistedState as Partial<PersistedDocumentLibrary>;
+  const previousState = persistedState as Partial<PersistedDocumentLibrary>;
 
-    if (previousState.diagram) {
-      const migratedDocument: DiagramDocument = {
-        id: createId('document'),
-        diagram: previousState.diagram,
-        history: createDocumentHistory(),
-      };
+  let migratedState: PersistedDocumentLibrary;
 
-      return {
-        diagram: previousState.diagram,
-        documents: [migratedDocument],
-        activeDocumentId: migratedDocument.id,
-      };
-    }
+  if (version < 2 && previousState.diagram) {
+    const migratedDocument: DiagramDocument = {
+      id: createId('document'),
+      diagram: previousState.diagram,
+      history: createDocumentHistory(),
+    };
+
+    migratedState = {
+      diagram: previousState.diagram,
+      documents: [migratedDocument],
+      activeDocumentId: migratedDocument.id,
+    };
+  } else {
+    migratedState = previousState as PersistedDocumentLibrary;
   }
 
   if (version < 3) {
-    const previousState = persistedState as PersistedDocumentLibrary;
-
-    return {
-      ...previousState,
-      documents: previousState.documents.map((document) => {
+    migratedState = {
+      ...migratedState,
+      documents: migratedState.documents.map((document) => {
         const legacyDocument = document as Partial<DiagramDocument>;
 
         return {
@@ -54,7 +61,14 @@ function migratePersistedState(persistedState: unknown, version: number): Persis
     };
   }
 
-  return persistedState as PersistedDocumentLibrary;
+  if (version < 4) {
+    migratedState = {
+      ...migratedState,
+      documents: migratedState.documents.map(clearDocumentHistory),
+    };
+  }
+
+  return migratedState;
 }
 
 export const useDiagramStore = create<DiagramState>()(
@@ -69,11 +83,11 @@ export const useDiagramStore = create<DiagramState>()(
     }),
     {
       name: 'er-designer-documents',
-      version: 3,
+      version: 4,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         diagram: state.diagram,
-        documents: state.documents,
+        documents: state.documents.map(clearDocumentHistory),
         activeDocumentId: state.activeDocumentId,
       }),
       migrate: migratePersistedState,
