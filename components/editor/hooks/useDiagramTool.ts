@@ -2,7 +2,7 @@
 
 import type { Tool } from '@/domain/diagram/models';
 import { findDiagramElement } from '@/domain/diagram/queries/elements';
-import { useDiagramStore } from '@/state/diagram/diagram.store';
+import { useDiagramStore } from '@/state/diagram/store';
 
 export function useDiagramTool() {
   const diagram = useDiagramStore((state) => state.diagram);

@@ -5,7 +5,7 @@ import { useRef, useState, type PointerEvent, type RefObject } from 'react';
 import { useCreateDiagramElement } from '@/components/editor/hooks/useCreateDiagramElement';
 import type { Diagram, Point, Tool } from '@/domain/diagram/models';
 import { findDiagramElement, getElementPosition } from '@/domain/diagram/queries/elements';
-import { useDiagramStore } from '@/state/diagram/diagram.store';
+import { useDiagramStore } from '@/state/diagram/store';
 import { canConnectElementsById } from '@/domain/diagram/validation/connections';
 
 import { CanvasGrid } from './CanvasGrid';

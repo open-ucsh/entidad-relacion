@@ -3,7 +3,7 @@
 import { PanelHeader } from '@/components/ui';
 import { findDiagramConnection } from '@/domain/diagram/queries/connections';
 import { findDiagramElement } from '@/domain/diagram/queries/elements';
-import { useDiagramStore } from '@/state/diagram/diagram.store';
+import { useDiagramStore } from '@/state/diagram/store';
 
 import { InspectorConnectionContent } from './InspectorConnectionContent';
 import { InspectorConnectionHeader } from './InspectorConnectionHeader';

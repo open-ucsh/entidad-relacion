@@ -1,9 +1,9 @@
 import { createId } from '@/domain/diagram/lib/id';
 import { canConnectElementsById } from '@/domain/diagram/validation/connections';
 
-import { appendDiagramActivity, replaceActiveDiagram } from '../diagram.helpers';
-import { updateDiagramConnection } from '../diagram.mutations';
-import type { ConnectionSlice, DiagramStoreSlice } from '../diagram.types';
+import { appendDiagramActivity, replaceActiveDiagram } from '../helpers';
+import { updateDiagramConnection } from '../mutations';
+import type { ConnectionSlice, DiagramStoreSlice } from '../types';
 
 function connectionAlreadyExists(
   diagram: {

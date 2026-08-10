@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 
 import { useDiagramTool } from '@/components/editor/hooks/useDiagramTool';
 import { getToolFromShortcut } from '@/components/editor/tool-shortcuts';
-import { useDiagramStore } from '@/state/diagram/diagram.store';
+import { useDiagramStore } from '@/state/diagram/store';
 
 function isTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) {

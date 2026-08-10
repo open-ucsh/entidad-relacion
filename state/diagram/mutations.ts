@@ -1,7 +1,7 @@
 import type { Attribute, Diagram, Entity, Relationship } from '@/domain/diagram/models';
 import type { Connection } from '@/domain/diagram/models';
 
-import type { ElementPositionUpdate } from './diagram.types';
+import type { ElementPositionUpdate } from './types';
 
 type DiagramElement = Entity | Relationship | Attribute;
 

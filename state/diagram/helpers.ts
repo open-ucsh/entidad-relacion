@@ -6,8 +6,8 @@ import type {
   DiagramDocumentHistory,
 } from '@/domain/diagram/models';
 
-import { createInitialDiagram } from './diagram.initial';
-import type { DiagramState } from './diagram.types';
+import { createInitialDiagram } from './initial';
+import type { DiagramState } from './types';
 
 const MAX_HISTORY_SIZE = 50;
 

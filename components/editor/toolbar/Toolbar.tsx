@@ -2,7 +2,7 @@
 
 import { useDiagramTool } from '@/components/editor/hooks/useDiagramTool';
 import { PanelHeader } from '@/components/ui';
-import { useDiagramStore } from '@/state/diagram/diagram.store';
+import { useDiagramStore } from '@/state/diagram/store';
 
 import { ToolbarGroup } from './ToolbarGroup';
 import { TOOL_GROUPS } from './tool-config';

@@ -2,9 +2,9 @@ import { createId } from '@/domain/diagram/lib/id';
 import { distance } from '@/domain/diagram/lib/geometry';
 import { findDiagramElement, getDiagramElements } from '@/domain/diagram/queries/elements';
 
-import { appendDiagramActivity, replaceActiveDiagram } from '../diagram.helpers';
-import { moveDiagramElements, removeDiagramElements, updateDiagram } from '../diagram.mutations';
-import type { DiagramStoreSlice, ElementSlice } from '../diagram.types';
+import { appendDiagramActivity, replaceActiveDiagram } from '../helpers';
+import { moveDiagramElements, removeDiagramElements, updateDiagram } from '../mutations';
+import type { DiagramStoreSlice, ElementSlice } from '../types';
 
 const DUPLICATE_OFFSET = 32;
 const ATTRIBUTE_DISTANCE = 120;

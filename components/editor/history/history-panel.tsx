@@ -1,6 +1,6 @@
 'use client';
 
-import { useDiagramStore } from '@/state/diagram/diagram.store';
+import { useDiagramStore } from '@/state/diagram/store';
 
 import { HistoryActivityList } from './history-activity-list';
 import { HistoryPanelHeader } from './history-panel-header';

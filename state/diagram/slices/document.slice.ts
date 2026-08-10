@@ -7,8 +7,8 @@ import {
   createEditorResetState,
   replaceActiveDiagram,
   createDocumentHistory,
-} from '../diagram.helpers';
-import type { DiagramStoreSlice, DocumentSlice } from '../diagram.types';
+} from '../helpers';
+import type { DiagramStoreSlice, DocumentSlice } from '../types';
 
 export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) => {
   const initialDocument = createDiagramDocument();

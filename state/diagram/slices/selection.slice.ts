@@ -1,4 +1,4 @@
-import type { DiagramStoreSlice, SelectionSlice } from '../diagram.types';
+import type { DiagramStoreSlice, SelectionSlice } from '../types';
 
 export const createSelectionSlice: DiagramStoreSlice<SelectionSlice> = (set) => ({
   selectedElementId: null,

@@ -1,7 +1,7 @@
 import type { Attribute, Entity, Point, Relationship, Tool } from '@/domain/diagram/models';
 
 import { createId } from '@/domain/diagram/lib/id';
-import { useDiagramStore } from '@/state/diagram/diagram.store';
+import { useDiagramStore } from '@/state/diagram/store';
 
 type CreatableTool = Extract<Tool, 'entity' | 'relationship' | 'attribute'>;
 export type CreatableElement = Entity | Relationship | Attribute;
