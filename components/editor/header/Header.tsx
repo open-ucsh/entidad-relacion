@@ -7,7 +7,6 @@ import { ProjectNameEditor } from './ProjectNameEditor';
 
 interface HeaderProps {
   diagramName: string;
-  updatedAt: string;
   canRedo: boolean;
   canUndo: boolean;
   onNewDiagram: () => void;
