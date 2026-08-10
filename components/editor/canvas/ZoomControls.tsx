@@ -1,8 +1,15 @@
 'use client';
 
+import { type KeyboardEvent, type ReactNode } from 'react';
 import { Maximize2, Minus, Plus, RotateCcw } from 'lucide-react';
 
+interface CanvasSize {
+  width: number;
+  height: number;
+}
+
 interface ZoomControlsProps {
+  canvasSize: CanvasSize;
   zoomPercentage: number;
   onZoomIn: () => void;
   onZoomOut: () => void;
@@ -12,10 +19,82 @@ interface ZoomControlsProps {
   canZoomOut: boolean;
 }
 
-const BUTTON_CLASS_NAME =
-  'flex h-9 w-9 items-center justify-center text-text-muted transition-colors hover:bg-surface-hover hover:text-text disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40';
+interface IconButtonProps {
+  x: number;
+  y: number;
+  size: number;
+  label: string;
+  disabled?: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}
+
+const BUTTON = 32;
+const PAD = 4;
+const GAP = 2;
+const PERCENT_W = 48;
+const PILL_GAP = 8;
+const MARGIN = 20;
+
+function IconButton({ x, y, size, label, disabled = false, onClick, children }: IconButtonProps) {
+  const activate = () => {
+    if (!disabled) onClick();
+  };
+
+  return (
+    <g
+      transform={`translate(${x} ${y})`}
+      role="button"
+      aria-label={label}
+      aria-disabled={disabled}
+      tabIndex={disabled ? -1 : 0}
+      className={disabled ? 'cursor-not-allowed' : 'cursor-pointer'}
+      onClick={(event) => {
+        event.stopPropagation();
+        activate();
+      }}
+      onKeyDown={(event: KeyboardEvent<SVGGElement>) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          event.stopPropagation();
+          activate();
+        }
+      }}
+    >
+      <title>{label}</title>
+
+      <rect
+        width={size}
+        height={size}
+        rx={7}
+        className={
+          disabled
+            ? 'fill-transparent'
+            : 'fill-transparent transition-colors hover:fill-surface-hover'
+        }
+      />
+
+      <g className={disabled ? 'opacity-35' : undefined}>{children}</g>
+    </g>
+  );
+}
+
+function Pill({ width, height }: { width: number; height: number }) {
+  return (
+    <rect
+      width={width}
+      height={height}
+      rx={12}
+      fill="var(--color-background)"
+      stroke="var(--color-border)"
+      strokeOpacity={0.7}
+      className="drop-shadow-[0_1px_2px_rgba(15,23,42,0.06)]"
+    />
+  );
+}
 
 export function ZoomControls({
+  canvasSize,
   zoomPercentage,
   onZoomIn,
   onZoomOut,
@@ -24,59 +103,86 @@ export function ZoomControls({
   canZoomIn,
   canZoomOut,
 }: ZoomControlsProps) {
+  const height = BUTTON + PAD * 2;
+
+  const zoomPillWidth = PAD * 2 + BUTTON * 2 + PERCENT_W + GAP * 2;
+  const actionsPillWidth = PAD * 2 + BUTTON * 2 + GAP;
+
+  const x = MARGIN;
+  const y = canvasSize.height - height - MARGIN;
+
+  const iconProps = { size: 15, color: 'var(--color-text-muted)', 'aria-hidden': true } as const;
+  const iconOffset = (BUTTON - iconProps.size) / 2;
+
   return (
-    <div className="absolute bottom-5 left-5 z-20 flex overflow-hidden rounded-lg border border-border bg-background/90 shadow-sm backdrop-blur">
-      <button
-        type="button"
-        onClick={onZoomOut}
-        disabled={!canZoomOut}
-        aria-label="Alejar"
-        title="Alejar"
-        className={BUTTON_CLASS_NAME}
-      >
-        <Minus size={17} aria-hidden="true" />
-      </button>
+    <g
+      transform={`translate(${x} ${y})`}
+      onPointerDown={(event) => {
+        event.stopPropagation();
+      }}
+      onClick={(event) => {
+        event.stopPropagation();
+      }}
+    >
+      {/* Grupo de zoom */}
+      <g>
+        <Pill width={zoomPillWidth} height={height} />
 
-      <button
-        type="button"
-        onClick={onReset}
-        aria-label={`Zoom actual ${zoomPercentage}%. Restablecer a 100%`}
-        title="Restablecer zoom a 100%"
-        className="h-9 min-w-14 border-x border-border px-2 text-xs font-semibold tabular-nums text-text transition-colors hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40"
-      >
-        {zoomPercentage}%
-      </button>
+        <IconButton
+          x={PAD}
+          y={PAD}
+          size={BUTTON}
+          label="Alejar"
+          disabled={!canZoomOut}
+          onClick={onZoomOut}
+        >
+          <Minus x={iconOffset} y={iconOffset} {...iconProps} />
+        </IconButton>
 
-      <button
-        type="button"
-        onClick={onZoomIn}
-        disabled={!canZoomIn}
-        aria-label="Acercar"
-        title="Acercar"
-        className={BUTTON_CLASS_NAME}
-      >
-        <Plus size={17} aria-hidden="true" />
-      </button>
+        <text
+          x={PAD + BUTTON + GAP + PERCENT_W / 2}
+          y={height / 2 + 4}
+          textAnchor="middle"
+          className="fill-text text-xs font-medium tabular-nums"
+        >
+          {zoomPercentage}%
+        </text>
 
-      <button
-        type="button"
-        onClick={onFitToView}
-        aria-label="Ajustar diagrama a la vista"
-        title="Ajustar diagrama a la vista"
-        className={`${BUTTON_CLASS_NAME} border-l border-border`}
-      >
-        <Maximize2 size={16} aria-hidden="true" />
-      </button>
+        <IconButton
+          x={PAD + BUTTON + GAP + PERCENT_W + GAP}
+          y={PAD}
+          size={BUTTON}
+          label="Acercar"
+          disabled={!canZoomIn}
+          onClick={onZoomIn}
+        >
+          <Plus x={iconOffset} y={iconOffset} {...iconProps} />
+        </IconButton>
+      </g>
 
-      <button
-        type="button"
-        onClick={onReset}
-        aria-label="Restablecer vista"
-        title="Restablecer vista"
-        className={`${BUTTON_CLASS_NAME} border-l border-border`}
-      >
-        <RotateCcw size={16} aria-hidden="true" />
-      </button>
-    </div>
+      <g transform={`translate(${zoomPillWidth + PILL_GAP} 0)`}>
+        <Pill width={actionsPillWidth} height={height} />
+
+        <IconButton
+          x={PAD}
+          y={PAD}
+          size={BUTTON}
+          label="Ajustar diagrama a la vista"
+          onClick={onFitToView}
+        >
+          <Maximize2 x={iconOffset} y={iconOffset} {...iconProps} />
+        </IconButton>
+
+        <IconButton
+          x={PAD + BUTTON + GAP}
+          y={PAD}
+          size={BUTTON}
+          label="Restablecer vista"
+          onClick={onReset}
+        >
+          <RotateCcw x={iconOffset} y={iconOffset} {...iconProps} />
+        </IconButton>
+      </g>
+    </g>
   );
 }

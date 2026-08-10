@@ -31,6 +31,7 @@ interface ConnectionPreview {
   from: Point;
   to: Point;
 }
+
 function isCreatableTool(tool: Tool): tool is 'entity' | 'relationship' | 'attribute' {
   return tool === 'entity' || tool === 'relationship' || tool === 'attribute';
 }
@@ -52,7 +53,6 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
   const selectedElementId = useDiagramStore((state) => state.selectedElementId);
   const selectedElementIds = useDiagramStore((state) => state.selectedElementIds);
   const connectionSourceId = useDiagramStore((state) => state.connectionSourceId);
-  const [connectionDropTargetId, setConnectionDropTargetId] = useState<string | null>(null);
 
   const setActiveTool = useDiagramStore((state) => state.setActiveTool);
   const removeElement = useDiagramStore((state) => state.removeElement);
@@ -75,7 +75,9 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
   const { createDiagramElementAt } = useCreateDiagramElement();
 
   const directConnectionSourceRef = useRef<string | null>(null);
+
   const [connectionPreview, setConnectionPreview] = useState<ConnectionPreview | null>(null);
+  const [connectionDropTargetId, setConnectionDropTargetId] = useState<string | null>(null);
 
   useCanvasKeyboard();
 
@@ -242,6 +244,7 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
     if (directConnectionSourceRef.current) {
       directConnectionSourceRef.current = null;
       setConnectionPreview(null);
+      setConnectionDropTargetId(null);
       cancelConnection();
     }
 
@@ -251,119 +254,123 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
   }
 
   return (
-    <main className="relative min-h-0 flex-1 overflow-hidden">
-      <svg
-        ref={svgRef}
-        className={`block h-full w-full touch-none ${
-          isPanning
-            ? 'cursor-grabbing'
-            : isCreatableTool(activeTool)
-              ? 'cursor-crosshair'
-              : activeTool === 'select'
-                ? 'cursor-default'
-                : 'cursor-grab'
-        }`}
-        viewBox={`0 0 ${canvasSize.width} ${canvasSize.height}`}
-        onWheel={handleWheel}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerCancel}
-        role="application"
-        aria-label="Lienzo del diagrama Entidad-Relación"
-      >
-        <CanvasGrid camera={camera} canvasSize={canvasSize} />
+    <main className="relative h-full min-h-0 w-full overflow-hidden">
+      {' '}
+      <div className="relative h-full min-h-0 w-full">
+        <svg
+          ref={svgRef}
+          className={`block h-full w-full touch-none ${
+            isPanning
+              ? 'cursor-grabbing'
+              : isCreatableTool(activeTool)
+                ? 'cursor-crosshair'
+                : activeTool === 'select'
+                  ? 'cursor-default'
+                  : 'cursor-grab'
+          }`}
+          viewBox={`0 0 ${canvasSize.width} ${canvasSize.height}`}
+          onWheel={handleWheel}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerCancel}
+          role="application"
+          aria-label="Lienzo del diagrama Entidad-Relación"
+        >
+          <CanvasGrid camera={camera} canvasSize={canvasSize} />
 
-        <CanvasInteraction>
-          <g
-            id="diagram-world"
-            transform={`translate(${camera.x} ${camera.y}) scale(${camera.zoom})`}
-          >
-            {connectionPreview && (
-              <g pointerEvents="none">
-                <line
-                  x1={connectionPreview.from.x}
-                  y1={connectionPreview.from.y}
-                  x2={connectionPreview.to.x}
-                  y2={connectionPreview.to.y}
-                  stroke="var(--color-brand-primary)"
-                  strokeWidth={2}
-                  strokeDasharray="7 5"
-                  strokeLinecap="round"
-                  opacity={0.9}
+          <CanvasInteraction>
+            <g
+              id="diagram-world"
+              transform={`translate(${camera.x} ${camera.y}) scale(${camera.zoom})`}
+            >
+              {connectionPreview && (
+                <g pointerEvents="none">
+                  <line
+                    x1={connectionPreview.from.x}
+                    y1={connectionPreview.from.y}
+                    x2={connectionPreview.to.x}
+                    y2={connectionPreview.to.y}
+                    stroke="var(--color-brand-primary)"
+                    strokeWidth={2}
+                    strokeDasharray="7 5"
+                    strokeLinecap="round"
+                    opacity={0.9}
+                  />
+
+                  <circle
+                    cx={connectionPreview.to.x}
+                    cy={connectionPreview.to.y}
+                    r={5}
+                    fill="var(--color-brand-primary)"
+                    opacity={0.9}
+                  />
+                </g>
+              )}
+
+              <CanvasLayers
+                diagram={diagram}
+                selectedElementIds={selectedElementIds}
+                connectionSourceId={connectionSourceId}
+                connectionDropTargetId={connectionDropTargetId}
+                activeTool={activeTool}
+                onSelectElement={setSelectedElement}
+                onToggleElement={toggleSelectedElement}
+                onDeleteElement={removeElement}
+                onElementPointerDown={startDrag}
+                onConnectionHandlePointerDown={handleConnectionHandlePointerDown}
+                onConnectClick={handleConnectClick}
+                onEditElement={startEditing}
+              />
+
+              {editingElement && (
+                <InlineElementNameEditor
+                  element={editingElement}
+                  value={editingName}
+                  onChange={setEditingName}
+                  onCommit={saveEditing}
+                  onCancel={cancelEditing}
                 />
+              )}
+            </g>
 
-                <circle
-                  cx={connectionPreview.to.x}
-                  cy={connectionPreview.to.y}
-                  r={5}
-                  fill="var(--color-brand-primary)"
-                  opacity={0.9}
-                />
-              </g>
-            )}
-
-            <CanvasLayers
-              diagram={diagram}
-              selectedElementIds={selectedElementIds}
-              connectionSourceId={connectionSourceId}
-              connectionDropTargetId={connectionDropTargetId}
-              activeTool={activeTool}
-              onSelectElement={setSelectedElement}
-              onToggleElement={toggleSelectedElement}
-              onDeleteElement={removeElement}
-              onElementPointerDown={startDrag}
-              onConnectionHandlePointerDown={handleConnectionHandlePointerDown}
-              onConnectClick={handleConnectClick}
-              onEditElement={startEditing}
-            />
-
-            {editingElement && (
-              <InlineElementNameEditor
-                element={editingElement}
-                value={editingName}
-                onChange={setEditingName}
-                onCommit={saveEditing}
-                onCancel={cancelEditing}
+            {selectionBox && (
+              <rect
+                x={selectionBox.x}
+                y={selectionBox.y}
+                width={selectionBox.width}
+                height={selectionBox.height}
+                fill="var(--color-brand-primary)"
+                fillOpacity={0.1}
+                stroke="var(--color-brand-primary)"
+                strokeWidth={1}
+                strokeDasharray="5 4"
+                pointerEvents="none"
               />
             )}
-          </g>
+          </CanvasInteraction>
 
-          {selectionBox && (
-            <rect
-              x={selectionBox.x}
-              y={selectionBox.y}
-              width={selectionBox.width}
-              height={selectionBox.height}
-              fill="var(--color-brand-primary)"
-              fillOpacity={0.1}
-              stroke="var(--color-brand-primary)"
-              strokeWidth={1}
-              strokeDasharray="5 4"
-              pointerEvents="none"
-            />
-          )}
-        </CanvasInteraction>
-      </svg>
+          <ZoomControls
+            canvasSize={canvasSize}
+            zoomPercentage={zoomPercentage}
+            onZoomIn={zoomIn}
+            onZoomOut={zoomOut}
+            onReset={resetView}
+            onFitToView={() => {
+              fitToDiagram(diagram);
+            }}
+            canZoomIn={canZoomIn}
+            canZoomOut={canZoomOut}
+          />
+        </svg>
 
-      <ZoomControls
-        zoomPercentage={zoomPercentage}
-        onZoomIn={zoomIn}
-        onZoomOut={zoomOut}
-        onReset={resetView}
-        onFitToView={() => {
-          fitToDiagram(diagram);
-        }}
-        canZoomIn={canZoomIn}
-        canZoomOut={canZoomOut}
-      />
-
-      <CanvasStatus
-        diagram={diagram}
-        selectedElement={selectedElement}
-        selectedElementCount={selectedElementIds.length}
-        isConnectionSelected={isConnectionSelected}
-      />
+        <CanvasStatus
+          diagram={diagram}
+          selectedElement={selectedElement}
+          selectedElementCount={selectedElementIds.length}
+          isConnectionSelected={isConnectionSelected}
+        />
+      </div>
     </main>
   );
 }

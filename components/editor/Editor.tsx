@@ -10,7 +10,7 @@ import { DocumentGallery } from './documents/DocumentGallery';
 import { EditorPanelToggle } from './EditorPanelToggle';
 import { Header } from './header/Header';
 import { KeyboardShortcutsDialog } from './header/KeyboardShortcutsDialog';
-import { HistoryPanel } from './history/HistoryPanel';
+import { HistoryPanel } from './history/history-panel';
 import { useDiagramFile } from './hooks/useDiagramFile';
 import { useEditorPanels } from './hooks/useEditorPanels';
 import { Inspector } from './inspector/Inspector';
@@ -91,7 +91,8 @@ export function Editor() {
         }}
       />
 
-      <main className="relative min-h-0 flex-1 overflow-hidden">
+      <main className="relative h-full min-h-0 w-full overflow-hidden">
+        {' '}
         <div
           className="grid h-full min-h-0 min-w-0 overflow-hidden transition-[grid-template-columns] duration-200 ease-out"
           style={{ gridTemplateColumns: workspaceColumns }}
@@ -116,7 +117,6 @@ export function Editor() {
             <Inspector />
           </div>
         </div>
-
         <EditorPanelToggle side="left" isOpen={isToolbarOpen} onToggle={toggleToolbar} />
         <EditorPanelToggle side="right" isOpen={isInspectorOpen} onToggle={toggleInspector} />
       </main>
