@@ -5,7 +5,6 @@ import { createId } from '@/domain/diagram/lib/id';
 import type { Diagram, DiagramDocument } from '@/domain/diagram/models';
 
 import { createDocumentHistory } from './helpers';
-import { createActivitySlice } from './slices/activity.slice';
 import { createConnectionSlice } from './slices/connection.slice';
 import { createDocumentSlice } from './slices/document.slice';
 import { createElementSlice } from './slices/element.slice';
@@ -78,7 +77,6 @@ export const useDiagramStore = create<DiagramState>()(
       ...createSelectionSlice(...store),
       ...createElementSlice(...store),
       ...createConnectionSlice(...store),
-      ...createActivitySlice(...store),
       ...createHistorySlice(...store),
     }),
     {

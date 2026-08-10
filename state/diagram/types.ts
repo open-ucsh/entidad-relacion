@@ -77,10 +77,6 @@ export interface ConnectionSlice {
   handleConnectClick: (id: string) => void;
 }
 
-export interface ActivitySlice {
-  recordActivity: (type: DiagramActivityType, details: string) => void;
-}
-
 export interface HistorySlice {
   pendingHistorySnapshot: Diagram | null;
 
@@ -96,7 +92,6 @@ export type DiagramState = DocumentSlice &
   SelectionSlice &
   ElementSlice &
   ConnectionSlice &
-  ActivitySlice &
   HistorySlice;
 
 export type DiagramStoreSlice<T> = StateCreator<DiagramState, [], [], T>;
