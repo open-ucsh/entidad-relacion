@@ -1,7 +1,7 @@
 import { HistoryActivityRow } from './history-activity-row';
 import { HistoryEmptyState } from './history-empty-state';
-import type { Activity } from './utils/group-activity';
 import { groupActivityByDay } from './utils/group-activity';
+import type { Activity } from './utils/group-activity';
 
 interface HistoryActivityListProps {
   activities: Activity[];
@@ -15,10 +15,10 @@ export function HistoryActivityList({ activities }: HistoryActivityListProps) {
   }
 
   return (
-    <>
+    <div className="py-3">
       {groups.map((group) => (
         <section key={group.label}>
-          <h3 className="sticky top-0 z-10 bg-background/95 px-5 py-2 text-[11px] font-semibold uppercase tracking-wide text-text-muted backdrop-blur-sm">
+          <h3 className="px-5 pb-2 pt-3 text-xs font-semibold uppercase tracking-wider text-text-muted">
             {group.label}
           </h3>
 
@@ -31,6 +31,6 @@ export function HistoryActivityList({ activities }: HistoryActivityListProps) {
           </ol>
         </section>
       ))}
-    </>
+    </div>
   );
 }

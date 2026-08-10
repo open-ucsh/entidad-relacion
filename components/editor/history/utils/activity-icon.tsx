@@ -1,30 +1,72 @@
-import { CircleDot, Link2, PenLine, Plus, Trash2, type LucideIcon } from 'lucide-react';
+import {
+  CircleDot,
+  FileDown,
+  FilePlus,
+  Link2,
+  Move,
+  PenLine,
+  Plus,
+  Trash2,
+  type LucideIcon,
+} from 'lucide-react';
+
+import type { DiagramActivityType } from '@/domain/diagram/models';
 
 interface ActivityIcon {
   Icon: LucideIcon;
   className: string;
 }
 
-/**
- * Infiere un ícono y color a partir del texto del evento.
- * Si el backend algún día expone un `type` explícito, reemplazar esto por un switch sobre ese campo.
- */
-export function getActivityIcon(details: string): ActivityIcon {
-  if (/^Se eliminar/i.test(details)) {
-    return { Icon: Trash2, className: 'bg-rose-500/10 text-rose-600' };
-  }
+export function getActivityIcon(type: DiagramActivityType): ActivityIcon {
+  switch (type) {
+    case 'diagram-created':
+      return {
+        Icon: FilePlus,
+        className: 'bg-emerald-500/10 text-emerald-600',
+      };
 
-  if (/^Se cre[oó]/i.test(details)) {
-    return { Icon: Plus, className: 'bg-emerald-500/10 text-emerald-600' };
-  }
+    case 'diagram-imported':
+      return {
+        Icon: FileDown,
+        className: 'bg-amber-500/10 text-amber-600',
+      };
 
-  if (/^Se renombr[oó]/i.test(details)) {
-    return { Icon: PenLine, className: 'bg-brand-primary/10 text-brand-primary' };
-  }
+    case 'diagram-renamed':
+    case 'element-renamed':
+      return {
+        Icon: PenLine,
+        className: 'bg-brand-primary/10 text-brand-primary',
+      };
 
-  if (/cardinalidad|conexi[oó]n/i.test(details)) {
-    return { Icon: Link2, className: 'bg-amber-500/10 text-amber-600' };
-  }
+    case 'element-created':
+      return {
+        Icon: Plus,
+        className: 'bg-emerald-500/10 text-emerald-600',
+      };
 
-  return { Icon: CircleDot, className: 'bg-surface text-text-muted' };
+    case 'elements-moved':
+      return {
+        Icon: Move,
+        className: 'bg-violet-500/10 text-violet-600',
+      };
+
+    case 'elements-removed':
+      return {
+        Icon: Trash2,
+        className: 'bg-rose-500/10 text-rose-600',
+      };
+
+    case 'connection-created':
+    case 'connection-updated':
+      return {
+        Icon: Link2,
+        className: 'bg-amber-500/10 text-amber-600',
+      };
+
+    case 'element-updated':
+      return {
+        Icon: CircleDot,
+        className: 'bg-surface text-text-muted',
+      };
+  }
 }

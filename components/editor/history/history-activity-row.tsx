@@ -7,14 +7,14 @@ interface HistoryActivityRowProps {
 }
 
 export function HistoryActivityRow({ row }: HistoryActivityRowProps) {
-  const { Icon, className } = getActivityIcon(row.details);
+  const { Icon, className } = getActivityIcon(row.type);
 
   return (
-    <div className="flex items-start gap-3 rounded-md px-2.5 py-2 transition-colors hover:bg-surface-hover">
+    <div className="flex gap-3 px-2.5 py-2">
       <span
         className={`flex size-7 shrink-0 items-center justify-center rounded-full ${className}`}
       >
-        <Icon size={13} aria-hidden="true" />
+        <Icon size={14} aria-hidden="true" />
       </span>
 
       <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
