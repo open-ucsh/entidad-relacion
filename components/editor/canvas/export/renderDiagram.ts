@@ -1,5 +1,5 @@
 import type { Diagram } from '@/domain/diagram/models';
-import { getDiagramContentBounds } from '@/domain/diagram/queries/elements';
+import { getDiagramContentBounds } from '../elements/element-geometry';
 
 import { BRANDING } from '@/config/branding';
 

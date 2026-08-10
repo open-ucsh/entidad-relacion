@@ -11,7 +11,8 @@ import {
 } from 'react';
 
 import type { Diagram } from '@/domain/diagram/models';
-import { getDiagramContentBounds } from '@/domain/diagram/queries/bounds';
+
+import { getDiagramContentBounds } from '../elements/element-geometry';
 
 export interface CanvasSize {
   width: number;
@@ -45,12 +46,12 @@ function clamp(value: number, min: number, max: number): number {
 }
 
 export function useCanvasCamera(svgRef: RefObject<SVGSVGElement | null>) {
-  const [canvasSize, setCanvasSize] = useState<CanvasSize>({
+  const [canvasSize, setCanvasSize] = useState({
     width: 1,
     height: 1,
   });
 
-  const [camera, setCamera] = useState<CanvasCamera>(INITIAL_CAMERA);
+  const [camera, setCamera] = useState(INITIAL_CAMERA);
   const [isPanning, setIsPanning] = useState(false);
   const panStartRef = useRef<ClientPoint | null>(null);
 

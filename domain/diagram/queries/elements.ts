@@ -14,5 +14,3 @@ export function getElementPosition(
 ): BaseElement['position'] | undefined {
   return findDiagramElement(diagram, id)?.position;
 }
-
-export { getDiagramContentBounds } from './bounds';
