@@ -9,6 +9,7 @@ import type {
 import { createInitialDiagram } from './initial';
 import type { DiagramState } from './types';
 
+const MAX_ACTIVITY_SIZE = 200;
 const MAX_HISTORY_SIZE = 50;
 
 interface ReplaceDiagramOptions {
@@ -52,7 +53,7 @@ export function appendDiagramActivity(
         occurredAt,
         details,
       },
-    ],
+    ].slice(-MAX_ACTIVITY_SIZE),
   };
 }
 
