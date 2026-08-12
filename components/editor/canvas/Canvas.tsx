@@ -14,6 +14,7 @@ import { CanvasLayers } from './CanvasLayers';
 import { CanvasStatus } from './CanvasStatus';
 import { InlineElementNameEditor } from './InlineElementNameEditor';
 import { ZoomControls } from './ZoomControls';
+import { SelectionBox } from './SelectionBox';
 
 import { useCanvasCamera } from './hooks/useCanvasCamera';
 import { useCanvasDrag } from './hooks/useCanvasDrag';
@@ -280,6 +281,7 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
           <CanvasGrid camera={camera} canvasSize={canvasSize} />
 
           <CanvasInteraction>
+            {selectionBox && <SelectionBox box={selectionBox} />}
             <g
               id="diagram-world"
               transform={`translate(${camera.x} ${camera.y}) scale(${camera.zoom})`}
@@ -333,21 +335,6 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
                 />
               )}
             </g>
-
-            {selectionBox && (
-              <rect
-                x={selectionBox.x}
-                y={selectionBox.y}
-                width={selectionBox.width}
-                height={selectionBox.height}
-                fill="var(--color-brand-primary)"
-                fillOpacity={0.1}
-                stroke="var(--color-brand-primary)"
-                strokeWidth={1}
-                strokeDasharray="5 4"
-                pointerEvents="none"
-              />
-            )}
           </CanvasInteraction>
 
           <ZoomControls
