@@ -11,7 +11,7 @@ import { DocumentGallery } from './documents/DocumentGallery';
 import { EditorPanelToggle } from './EditorPanelToggle';
 import { Header } from './header/Header';
 import { KeyboardShortcutsDialog } from './header/KeyboardShortcutsDialog';
-import { HistoryPanel } from './history/history-panel';
+import { HistoryPanel } from './history/HistoryPanel';
 import { useDiagramFile } from './hooks/useDiagramFile';
 import { useEditorPanels } from './hooks/useEditorPanels';
 import { Inspector } from './inspector/Inspector';

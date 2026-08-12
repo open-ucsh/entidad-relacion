@@ -1,5 +1,5 @@
-import { HistoryActivityRow } from './history-activity-row';
-import { HistoryEmptyState } from './history-empty-state';
+import { HistoryActivityRow } from './HistoryActivityRow';
+import { HistoryEmptyState } from './HistoryEmptyState';
 import { groupActivityByDay } from './utils/group-activity';
 import type { Activity } from './utils/group-activity';
 

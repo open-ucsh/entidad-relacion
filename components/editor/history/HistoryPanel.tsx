@@ -3,9 +3,9 @@
 import { selectActiveDiagram } from '@/state/diagram/selectors';
 import { useDiagramStore } from '@/state/diagram/store';
 
-import { HistoryActivityList } from './history-activity-list';
-import { HistoryPanelHeader } from './history-panel-header';
-import { HistorySummary } from './history-summary';
+import { HistoryActivityList } from './HistoryActivityList';
+import { HistoryPanelHeader } from './HistoryPanelHeader';
+import { HistorySummary } from './HistorySummary';
 
 interface HistoryPanelProps {
   isOpen: boolean;

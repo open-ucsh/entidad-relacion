@@ -1,4 +1,4 @@
-import { getActivityIcon } from './utils/activity-icon';
+import { getActivityIcon } from './utils/ActivityIcon';
 import { formatTime } from './utils/format-history-date';
 import type { ActivityRow as ActivityRowData } from './utils/group-activity';
 
