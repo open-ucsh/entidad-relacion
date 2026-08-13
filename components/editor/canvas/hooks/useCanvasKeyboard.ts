@@ -40,7 +40,6 @@ export function useCanvasKeyboard() {
 
       if (isSpaceKey && !isTypingTarget(event.target)) {
         event.preventDefault();
-
         spacePressedRef.current = true;
         setIsSpacePressed(true);
         return;
@@ -80,6 +79,12 @@ export function useCanvasKeyboard() {
       if (hasModifier && key === 'd') {
         event.preventDefault();
         duplicateSelectedElements();
+        return;
+      }
+
+      // Deja que el navegador use Ctrl/Cmd/Alt para sus propios atajos:
+      // Ctrl+R, Ctrl+Shift+R, Ctrl+L, Cmd+R, etc.
+      if (hasModifier || event.altKey) {
         return;
       }
 
