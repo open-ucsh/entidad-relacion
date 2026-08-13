@@ -5,6 +5,8 @@ import { useRef, type PointerEvent } from 'react';
 import type { Diagram, Point } from '@/domain/diagram/models';
 import { getElementPosition } from '@/domain/diagram/queries/elements';
 
+import { snapDelta } from '../lib/grid';
+
 interface DragItem {
   id: string;
   position: Point;
@@ -86,12 +88,15 @@ export function useCanvasDrag({
       return;
     }
 
-    const dx = point.x - session.startPoint.x;
-    const dy = point.y - session.startPoint.y;
+    const rawDx = point.x - session.startPoint.x;
+    const rawDy = point.y - session.startPoint.y;
 
-    if (dx === 0 && dy === 0) {
+    if (rawDx === 0 && rawDy === 0) {
       return;
     }
+
+    const dx = event.altKey ? rawDx : snapDelta(rawDx);
+    const dy = event.altKey ? rawDy : snapDelta(rawDy);
 
     session.hasMoved = true;
 

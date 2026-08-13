@@ -4,16 +4,9 @@ import { createDiagramElement } from '@/domain/diagram/factories/element';
 import type { Point, Tool } from '@/domain/diagram/models';
 import { useDiagramStore } from '@/state/diagram/store';
 
+import { snapToGrid } from '../canvas/lib/grid';
+
 type CreatableTool = Extract<Tool, 'entity' | 'relationship' | 'attribute'>;
-
-const GRID_SIZE = 24;
-
-function snapToGrid(position: Point): Point {
-  return {
-    x: Math.round(position.x / GRID_SIZE) * GRID_SIZE,
-    y: Math.round(position.y / GRID_SIZE) * GRID_SIZE,
-  };
-}
 
 export function useCreateDiagramElement() {
   const addEntity = useDiagramStore((state) => state.addEntity);
