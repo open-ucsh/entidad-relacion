@@ -27,10 +27,10 @@ export function ToolbarButton({
       }`}
     >
       <span
-        className={`absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded px-1 text-xs font-semibold leading-none ${
+        className={`absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded px-1 text-xs font-semibold leading-none transition-opacity duration-150 ${
           active
-            ? 'bg-brand-primary text-white'
-            : 'bg-surface text-text-muted group-hover:text-brand-primary'
+            ? 'bg-brand-primary text-white opacity-100'
+            : 'bg-surface text-text-muted opacity-0 group-hover:opacity-100'
         }`}
       >
         {shortcut}

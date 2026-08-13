@@ -24,7 +24,7 @@ export interface ToolbarToolGroup {
 
 export const TOOL_GROUPS: ToolbarToolGroup[] = [
   {
-    title: 'Elementos',
+    title: 'Figuras',
     items: [
       {
         id: 'entity',

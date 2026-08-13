@@ -8,11 +8,20 @@ interface ToolbarGroupProps {
   items: ToolbarTool[];
   activeTool: Tool;
   onToolSelect: (tool: Tool) => void;
+  isFirst?: boolean;
 }
 
-export function ToolbarGroup({ title, items, activeTool, onToolSelect }: ToolbarGroupProps) {
+export function ToolbarGroup({
+  title,
+  items,
+  activeTool,
+  onToolSelect,
+  isFirst,
+}: ToolbarGroupProps) {
   return (
     <section>
+      {!isFirst && <div className="mb-6 h-px bg-border" />}
+
       <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-text-muted">
         {title}
       </h2>
