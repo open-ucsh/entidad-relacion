@@ -49,6 +49,10 @@ export interface SelectionSlice {
   setActiveTool: (tool: Tool) => void;
 }
 
+export type ElementAlignment = 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom';
+
+export type ElementDistribution = 'horizontal' | 'vertical';
+
 export interface ElementSlice {
   addEntity: (entity: Entity) => void;
   addRelationship: (relationship: Relationship) => void;
@@ -58,6 +62,8 @@ export interface ElementSlice {
   updateElement: (id: string, updates: Partial<Entity | Relationship | Attribute>) => void;
 
   duplicateSelectedElements: () => void;
+  alignSelectedElements: (alignment: ElementAlignment) => void;
+  distributeSelectedElements: (distribution: ElementDistribution) => void;
 
   moveElements: (updates: ElementPositionUpdate[]) => void;
 

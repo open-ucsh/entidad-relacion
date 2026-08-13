@@ -7,7 +7,12 @@ import { findDiagramElement, getDiagramElements } from '@/domain/diagram/queries
 
 import { appendDiagramActivity, replaceActiveDiagram } from '../helpers';
 import { moveDiagramElements, removeDiagramElements, updateDiagram } from '../mutations';
-import type { DiagramStoreSlice, ElementSlice } from '../types';
+import type {
+  DiagramStoreSlice,
+  ElementAlignment,
+  ElementDistribution,
+  ElementSlice,
+} from '../types';
 
 const DUPLICATE_OFFSET = 32;
 const ATTRIBUTE_DISTANCE = 120;
@@ -169,6 +174,95 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
         recordHistory: false,
       }),
     );
+  },
+  alignSelectedElements: (alignment: ElementAlignment) => {
+    set((state) => {
+      const selectedIds = new Set(state.selectedElementIds);
+      const selectedElements = getDiagramElements(state.diagram).filter((element) =>
+        selectedIds.has(element.id),
+      );
+
+      if (selectedElements.length < 2) {
+        return state;
+      }
+
+      const xPositions = selectedElements.map((element) => element.position.x);
+      const yPositions = selectedElements.map((element) => element.position.y);
+
+      const left = Math.min(...xPositions);
+      const right = Math.max(...xPositions);
+      const top = Math.min(...yPositions);
+      const bottom = Math.max(...yPositions);
+
+      const updates = selectedElements.map((element) => ({
+        id: element.id,
+        position: {
+          x:
+            alignment === 'left'
+              ? left
+              : alignment === 'center'
+                ? (left + right) / 2
+                : alignment === 'right'
+                  ? right
+                  : element.position.x,
+          y:
+            alignment === 'top'
+              ? top
+              : alignment === 'middle'
+                ? (top + bottom) / 2
+                : alignment === 'bottom'
+                  ? bottom
+                  : element.position.y,
+        },
+      }));
+
+      const diagram = appendDiagramActivity(
+        moveDiagramElements(state.diagram, updates),
+        'element-updated',
+        `Se alinearon ${selectedElements.length} elementos.`,
+      );
+
+      return replaceActiveDiagram(state, diagram);
+    });
+  },
+
+  distributeSelectedElements: (distribution: ElementDistribution) => {
+    set((state) => {
+      const selectedIds = new Set(state.selectedElementIds);
+      const selectedElements = getDiagramElements(state.diagram).filter((element) =>
+        selectedIds.has(element.id),
+      );
+
+      if (selectedElements.length < 3) {
+        return state;
+      }
+
+      const axis = distribution === 'horizontal' ? 'x' : 'y';
+
+      const sortedElements = [...selectedElements].sort(
+        (first, second) => first.position[axis] - second.position[axis],
+      );
+
+      const firstPosition = sortedElements[0].position[axis];
+      const lastPosition = sortedElements.at(-1)?.position[axis] ?? firstPosition;
+      const spacing = (lastPosition - firstPosition) / (sortedElements.length - 1);
+
+      const updates = sortedElements.map((element, index) => ({
+        id: element.id,
+        position: {
+          ...element.position,
+          [axis]: firstPosition + spacing * index,
+        },
+      }));
+
+      const diagram = appendDiagramActivity(
+        moveDiagramElements(state.diagram, updates),
+        'element-updated',
+        `Se distribuyeron ${selectedElements.length} elementos.`,
+      );
+
+      return replaceActiveDiagram(state, diagram);
+    });
   },
 
   duplicateSelectedElements: () => {
