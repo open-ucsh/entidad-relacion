@@ -80,7 +80,7 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
   const [connectionPreview, setConnectionPreview] = useState<ConnectionPreview | null>(null);
   const [connectionDropTargetId, setConnectionDropTargetId] = useState<string | null>(null);
 
-  useCanvasKeyboard();
+  const { isSpacePressed, spacePressedRef } = useCanvasKeyboard();
 
   const {
     canvasSize,
@@ -167,6 +167,19 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
     event.currentTarget.setPointerCapture(event.pointerId);
   }
 
+  function handlePointerDownCapture(event: PointerEvent<SVGSVGElement>) {
+    const shouldPan = spacePressedRef.current || event.button === 1;
+
+    if (!shouldPan) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    startPan(event);
+  }
+
   function handlePointerDown(event: PointerEvent<SVGSVGElement>) {
     if (isCreatableTool(activeTool) && event.button === 0) {
       const point = getWorldPoint(event.nativeEvent);
@@ -183,9 +196,7 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
       return;
     }
 
-    const shouldStartSelection = activeTool === 'select' && event.button === 0 && !event.shiftKey;
-
-    if (shouldStartSelection && startSelection(event)) {
+    if (activeTool === 'select' && event.button === 0 && startSelection(event)) {
       return;
     }
 
@@ -260,17 +271,21 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
       <div className="relative h-full min-h-0 w-full">
         <svg
           ref={svgRef}
+          tabIndex={0}
           className={`block h-full w-full touch-none ${
             isPanning
               ? 'cursor-grabbing'
-              : isCreatableTool(activeTool)
-                ? 'cursor-crosshair'
-                : activeTool === 'select'
-                  ? 'cursor-default'
-                  : 'cursor-grab'
+              : isSpacePressed
+                ? 'cursor-grab'
+                : isCreatableTool(activeTool)
+                  ? 'cursor-crosshair'
+                  : activeTool === 'select'
+                    ? 'cursor-default'
+                    : 'cursor-grab'
           }`}
           viewBox={`0 0 ${canvasSize.width} ${canvasSize.height}`}
           onWheel={handleWheel}
+          onPointerDownCapture={handlePointerDownCapture}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}

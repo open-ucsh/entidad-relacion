@@ -111,7 +111,7 @@ export function useCanvasSelectionBox({
 
       sessionRef.current = {
         startPoint,
-        additive: event.ctrlKey || event.metaKey,
+        additive: event.shiftKey || event.ctrlKey || event.metaKey,
         hasMoved: false,
       };
 

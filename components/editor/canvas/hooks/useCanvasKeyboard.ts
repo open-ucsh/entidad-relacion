@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { useDiagramTool } from '@/components/editor/hooks/useDiagramTool';
 import { getToolFromShortcut } from '@/components/editor/toolbar/tool-config';
@@ -15,6 +15,9 @@ function isTypingTarget(target: EventTarget | null): boolean {
 }
 
 export function useCanvasKeyboard() {
+  const [isSpacePressed, setIsSpacePressed] = useState(false);
+  const spacePressedRef = useRef(false);
+
   const selectedElementIds = useDiagramStore((state) => state.selectedElementIds);
 
   const removeElements = useDiagramStore((state) => state.removeElements);
@@ -27,7 +30,22 @@ export function useCanvasKeyboard() {
   const { activateTool } = useDiagramTool();
 
   useEffect(() => {
+    function resetSpaceKey() {
+      spacePressedRef.current = false;
+      setIsSpacePressed(false);
+    }
+
     function handleKeyDown(event: KeyboardEvent) {
+      const isSpaceKey = event.code === 'Space' || event.key === ' ';
+
+      if (isSpaceKey && !isTypingTarget(event.target)) {
+        event.preventDefault();
+
+        spacePressedRef.current = true;
+        setIsSpacePressed(true);
+        return;
+      }
+
       if (isTypingTarget(event.target)) {
         return;
       }
@@ -87,10 +105,20 @@ export function useCanvasKeyboard() {
       }
     }
 
-    window.addEventListener('keydown', handleKeyDown);
+    function handleKeyUp(event: KeyboardEvent) {
+      if (event.code === 'Space' || event.key === ' ') {
+        resetSpaceKey();
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown, true);
+    document.addEventListener('keyup', handleKeyUp, true);
+    window.addEventListener('blur', resetSpaceKey);
 
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keydown', handleKeyDown, true);
+      document.removeEventListener('keyup', handleKeyUp, true);
+      window.removeEventListener('blur', resetSpaceKey);
     };
   }, [
     activateTool,
@@ -102,4 +130,9 @@ export function useCanvasKeyboard() {
     setActiveTool,
     undo,
   ]);
+
+  return {
+    isSpacePressed,
+    spacePressedRef,
+  };
 }
