@@ -14,6 +14,7 @@ import { CanvasStatus } from './CanvasStatus';
 import { InlineElementNameEditor } from './InlineElementNameEditor';
 import { SelectionBox } from './SelectionBox';
 import { ZoomControls } from './ZoomControls';
+import { CanvasAlignmentGuides } from './CanvasAlignmentGuides';
 
 import { useCanvasCamera } from './hooks/useCanvasCamera';
 import { useCanvasConnection } from './hooks/useCanvasConnection';
@@ -22,6 +23,7 @@ import { useCanvasKeyboard } from './hooks/useCanvasKeyboard';
 import { useCanvasSelectionBox } from './hooks/useCanvasSelectionBox';
 import { useInlineElementNameEditing } from './hooks/useInlineElementNameEditing';
 import { useWorldCoordinates } from './hooks/useWorldCoordinates';
+import { useCanvasAlignmentGuides } from './hooks/useCanvasAlignmentGuides';
 import { isCreatableTool } from './lib/canvas-elements';
 
 interface CanvasProps {
@@ -74,6 +76,8 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
   } = useCanvasCamera(svgRef);
 
   const { getWorldPoint } = useWorldCoordinates(svgRef, camera);
+  const { alignmentGuides, updateAlignmentGuides, clearAlignmentGuides } =
+    useCanvasAlignmentGuides(diagram);
 
   const {
     connectionPreview,
@@ -94,6 +98,7 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
     diagram,
     selectedElementIds,
     getSvgPoint: getWorldPoint,
+    onDrag: updateAlignmentGuides,
     moveElements,
     onMoveStarted: beginHistoryTransaction,
     onMoveCompleted: (movedElementCount) => {
@@ -184,6 +189,8 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
   }
 
   function handlePointerUp(event: PointerEvent<SVGSVGElement>) {
+    clearAlignmentGuides();
+
     if (finishConnection(event)) {
       return;
     }
@@ -194,6 +201,7 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
   }
 
   function handlePointerCancel() {
+    clearAlignmentGuides();
     cancelCanvasConnection();
     stopPan();
     stopDrag();
@@ -237,6 +245,8 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
               transform={`translate(${camera.x} ${camera.y}) scale(${camera.zoom})`}
             >
               <CanvasConnectionPreview preview={connectionPreview} />
+
+              <CanvasAlignmentGuides guides={alignmentGuides} />
 
               <CanvasLayers
                 diagram={diagram}

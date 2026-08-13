@@ -18,16 +18,17 @@ interface DragSession {
   hasMoved: boolean;
 }
 
+interface ElementPositionUpdate {
+  id: string;
+  position: Point;
+}
+
 interface UseCanvasDragProps {
   diagram: Diagram;
   selectedElementIds: string[];
   getSvgPoint: (event: globalThis.PointerEvent) => Point | null;
-  moveElements: (
-    updates: Array<{
-      id: string;
-      position: Point;
-    }>,
-  ) => void;
+  moveElements: (updates: ElementPositionUpdate[]) => void;
+  onDrag: (updates: ElementPositionUpdate[]) => void;
   onMoveStarted: () => void;
   onMoveCompleted: (movedElementCount: number) => void;
   onMoveCancelled: () => void;
@@ -38,6 +39,7 @@ export function useCanvasDrag({
   selectedElementIds,
   getSvgPoint,
   moveElements,
+  onDrag,
   onMoveStarted,
   onMoveCompleted,
   onMoveCancelled,
@@ -98,17 +100,17 @@ export function useCanvasDrag({
     const dx = event.altKey ? rawDx : snapDelta(rawDx);
     const dy = event.altKey ? rawDy : snapDelta(rawDy);
 
-    session.hasMoved = true;
+    const updates = session.items.map((item) => ({
+      id: item.id,
+      position: {
+        x: item.position.x + dx,
+        y: item.position.y + dy,
+      },
+    }));
 
-    moveElements(
-      session.items.map((item) => ({
-        id: item.id,
-        position: {
-          x: item.position.x + dx,
-          y: item.position.y + dy,
-        },
-      })),
-    );
+    session.hasMoved = true;
+    moveElements(updates);
+    onDrag(updates);
   }
 
   function stopDrag() {
