@@ -56,26 +56,21 @@ export function EntityShape({
   ].join(' ');
 
   const isInvalidTarget = showConnectionTargets && isConnectionTargetInvalid && !selected;
-
   const isValidTarget =
     showConnectionTargets && isConnectionTarget && !selected && !isConnectionDropTarget;
-
   const isActiveTarget = isConnectionDropTarget;
 
   const stroke = isActiveTarget
     ? 'var(--color-brand-primary-hover)'
-    : selected
+    : isValidTarget
       ? 'var(--color-brand-primary)'
-      : isValidTarget
-        ? 'var(--color-brand-primary)'
-        : 'var(--color-border)';
+      : 'var(--color-border)';
 
-  const strokeWidth = isActiveTarget ? 4 : selected ? 3 : isValidTarget ? 2 : 1.5;
+  const strokeWidth = isActiveTarget ? 4 : isValidTarget ? 2 : 1.5;
   const strokeOpacity = isValidTarget ? 0.55 : 1;
   const elementOpacity = isInvalidTarget ? 0.35 : 1;
 
   const fill = isActiveTarget ? 'var(--color-brand-primary)' : 'var(--color-background)';
-
   const fillOpacity = isActiveTarget ? 0.12 : 1;
 
   return (
@@ -119,7 +114,7 @@ export function EntityShape({
             fill={fill}
             fillOpacity={fillOpacity}
             stroke={stroke}
-            strokeWidth={isActiveTarget ? 3 : selected || isValidTarget ? 2 : 1}
+            strokeWidth={isActiveTarget ? 3 : isValidTarget ? 2 : 1}
             strokeOpacity={strokeOpacity}
           />
         )}
@@ -134,8 +129,45 @@ export function EntityShape({
         </text>
       </g>
 
+      {selected && (
+        <g data-export-exclude pointerEvents="none">
+          {isWeak && (
+            <rect
+              x={x + 4}
+              y={y + 4}
+              width={WIDTH}
+              height={HEIGHT}
+              rx={6}
+              fill="none"
+              stroke="var(--color-brand-primary)"
+              strokeWidth={3}
+            />
+          )}
+
+          <rect
+            x={x}
+            y={y}
+            width={WIDTH}
+            height={HEIGHT}
+            rx={isAssociative ? 0 : 6}
+            fill="none"
+            stroke="var(--color-brand-primary)"
+            strokeWidth={3}
+          />
+
+          {isAssociative && (
+            <polygon
+              points={diamondPoints}
+              fill="none"
+              stroke="var(--color-brand-primary)"
+              strokeWidth={2}
+            />
+          )}
+        </g>
+      )}
+
       {selected && showConnectionHandle && (
-        <g>
+        <g data-export-exclude>
           <circle
             cx={centerX + WIDTH / 2 + 14}
             cy={centerY}

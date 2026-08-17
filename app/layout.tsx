@@ -8,6 +8,11 @@ import './globals.css';
 export const metadata: Metadata = {
   title: BRANDING.applicationName,
   description: 'Editor visual para crear y editar diagramas Entidad-Relación.',
+  icons: {
+    icon: BRANDING.favicon,
+    shortcut: BRANDING.favicon,
+    apple: BRANDING.favicon,
+  },
 };
 
 interface RootLayoutProps {

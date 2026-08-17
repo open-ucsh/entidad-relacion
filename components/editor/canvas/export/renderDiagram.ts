@@ -104,6 +104,9 @@ function prepareExportSvg(
   clone.querySelector('#diagram-world')?.setAttribute('transform', '');
 
   clone.querySelector('[data-canvas-grid]')?.remove();
+  clone.querySelectorAll('[data-export-exclude]').forEach((element) => {
+    element.remove();
+  });
 
   const background = document.createElementNS(SVG_NAMESPACE, 'rect');
 

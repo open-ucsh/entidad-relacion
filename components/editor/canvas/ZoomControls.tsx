@@ -43,6 +43,7 @@ function IconButton({ x, y, size, label, disabled = false, onClick, children }: 
 
   return (
     <g
+      data-export-exclude
       transform={`translate(${x} ${y})`}
       role="button"
       aria-label={label}
@@ -124,7 +125,6 @@ export function ZoomControls({
         event.stopPropagation();
       }}
     >
-      {/* Grupo de zoom */}
       <g>
         <Pill width={zoomPillWidth} height={height} />
 

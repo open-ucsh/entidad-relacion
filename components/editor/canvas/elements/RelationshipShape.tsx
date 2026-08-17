@@ -44,27 +44,29 @@ export function RelationshipShape({
     `${x - WIDTH / 2},${y}`,
   ].join(' ');
 
-  const isInvalidTarget = showConnectionTargets && isConnectionTargetInvalid && !selected;
+  const identifyingPoints = [
+    `${x},${y - HEIGHT / 2 - 5}`,
+    `${x + WIDTH / 2 + 5},${y}`,
+    `${x},${y + HEIGHT / 2 + 5}`,
+    `${x - WIDTH / 2 - 5},${y}`,
+  ].join(' ');
 
+  const isInvalidTarget = showConnectionTargets && isConnectionTargetInvalid && !selected;
   const isValidTarget =
     showConnectionTargets && isConnectionTarget && !selected && !isConnectionDropTarget;
-
   const isActiveTarget = isConnectionDropTarget;
 
   const stroke = isActiveTarget
     ? 'var(--color-brand-primary-hover)'
-    : selected
+    : isValidTarget
       ? 'var(--color-brand-primary)'
-      : isValidTarget
-        ? 'var(--color-brand-primary)'
-        : 'var(--color-border)';
+      : 'var(--color-border)';
 
-  const strokeWidth = isActiveTarget ? 4 : selected ? 3 : isValidTarget ? 2 : 1.5;
+  const strokeWidth = isActiveTarget ? 4 : isValidTarget ? 2 : 1.5;
   const strokeOpacity = isValidTarget ? 0.55 : 1;
   const elementOpacity = isInvalidTarget ? 0.35 : 1;
 
   const fill = isActiveTarget ? 'var(--color-brand-primary)' : 'var(--color-background)';
-
   const fillOpacity = isActiveTarget ? 0.12 : 1;
 
   return (
@@ -77,12 +79,7 @@ export function RelationshipShape({
       <g opacity={elementOpacity}>
         {relationship.kind === 'identifying' && (
           <polygon
-            points={[
-              `${x},${y - HEIGHT / 2 - 5}`,
-              `${x + WIDTH / 2 + 5},${y}`,
-              `${x},${y + HEIGHT / 2 + 5}`,
-              `${x - WIDTH / 2 - 5},${y}`,
-            ].join(' ')}
+            points={identifyingPoints}
             fill="none"
             stroke={stroke}
             strokeWidth={strokeWidth}
@@ -104,8 +101,28 @@ export function RelationshipShape({
         </text>
       </g>
 
+      {selected && (
+        <g data-export-exclude pointerEvents="none">
+          {relationship.kind === 'identifying' && (
+            <polygon
+              points={identifyingPoints}
+              fill="none"
+              stroke="var(--color-brand-primary)"
+              strokeWidth={3}
+            />
+          )}
+
+          <polygon
+            points={points}
+            fill="none"
+            stroke="var(--color-brand-primary)"
+            strokeWidth={3}
+          />
+        </g>
+      )}
+
       {selected && showConnectionHandle && (
-        <g>
+        <g data-export-exclude>
           <circle cx={x + WIDTH / 2 + 14} cy={y} r={9} fill="var(--color-brand-primary)" />
 
           <ConnectionHandle x={x + WIDTH / 2 + 14} y={y} onPointerDown={onConnectionPointerDown} />

@@ -47,26 +47,21 @@ export function AttributeShape({
   const halfTextWidth = estimateTextWidth(displayName) / 2;
 
   const isInvalidTarget = showConnectionTargets && isConnectionTargetInvalid && !selected;
-
   const isValidTarget =
     showConnectionTargets && isConnectionTarget && !selected && !isConnectionDropTarget;
-
   const isActiveTarget = isConnectionDropTarget;
 
   const stroke = isActiveTarget
     ? 'var(--color-brand-primary-hover)'
-    : selected
+    : isValidTarget
       ? 'var(--color-brand-primary)'
-      : isValidTarget
-        ? 'var(--color-brand-primary)'
-        : 'var(--color-border)';
+      : 'var(--color-border)';
 
-  const strokeWidth = isActiveTarget ? 4 : selected ? 3 : isValidTarget ? 2 : 1.5;
+  const strokeWidth = isActiveTarget ? 4 : isValidTarget ? 2 : 1.5;
   const strokeOpacity = isValidTarget ? 0.55 : 1;
   const elementOpacity = isInvalidTarget ? 0.35 : 1;
 
   const fill = isActiveTarget ? 'var(--color-brand-primary)' : 'var(--color-background)';
-
   const fillOpacity = isActiveTarget ? 0.12 : 1;
 
   return (
@@ -143,8 +138,35 @@ export function AttributeShape({
         )}
       </g>
 
+      {selected && (
+        <g data-export-exclude pointerEvents="none">
+          {attribute.multivalued && (
+            <ellipse
+              cx={x}
+              cy={y}
+              rx={RX + 5}
+              ry={RY + 5}
+              fill="none"
+              stroke="var(--color-brand-primary)"
+              strokeWidth={3}
+            />
+          )}
+
+          <ellipse
+            cx={x}
+            cy={y}
+            rx={RX}
+            ry={RY}
+            fill="none"
+            stroke="var(--color-brand-primary)"
+            strokeWidth={3}
+            strokeDasharray={attribute.derived ? '5 4' : undefined}
+          />
+        </g>
+      )}
+
       {selected && showConnectionHandle && (
-        <g>
+        <g data-export-exclude>
           <circle cx={x + RX + 14} cy={y} r={9} fill="var(--color-brand-primary)" />
 
           <ConnectionHandle x={x + RX + 14} y={y} onPointerDown={onConnectionPointerDown} />

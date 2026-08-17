@@ -34,8 +34,6 @@ export function ConnectionShape({
   cardinalityLabel,
   onClick,
 }: ConnectionShapeProps) {
-  const stroke = selected ? 'var(--color-brand-primary)' : 'var(--color-border)';
-  const strokeWidth = selected ? 3 : 1.5;
   const labelPosition = getCardinalityPosition(from, to);
 
   return (
@@ -54,10 +52,24 @@ export function ConnectionShape({
         y1={from.y}
         x2={to.x}
         y2={to.y}
-        stroke={stroke}
-        strokeWidth={strokeWidth}
+        stroke="var(--color-border)"
+        strokeWidth={1.5}
         strokeLinecap="round"
       />
+
+      {selected && (
+        <line
+          data-export-exclude
+          x1={from.x}
+          y1={from.y}
+          x2={to.x}
+          y2={to.y}
+          stroke="var(--color-brand-primary)"
+          strokeWidth={3}
+          strokeLinecap="round"
+          pointerEvents="none"
+        />
+      )}
 
       {cardinalityLabel && (
         <g pointerEvents="none">

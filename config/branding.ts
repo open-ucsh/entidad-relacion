@@ -1,5 +1,6 @@
 export const BRANDING = {
-  applicationName: 'ER Designer',
+  applicationName: 'Diagramando UCSH',
   logo: '/logo.png',
+  favicon: '/favicon.png',
   university: 'Universidad Católica Silva Henríquez',
 } as const;
