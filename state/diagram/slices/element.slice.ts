@@ -243,7 +243,13 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
         (first, second) => first.position[axis] - second.position[axis],
       );
 
-      const firstPosition = sortedElements[0].position[axis];
+      const firstElement = sortedElements.at(0);
+
+      if (!firstElement) {
+        return state;
+      }
+
+      const firstPosition = firstElement.position[axis];
       const lastPosition = sortedElements.at(-1)?.position[axis] ?? firstPosition;
       const spacing = (lastPosition - firstPosition) / (sortedElements.length - 1);
 
