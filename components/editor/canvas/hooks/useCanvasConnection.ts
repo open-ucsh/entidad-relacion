@@ -1,9 +1,10 @@
 'use client';
 
-import { useCallback, useRef, useState, type PointerEvent } from 'react';
+import { type PointerEvent, useCallback, useRef, useState } from 'react';
 
+import { getElementBoundaryPoint } from '@/domain/diagram/lib/geometry';
 import type { Diagram, Point } from '@/domain/diagram/models';
-import { getElementPosition } from '@/domain/diagram/queries/elements';
+import { findDiagramElement } from '@/domain/diagram/queries/elements';
 import { canConnectElementsById } from '@/domain/diagram/validation/connections';
 
 import type { ConnectionPreview } from '../CanvasConnectionPreview';
@@ -29,6 +30,35 @@ export function useCanvasConnection({
   const [preview, setPreview] = useState<ConnectionPreview | null>(null);
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
 
+  const createPreview = useCallback(
+    (sourceId: string, pointer: Point, targetId?: string | null): ConnectionPreview | null => {
+      const sourceElement = findDiagramElement(diagram, sourceId);
+
+      if (!sourceElement) {
+        return null;
+      }
+
+      const targetElement = targetId ? findDiagramElement(diagram, targetId) : undefined;
+
+      if (
+        targetElement &&
+        targetElement.id !== sourceElement.id &&
+        canConnectElementsById(diagram, sourceId, targetElement.id)
+      ) {
+        return {
+          from: getElementBoundaryPoint(sourceElement, targetElement.position),
+          to: getElementBoundaryPoint(targetElement, sourceElement.position),
+        };
+      }
+
+      return {
+        from: getElementBoundaryPoint(sourceElement, pointer),
+        to: pointer,
+      };
+    },
+    [diagram],
+  );
+
   const resetConnection = useCallback(() => {
     sourceIdRef.current = null;
     setPreview(null);
@@ -41,20 +71,25 @@ export function useCanvasConnection({
       event.preventDefault();
       event.stopPropagation();
 
-      const from = getElementPosition(diagram, sourceId);
-      const to = getWorldPoint(event.nativeEvent);
+      const pointer = getWorldPoint(event.nativeEvent);
 
-      if (!from || !to) {
+      if (!pointer) {
+        return;
+      }
+
+      const nextPreview = createPreview(sourceId, pointer);
+
+      if (!nextPreview) {
         return;
       }
 
       sourceIdRef.current = sourceId;
-      setPreview({ from, to });
+      setPreview(nextPreview);
       beginConnection(sourceId);
 
       event.currentTarget.setPointerCapture(event.pointerId);
     },
-    [beginConnection, diagram, getWorldPoint],
+    [beginConnection, createPreview, getWorldPoint],
   );
 
   const moveConnection = useCallback(
@@ -65,23 +100,27 @@ export function useCanvasConnection({
         return false;
       }
 
-      const from = getElementPosition(diagram, sourceId);
-      const to = getWorldPoint(event.nativeEvent);
-      const targetId = getElementIdAtPoint(event.clientX, event.clientY);
+      const pointer = getWorldPoint(event.nativeEvent);
 
-      if (from && to) {
-        setPreview({ from, to });
+      if (!pointer) {
+        return true;
       }
 
-      if (targetId && canConnectElementsById(diagram, sourceId, targetId)) {
-        setDropTargetId(targetId);
-      } else {
-        setDropTargetId(null);
-      }
+      const hoveredElementId = getElementIdAtPoint(event.clientX, event.clientY);
+
+      const validTargetId =
+        hoveredElementId &&
+        hoveredElementId !== sourceId &&
+        canConnectElementsById(diagram, sourceId, hoveredElementId)
+          ? hoveredElementId
+          : null;
+
+      setDropTargetId(validTargetId);
+      setPreview(createPreview(sourceId, pointer, validTargetId));
 
       return true;
     },
-    [diagram, getWorldPoint],
+    [createPreview, diagram, getWorldPoint],
   );
 
   const finishConnection = useCallback(
@@ -94,7 +133,11 @@ export function useCanvasConnection({
 
       const targetId = getElementIdAtPoint(event.clientX, event.clientY);
 
-      if (targetId && targetId !== sourceId) {
+      if (
+        targetId &&
+        targetId !== sourceId &&
+        canConnectElementsById(diagram, sourceId, targetId)
+      ) {
         connectElements(sourceId, targetId);
       }
 
@@ -102,7 +145,7 @@ export function useCanvasConnection({
 
       return true;
     },
-    [connectElements, resetConnection],
+    [connectElements, diagram, resetConnection],
   );
 
   return {

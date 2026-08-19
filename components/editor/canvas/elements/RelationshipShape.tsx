@@ -3,7 +3,7 @@ import type { MouseEvent, PointerEvent } from 'react';
 import { ELEMENT_GEOMETRY } from '@/domain/diagram/lib/geometry';
 import type { Relationship } from '@/domain/diagram/models';
 
-import { ConnectionHandle } from './ConnectionHandle';
+import { ConnectionHandle, CONNECTION_HANDLE_OFFSET } from './ConnectionHandle';
 import { ElementInteractionGroup } from './ElementInteractionGroup';
 
 const WIDTH = ELEMENT_GEOMETRY.relationship.width;
@@ -116,9 +116,11 @@ export function RelationshipShape({
 
       {selected && showConnectionHandle && (
         <g data-export-exclude>
-          <circle cx={x + WIDTH / 2 + 14} cy={y} r={9} fill="var(--color-brand-primary)" />
-
-          <ConnectionHandle x={x + WIDTH / 2 + 14} y={y} onPointerDown={onConnectionPointerDown} />
+          <ConnectionHandle
+            x={x + WIDTH / 2 + CONNECTION_HANDLE_OFFSET}
+            y={y}
+            onPointerDown={onConnectionPointerDown}
+          />
         </g>
       )}
     </ElementInteractionGroup>

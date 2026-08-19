@@ -15,25 +15,17 @@ export function CanvasConnectionPreview({ preview }: CanvasConnectionPreviewProp
   }
 
   return (
-    <g pointerEvents="none" aria-hidden="true">
+    <g pointerEvents="none" aria-hidden="true" data-export-exclude>
       <line
         x1={preview.from.x}
         y1={preview.from.y}
         x2={preview.to.x}
         y2={preview.to.y}
         stroke="var(--color-brand-primary)"
-        strokeWidth={2}
-        strokeDasharray="7 5"
+        strokeWidth={1.75}
+        strokeDasharray="5 5"
         strokeLinecap="round"
-        opacity={0.9}
-      />
-
-      <circle
-        cx={preview.to.x}
-        cy={preview.to.y}
-        r={5}
-        fill="var(--color-brand-primary)"
-        opacity={0.9}
+        opacity={0.75}
       />
     </g>
   );

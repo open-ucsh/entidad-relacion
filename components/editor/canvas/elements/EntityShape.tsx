@@ -3,7 +3,7 @@ import type { MouseEvent, PointerEvent } from 'react';
 import { ELEMENT_GEOMETRY } from '@/domain/diagram/lib/geometry';
 import type { Entity } from '@/domain/diagram/models';
 
-import { ConnectionHandle } from './ConnectionHandle';
+import { ConnectionHandle, CONNECTION_HANDLE_OFFSET } from './ConnectionHandle';
 import { ElementInteractionGroup } from './ElementInteractionGroup';
 
 const WIDTH = ELEMENT_GEOMETRY.entity.width;
@@ -139,15 +139,8 @@ export function EntityShape({
 
       {selected && showConnectionHandle && (
         <g data-export-exclude>
-          <circle
-            cx={centerX + WIDTH / 2 + 14}
-            cy={centerY}
-            r={9}
-            fill="var(--color-brand-primary)"
-          />
-
           <ConnectionHandle
-            x={centerX + WIDTH / 2 + 14}
+            x={centerX + WIDTH / 2 + CONNECTION_HANDLE_OFFSET}
             y={centerY}
             onPointerDown={onConnectionPointerDown}
           />

@@ -3,7 +3,7 @@ import type { MouseEvent, PointerEvent } from 'react';
 import { ELEMENT_GEOMETRY } from '@/domain/diagram/lib/geometry';
 import type { Attribute } from '@/domain/diagram/models';
 
-import { ConnectionHandle } from './ConnectionHandle';
+import { CONNECTION_HANDLE_OFFSET, ConnectionHandle } from './ConnectionHandle';
 import { ElementInteractionGroup } from './ElementInteractionGroup';
 
 const RX = ELEMENT_GEOMETRY.attribute.radiusX;
@@ -155,9 +155,11 @@ export function AttributeShape({
 
       {selected && showConnectionHandle && (
         <g data-export-exclude>
-          <circle cx={x + RX + 14} cy={y} r={9} fill="var(--color-brand-primary)" />
-
-          <ConnectionHandle x={x + RX + 14} y={y} onPointerDown={onConnectionPointerDown} />
+          <ConnectionHandle
+            x={x + RX + CONNECTION_HANDLE_OFFSET}
+            y={y}
+            onPointerDown={onConnectionPointerDown}
+          />
         </g>
       )}
     </ElementInteractionGroup>
