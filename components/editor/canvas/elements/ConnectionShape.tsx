@@ -10,20 +10,22 @@ interface ConnectionShapeProps {
   onClick: (event: MouseEvent<SVGGElement>) => void;
 }
 
-const CARDINALITY_OFFSET = 88;
+const CARDINALITY_OFFSET = 28;
 
 function getCardinalityPosition(from: Point, to: Point): Point {
   const dx = to.x - from.x;
   const dy = to.y - from.y;
-  const distance = Math.hypot(dx, dy);
+  const lineLength = Math.hypot(dx, dy);
 
-  if (distance === 0) {
+  if (lineLength === 0) {
     return from;
   }
 
+  const offset = Math.min(CARDINALITY_OFFSET, lineLength / 2);
+
   return {
-    x: from.x + (dx / distance) * CARDINALITY_OFFSET,
-    y: from.y + (dy / distance) * CARDINALITY_OFFSET,
+    x: from.x + (dx / lineLength) * offset,
+    y: from.y + (dy / lineLength) * offset,
   };
 }
 
@@ -45,42 +47,40 @@ export function ConnectionShape({
         event.stopPropagation();
         onClick(event);
       }}
-      className="cursor-pointer"
+      className="group cursor-pointer"
     >
       <line
         x1={from.x}
         y1={from.y}
         x2={to.x}
         y2={to.y}
-        stroke="var(--color-border)"
-        strokeWidth={1.5}
+        stroke="transparent"
+        strokeWidth={12}
         strokeLinecap="round"
       />
 
-      {selected && (
-        <line
-          data-export-exclude
-          x1={from.x}
-          y1={from.y}
-          x2={to.x}
-          y2={to.y}
-          stroke="var(--color-brand-primary)"
-          strokeWidth={3}
-          strokeLinecap="round"
-          pointerEvents="none"
-        />
-      )}
+      <line
+        x1={from.x}
+        y1={from.y}
+        x2={to.x}
+        y2={to.y}
+        stroke={selected ? 'var(--color-brand-primary)' : 'var(--color-border)'}
+        strokeWidth={selected ? 2.5 : 1.5}
+        strokeLinecap="round"
+        className="transition-all duration-150 group-hover:stroke-brand-primary"
+        pointerEvents="none"
+      />
 
       {cardinalityLabel && (
         <g pointerEvents="none">
           <rect
-            x={labelPosition.x - 15}
+            x={labelPosition.x - 17}
             y={labelPosition.y - 10}
-            width="30"
-            height="20"
-            rx="4"
+            width={34}
+            height={20}
+            rx={6}
             className="fill-background stroke-border"
-            strokeWidth="1"
+            strokeWidth={1}
           />
 
           <text

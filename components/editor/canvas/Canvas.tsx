@@ -250,6 +250,7 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
 
               <CanvasLayers
                 diagram={diagram}
+                editingElementId={editingElement?.id ?? null}
                 selectedElementIds={selectedElementIds}
                 connectionSourceId={connectionSourceId}
                 connectionDropTargetId={connectionDropTargetId}

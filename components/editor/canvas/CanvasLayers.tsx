@@ -1,12 +1,12 @@
 import type { PointerEvent } from 'react';
 
 import type { Diagram, Tool } from '@/domain/diagram/models';
-import { canConnectDiagramElements } from '@/domain/diagram/validation/connections';
-import { findDiagramElement } from '@/domain/diagram/queries/elements';
 import {
   formatConnectionCardinality,
   getConnectionEndpoints,
 } from '@/domain/diagram/queries/connections';
+import { findDiagramElement } from '@/domain/diagram/queries/elements';
+import { canConnectDiagramElements } from '@/domain/diagram/validation/connections';
 
 import { AttributeShape } from './elements/AttributeShape';
 import { ConnectionShape } from './elements/ConnectionShape';
@@ -16,6 +16,7 @@ import { useCanvasElementInteraction } from './hooks/useCanvasElementInteraction
 
 interface CanvasLayersProps {
   diagram: Diagram;
+  editingElementId: string | null;
   connectionDropTargetId: string | null;
   selectedElementIds: string[];
   connectionSourceId: string | null;
@@ -31,11 +32,12 @@ interface CanvasLayersProps {
 
 export function CanvasLayers({
   diagram,
+  editingElementId,
   selectedElementIds,
   connectionSourceId,
+  connectionDropTargetId,
   activeTool,
   onSelectElement,
-  connectionDropTargetId,
   onToggleElement,
   onDeleteElement,
   onElementPointerDown,
@@ -66,6 +68,8 @@ export function CanvasLayers({
     : undefined;
 
   const showConnectionTargets = Boolean(connectionSource);
+
+  const showConnectionHandles = activeTool === 'select' || activeTool === 'connect';
 
   function getConnectionTargetState(id: string) {
     const target = findDiagramElement(diagram, id);
@@ -119,7 +123,8 @@ export function CanvasLayers({
               key={entity.id}
               entity={entity}
               selected={isSelected(entity.id)}
-              showConnectionHandle={activeTool === 'select'}
+              isEditing={editingElementId === entity.id}
+              showConnectionHandle={showConnectionHandles}
               isConnectionDropTarget={connectionDropTargetId === entity.id}
               showConnectionTargets={showConnectionTargets}
               {...connectionTargetState}
@@ -144,11 +149,12 @@ export function CanvasLayers({
 
           return (
             <RelationshipShape
-              isConnectionDropTarget={connectionDropTargetId === relationship.id}
               key={relationship.id}
               relationship={relationship}
               selected={isSelected(relationship.id)}
-              showConnectionHandle={activeTool === 'select'}
+              isEditing={editingElementId === relationship.id}
+              showConnectionHandle={showConnectionHandles}
+              isConnectionDropTarget={connectionDropTargetId === relationship.id}
               showConnectionTargets={showConnectionTargets}
               {...connectionTargetState}
               onClick={(event) => {
@@ -173,10 +179,11 @@ export function CanvasLayers({
           return (
             <AttributeShape
               key={attribute.id}
-              isConnectionDropTarget={connectionDropTargetId === attribute.id}
               attribute={attribute}
               selected={isSelected(attribute.id)}
-              showConnectionHandle={activeTool === 'select'}
+              isEditing={editingElementId === attribute.id}
+              showConnectionHandle={showConnectionHandles}
+              isConnectionDropTarget={connectionDropTargetId === attribute.id}
               showConnectionTargets={showConnectionTargets}
               {...connectionTargetState}
               onClick={(event) => {

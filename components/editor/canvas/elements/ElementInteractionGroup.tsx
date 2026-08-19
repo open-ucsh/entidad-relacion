@@ -26,7 +26,7 @@ export function ElementInteractionGroup({
         event.stopPropagation();
         onDoubleClick();
       }}
-      className="cursor-pointer"
+      className="group cursor-pointer"
     >
       {children}
     </g>

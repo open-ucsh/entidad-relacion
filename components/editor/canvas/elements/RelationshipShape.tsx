@@ -1,16 +1,18 @@
 import type { MouseEvent, PointerEvent } from 'react';
 
+import { ELEMENT_GEOMETRY } from '@/domain/diagram/lib/geometry';
 import type { Relationship } from '@/domain/diagram/models';
 
 import { ConnectionHandle } from './ConnectionHandle';
 import { ElementInteractionGroup } from './ElementInteractionGroup';
 
-const WIDTH = 120;
-const HEIGHT = 60;
+const WIDTH = ELEMENT_GEOMETRY.relationship.width;
+const HEIGHT = ELEMENT_GEOMETRY.relationship.height;
 
 interface RelationshipShapeProps {
   relationship: Relationship;
   selected: boolean;
+  isEditing: boolean;
   showConnectionHandle: boolean;
   showConnectionTargets: boolean;
   isConnectionTarget: boolean;
@@ -25,6 +27,7 @@ interface RelationshipShapeProps {
 export function RelationshipShape({
   relationship,
   selected,
+  isEditing,
   showConnectionHandle,
   showConnectionTargets,
   isConnectionTarget,
@@ -52,22 +55,23 @@ export function RelationshipShape({
   ].join(' ');
 
   const isInvalidTarget = showConnectionTargets && isConnectionTargetInvalid && !selected;
+
   const isValidTarget =
     showConnectionTargets && isConnectionTarget && !selected && !isConnectionDropTarget;
-  const isActiveTarget = isConnectionDropTarget;
 
-  const stroke = isActiveTarget
+  const stroke = isConnectionDropTarget
     ? 'var(--color-brand-primary-hover)'
-    : isValidTarget
+    : isValidTarget || selected
       ? 'var(--color-brand-primary)'
       : 'var(--color-border)';
 
-  const strokeWidth = isActiveTarget ? 4 : isValidTarget ? 2 : 1.5;
-  const strokeOpacity = isValidTarget ? 0.55 : 1;
-  const elementOpacity = isInvalidTarget ? 0.35 : 1;
+  const strokeWidth = isConnectionDropTarget ? 3 : selected ? 2.5 : isValidTarget ? 2 : 1.5;
 
-  const fill = isActiveTarget ? 'var(--color-brand-primary)' : 'var(--color-background)';
-  const fillOpacity = isActiveTarget ? 0.12 : 1;
+  const fill = isConnectionDropTarget
+    ? 'var(--color-brand-primary)'
+    : selected
+      ? 'var(--color-surface)'
+      : 'var(--color-background)';
 
   return (
     <ElementInteractionGroup
@@ -76,50 +80,39 @@ export function RelationshipShape({
       onDoubleClick={onDoubleClick}
       {...(onPointerDown ? { onPointerDown } : {})}
     >
-      <g opacity={elementOpacity}>
+      <g opacity={isInvalidTarget ? 0.35 : 1}>
         {relationship.kind === 'identifying' && (
           <polygon
             points={identifyingPoints}
             fill="none"
             stroke={stroke}
             strokeWidth={strokeWidth}
-            strokeOpacity={strokeOpacity}
+            strokeLinejoin="round"
+            pointerEvents="none"
           />
         )}
 
         <polygon
           points={points}
           fill={fill}
-          fillOpacity={fillOpacity}
+          fillOpacity={isConnectionDropTarget ? 0.12 : 1}
           stroke={stroke}
           strokeWidth={strokeWidth}
-          strokeOpacity={strokeOpacity}
+          strokeLinejoin="round"
+          className="transition-all duration-150 group-hover:fill-surface-hover group-hover:stroke-brand-primary"
         />
 
-        <text x={x} y={y + 4} textAnchor="middle" className="fill-text text-xs font-semibold">
-          {relationship.name}
-        </text>
+        {!isEditing && (
+          <text
+            x={x}
+            y={y + 4}
+            textAnchor="middle"
+            className="pointer-events-none fill-text text-xs font-semibold"
+          >
+            {relationship.name}
+          </text>
+        )}
       </g>
-
-      {selected && (
-        <g data-export-exclude pointerEvents="none">
-          {relationship.kind === 'identifying' && (
-            <polygon
-              points={identifyingPoints}
-              fill="none"
-              stroke="var(--color-brand-primary)"
-              strokeWidth={3}
-            />
-          )}
-
-          <polygon
-            points={points}
-            fill="none"
-            stroke="var(--color-brand-primary)"
-            strokeWidth={3}
-          />
-        </g>
-      )}
 
       {selected && showConnectionHandle && (
         <g data-export-exclude>

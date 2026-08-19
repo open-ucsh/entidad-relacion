@@ -1,6 +1,7 @@
+import { getElementBoundaryPoint } from '@/domain/diagram/lib/geometry';
 import type { Connection, Diagram, Point } from '@/domain/diagram/models';
 
-import { getElementPosition } from './elements';
+import { findDiagramElement } from './elements';
 
 export interface ConnectionEndpoints {
   from: Point;
@@ -11,14 +12,17 @@ export function getConnectionEndpoints(
   diagram: Diagram,
   connection: Connection,
 ): ConnectionEndpoints | null {
-  const from = getElementPosition(diagram, connection.fromId);
-  const to = getElementPosition(diagram, connection.toId);
+  const fromElement = findDiagramElement(diagram, connection.fromId);
+  const toElement = findDiagramElement(diagram, connection.toId);
 
-  if (!from || !to) {
+  if (!fromElement || !toElement) {
     return null;
   }
 
-  return { from, to };
+  return {
+    from: getElementBoundaryPoint(fromElement, toElement.position),
+    to: getElementBoundaryPoint(toElement, fromElement.position),
+  };
 }
 
 export function findDiagramConnection(diagram: Diagram, id: string): Connection | undefined {

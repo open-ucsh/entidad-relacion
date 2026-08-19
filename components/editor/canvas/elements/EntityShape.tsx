@@ -1,12 +1,13 @@
 import type { MouseEvent, PointerEvent } from 'react';
 
+import { ELEMENT_GEOMETRY } from '@/domain/diagram/lib/geometry';
 import type { Entity } from '@/domain/diagram/models';
 
 import { ConnectionHandle } from './ConnectionHandle';
 import { ElementInteractionGroup } from './ElementInteractionGroup';
 
-const WIDTH = 120;
-const HEIGHT = 56;
+const WIDTH = ELEMENT_GEOMETRY.entity.width;
+const HEIGHT = ELEMENT_GEOMETRY.entity.height;
 
 const DIAMOND_MARGIN_X = 14;
 const DIAMOND_MARGIN_Y = 10;
@@ -14,6 +15,7 @@ const DIAMOND_MARGIN_Y = 10;
 interface EntityShapeProps {
   entity: Entity;
   selected: boolean;
+  isEditing: boolean;
   showConnectionHandle: boolean;
   showConnectionTargets: boolean;
   isConnectionTarget: boolean;
@@ -28,6 +30,7 @@ interface EntityShapeProps {
 export function EntityShape({
   entity,
   selected,
+  isEditing,
   showConnectionHandle,
   showConnectionTargets,
   isConnectionTarget,
@@ -39,6 +42,7 @@ export function EntityShape({
   onConnectionPointerDown,
 }: EntityShapeProps) {
   const { x: centerX, y: centerY } = entity.position;
+
   const x = centerX - WIDTH / 2;
   const y = centerY - HEIGHT / 2;
 
@@ -56,22 +60,23 @@ export function EntityShape({
   ].join(' ');
 
   const isInvalidTarget = showConnectionTargets && isConnectionTargetInvalid && !selected;
+
   const isValidTarget =
     showConnectionTargets && isConnectionTarget && !selected && !isConnectionDropTarget;
-  const isActiveTarget = isConnectionDropTarget;
 
-  const stroke = isActiveTarget
+  const stroke = isConnectionDropTarget
     ? 'var(--color-brand-primary-hover)'
-    : isValidTarget
+    : isValidTarget || selected
       ? 'var(--color-brand-primary)'
       : 'var(--color-border)';
 
-  const strokeWidth = isActiveTarget ? 4 : isValidTarget ? 2 : 1.5;
-  const strokeOpacity = isValidTarget ? 0.55 : 1;
-  const elementOpacity = isInvalidTarget ? 0.35 : 1;
+  const strokeWidth = isConnectionDropTarget ? 3 : selected ? 2.5 : isValidTarget ? 2 : 1.5;
 
-  const fill = isActiveTarget ? 'var(--color-brand-primary)' : 'var(--color-background)';
-  const fillOpacity = isActiveTarget ? 0.12 : 1;
+  const fill = isConnectionDropTarget
+    ? 'var(--color-brand-primary)'
+    : selected
+      ? 'var(--color-surface)'
+      : 'var(--color-background)';
 
   return (
     <ElementInteractionGroup
@@ -80,18 +85,18 @@ export function EntityShape({
       onDoubleClick={onDoubleClick}
       {...(onPointerDown ? { onPointerDown } : {})}
     >
-      <g opacity={elementOpacity}>
+      <g opacity={isInvalidTarget ? 0.35 : 1}>
         {isWeak && (
           <rect
             x={x + 4}
             y={y + 4}
             width={WIDTH}
             height={HEIGHT}
-            rx={6}
+            rx={5}
             fill="none"
             stroke={stroke}
             strokeWidth={strokeWidth}
-            strokeOpacity={strokeOpacity}
+            pointerEvents="none"
           />
         )}
 
@@ -100,71 +105,37 @@ export function EntityShape({
           y={y}
           width={WIDTH}
           height={HEIGHT}
-          rx={isAssociative ? 0 : 6}
+          rx={isAssociative ? 2 : 6}
           fill={fill}
-          fillOpacity={fillOpacity}
+          fillOpacity={isConnectionDropTarget ? 0.12 : 1}
           stroke={stroke}
           strokeWidth={strokeWidth}
-          strokeOpacity={strokeOpacity}
+          className="transition-all duration-150 group-hover:fill-surface-hover group-hover:stroke-brand-primary"
         />
 
         {isAssociative && (
           <polygon
             points={diamondPoints}
             fill={fill}
-            fillOpacity={fillOpacity}
+            fillOpacity={isConnectionDropTarget ? 0.12 : 1}
             stroke={stroke}
-            strokeWidth={isActiveTarget ? 3 : isValidTarget ? 2 : 1}
-            strokeOpacity={strokeOpacity}
+            strokeWidth={selected ? 2 : 1.5}
+            className="transition-all duration-150 group-hover:fill-surface-hover group-hover:stroke-brand-primary"
+            pointerEvents="none"
           />
         )}
 
-        <text
-          x={centerX}
-          y={centerY + 4}
-          textAnchor="middle"
-          className="fill-text text-xs font-semibold"
-        >
-          {entity.name}
-        </text>
+        {!isEditing && (
+          <text
+            x={centerX}
+            y={centerY + 4}
+            textAnchor="middle"
+            className="pointer-events-none fill-text text-xs font-semibold"
+          >
+            {entity.name}
+          </text>
+        )}
       </g>
-
-      {selected && (
-        <g data-export-exclude pointerEvents="none">
-          {isWeak && (
-            <rect
-              x={x + 4}
-              y={y + 4}
-              width={WIDTH}
-              height={HEIGHT}
-              rx={6}
-              fill="none"
-              stroke="var(--color-brand-primary)"
-              strokeWidth={3}
-            />
-          )}
-
-          <rect
-            x={x}
-            y={y}
-            width={WIDTH}
-            height={HEIGHT}
-            rx={isAssociative ? 0 : 6}
-            fill="none"
-            stroke="var(--color-brand-primary)"
-            strokeWidth={3}
-          />
-
-          {isAssociative && (
-            <polygon
-              points={diamondPoints}
-              fill="none"
-              stroke="var(--color-brand-primary)"
-              strokeWidth={2}
-            />
-          )}
-        </g>
-      )}
 
       {selected && showConnectionHandle && (
         <g data-export-exclude>

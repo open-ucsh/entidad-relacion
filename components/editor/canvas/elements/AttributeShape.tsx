@@ -1,16 +1,18 @@
 import type { MouseEvent, PointerEvent } from 'react';
 
+import { ELEMENT_GEOMETRY } from '@/domain/diagram/lib/geometry';
 import type { Attribute } from '@/domain/diagram/models';
 
 import { ConnectionHandle } from './ConnectionHandle';
 import { ElementInteractionGroup } from './ElementInteractionGroup';
 
-const RX = 55;
-const RY = 28;
+const RX = ELEMENT_GEOMETRY.attribute.radiusX;
+const RY = ELEMENT_GEOMETRY.attribute.radiusY;
 
 interface AttributeShapeProps {
   attribute: Attribute;
   selected: boolean;
+  isEditing: boolean;
   showConnectionHandle: boolean;
   showConnectionTargets: boolean;
   isConnectionTarget: boolean;
@@ -31,6 +33,7 @@ function estimateTextWidth(text: string): number {
 export function AttributeShape({
   attribute,
   selected,
+  isEditing,
   showConnectionHandle,
   showConnectionTargets,
   isConnectionTarget,
@@ -44,25 +47,27 @@ export function AttributeShape({
   const { x, y } = attribute.position;
 
   const displayName = attribute.composite ? `(${attribute.name})` : attribute.name;
+
   const halfTextWidth = estimateTextWidth(displayName) / 2;
 
   const isInvalidTarget = showConnectionTargets && isConnectionTargetInvalid && !selected;
+
   const isValidTarget =
     showConnectionTargets && isConnectionTarget && !selected && !isConnectionDropTarget;
-  const isActiveTarget = isConnectionDropTarget;
 
-  const stroke = isActiveTarget
+  const stroke = isConnectionDropTarget
     ? 'var(--color-brand-primary-hover)'
-    : isValidTarget
+    : isValidTarget || selected
       ? 'var(--color-brand-primary)'
       : 'var(--color-border)';
 
-  const strokeWidth = isActiveTarget ? 4 : isValidTarget ? 2 : 1.5;
-  const strokeOpacity = isValidTarget ? 0.55 : 1;
-  const elementOpacity = isInvalidTarget ? 0.35 : 1;
+  const strokeWidth = isConnectionDropTarget ? 3 : selected ? 2.5 : isValidTarget ? 2 : 1.5;
 
-  const fill = isActiveTarget ? 'var(--color-brand-primary)' : 'var(--color-background)';
-  const fillOpacity = isActiveTarget ? 0.12 : 1;
+  const fill = isConnectionDropTarget
+    ? 'var(--color-brand-primary)'
+    : selected
+      ? 'var(--color-surface)'
+      : 'var(--color-background)';
 
   return (
     <ElementInteractionGroup
@@ -71,7 +76,7 @@ export function AttributeShape({
       onDoubleClick={onDoubleClick}
       {...(onPointerDown ? { onPointerDown } : {})}
     >
-      <g opacity={elementOpacity}>
+      <g opacity={isInvalidTarget ? 0.35 : 1}>
         {attribute.multivalued && (
           <ellipse
             cx={x}
@@ -81,7 +86,7 @@ export function AttributeShape({
             fill="none"
             stroke={stroke}
             strokeWidth={strokeWidth}
-            strokeOpacity={strokeOpacity}
+            pointerEvents="none"
           />
         )}
 
@@ -91,79 +96,62 @@ export function AttributeShape({
           rx={RX}
           ry={RY}
           fill={fill}
-          fillOpacity={fillOpacity}
+          fillOpacity={isConnectionDropTarget ? 0.12 : 1}
           stroke={stroke}
           strokeWidth={strokeWidth}
-          strokeOpacity={strokeOpacity}
           strokeDasharray={attribute.derived ? '5 4' : undefined}
+          className="transition-all duration-150 group-hover:fill-surface-hover group-hover:stroke-brand-primary"
         />
 
-        <text x={x} y={y + 4} textAnchor="middle" className="fill-text text-xs font-semibold">
-          {displayName}
-          {attribute.optional && <tspan className="fill-text-muted font-normal"> (O)</tspan>}
-        </text>
+        {!isEditing && (
+          <>
+            <text
+              x={x}
+              y={y + 4}
+              textAnchor="middle"
+              className="pointer-events-none fill-text text-xs font-semibold"
+            >
+              {displayName}
 
-        {attribute.keyType === 'primary' && (
-          <line
-            x1={x - halfTextWidth}
-            y1={y + 8}
-            x2={x + halfTextWidth}
-            y2={y + 8}
-            className="stroke-text"
-            strokeWidth={2}
-          />
-        )}
+              {attribute.optional && <tspan className="fill-text-muted font-normal"> (O)</tspan>}
+            </text>
 
-        {attribute.keyType === 'partial' && (
-          <line
-            x1={x - halfTextWidth}
-            y1={y + 8}
-            x2={x + halfTextWidth}
-            y2={y + 8}
-            className="stroke-text"
-            strokeWidth={2}
-            strokeDasharray="4 3"
-          />
-        )}
+            {attribute.keyType === 'primary' && (
+              <line
+                x1={x - halfTextWidth}
+                y1={y + 8}
+                x2={x + halfTextWidth}
+                y2={y + 8}
+                className="pointer-events-none stroke-text"
+                strokeWidth={2}
+              />
+            )}
 
-        {attribute.unique && (
-          <line
-            x1={x - halfTextWidth}
-            y1={y + 12}
-            x2={x + halfTextWidth}
-            y2={y + 12}
-            className="stroke-text-muted"
-            strokeWidth={0.75}
-          />
+            {attribute.keyType === 'partial' && (
+              <line
+                x1={x - halfTextWidth}
+                y1={y + 8}
+                x2={x + halfTextWidth}
+                y2={y + 8}
+                className="pointer-events-none stroke-text"
+                strokeWidth={2}
+                strokeDasharray="4 3"
+              />
+            )}
+
+            {attribute.unique && (
+              <line
+                x1={x - halfTextWidth}
+                y1={y + 12}
+                x2={x + halfTextWidth}
+                y2={y + 12}
+                className="pointer-events-none stroke-text-muted"
+                strokeWidth={0.75}
+              />
+            )}
+          </>
         )}
       </g>
-
-      {selected && (
-        <g data-export-exclude pointerEvents="none">
-          {attribute.multivalued && (
-            <ellipse
-              cx={x}
-              cy={y}
-              rx={RX + 5}
-              ry={RY + 5}
-              fill="none"
-              stroke="var(--color-brand-primary)"
-              strokeWidth={3}
-            />
-          )}
-
-          <ellipse
-            cx={x}
-            cy={y}
-            rx={RX}
-            ry={RY}
-            fill="none"
-            stroke="var(--color-brand-primary)"
-            strokeWidth={3}
-            strokeDasharray={attribute.derived ? '5 4' : undefined}
-          />
-        </g>
-      )}
 
       {selected && showConnectionHandle && (
         <g data-export-exclude>
