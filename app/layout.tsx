@@ -1,9 +1,17 @@
 import type { Metadata } from 'next';
+import { Ubuntu } from 'next/font/google';
 import type { ReactNode } from 'react';
 
 import { BRANDING } from '@/config/branding';
 
 import './globals.css';
+
+const ubuntu = Ubuntu({
+  subsets: ['latin'],
+  weight: ['400', '500', '700'],
+  variable: '--font-ubuntu',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: BRANDING.applicationName,
@@ -21,7 +29,7 @@ interface RootLayoutProps {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="es" className="h-full">
+    <html lang="es" className={`${ubuntu.variable} h-full`}>
       <body className="h-full overflow-hidden">{children}</body>
     </html>
   );

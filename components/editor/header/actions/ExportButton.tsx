@@ -30,7 +30,7 @@ const FORMAT_OPTIONS: readonly ExportOption[] = [
   {
     format: 'png',
     label: 'PNG',
-    hint: 'Fondo transparente, ideal para web',
+    hint: 'Alta calidad, ideal para web',
     icon: ImageIcon,
     recommended: true,
   },
