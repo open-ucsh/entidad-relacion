@@ -55,8 +55,9 @@ export function ConnectionShape({
         x2={to.x}
         y2={to.y}
         stroke="transparent"
-        strokeWidth={12}
+        strokeWidth={24}
         strokeLinecap="round"
+        pointerEvents="stroke"
       />
 
       <line
@@ -67,7 +68,7 @@ export function ConnectionShape({
         stroke={selected ? 'var(--color-brand-primary)' : 'var(--color-border)'}
         strokeWidth={selected ? 2.5 : 1.5}
         strokeLinecap="round"
-        className="transition-all duration-150 group-hover:stroke-brand-primary"
+        className="transition-colors duration-150 group-hover:stroke-brand-primary"
         pointerEvents="none"
       />
 

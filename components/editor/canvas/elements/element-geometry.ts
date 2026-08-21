@@ -63,3 +63,7 @@ export function getDiagramContentBounds(diagram: Diagram): DiagramBounds | null 
     height: Math.max(bottom - top, 1),
   };
 }
+
+export function truncateLabel(value: string, maxLength: number): string {
+  return value.length > maxLength ? `${value.slice(0, maxLength - 1).trimEnd()}…` : value;
+}

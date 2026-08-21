@@ -1,9 +1,11 @@
 import type { MouseEvent, PointerEvent } from 'react';
 
 import { ELEMENT_GEOMETRY } from '@/domain/diagram/lib/geometry';
+
 import type { Relationship } from '@/domain/diagram/models';
 
 import { ConnectionHandle, CONNECTION_HANDLE_OFFSET } from './ConnectionHandle';
+import { truncateLabel } from './element-geometry';
 import { ElementInteractionGroup } from './ElementInteractionGroup';
 
 const WIDTH = ELEMENT_GEOMETRY.relationship.width;
@@ -39,6 +41,7 @@ export function RelationshipShape({
   onConnectionPointerDown,
 }: RelationshipShapeProps) {
   const { x, y } = relationship.position;
+  const displayName = truncateLabel(relationship.name, 12);
 
   const points = [
     `${x},${y - HEIGHT / 2}`,
@@ -99,7 +102,7 @@ export function RelationshipShape({
           stroke={stroke}
           strokeWidth={strokeWidth}
           strokeLinejoin="round"
-          className="transition-all duration-150 group-hover:fill-surface-hover group-hover:stroke-brand-primary"
+          className="transition-colors duration-150 group-hover:fill-surface-hover group-hover:stroke-brand-primary"
         />
 
         {!isEditing && (
@@ -109,7 +112,8 @@ export function RelationshipShape({
             textAnchor="middle"
             className="pointer-events-none fill-text text-xs font-semibold"
           >
-            {relationship.name}
+            <title>{relationship.name}</title>
+            {displayName}
           </text>
         )}
       </g>

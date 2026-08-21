@@ -1,9 +1,11 @@
 import type { MouseEvent, PointerEvent } from 'react';
 
 import { ELEMENT_GEOMETRY } from '@/domain/diagram/lib/geometry';
+
 import type { Attribute } from '@/domain/diagram/models';
 
 import { CONNECTION_HANDLE_OFFSET, ConnectionHandle } from './ConnectionHandle';
+import { truncateLabel } from './element-geometry';
 import { ElementInteractionGroup } from './ElementInteractionGroup';
 
 const RX = ELEMENT_GEOMETRY.attribute.radiusX;
@@ -46,8 +48,9 @@ export function AttributeShape({
 }: AttributeShapeProps) {
   const { x, y } = attribute.position;
 
-  const displayName = attribute.composite ? `(${attribute.name})` : attribute.name;
+  const fullDisplayName = attribute.composite ? `(${attribute.name})` : attribute.name;
 
+  const displayName = truncateLabel(fullDisplayName, 16);
   const halfTextWidth = estimateTextWidth(displayName) / 2;
 
   const isInvalidTarget = showConnectionTargets && isConnectionTargetInvalid && !selected;
@@ -100,7 +103,7 @@ export function AttributeShape({
           stroke={stroke}
           strokeWidth={strokeWidth}
           strokeDasharray={attribute.derived ? '5 4' : undefined}
-          className="transition-all duration-150 group-hover:fill-surface-hover group-hover:stroke-brand-primary"
+          className="transition-colors duration-150 group-hover:fill-surface-hover group-hover:stroke-brand-primary"
         />
 
         {!isEditing && (
@@ -111,8 +114,8 @@ export function AttributeShape({
               textAnchor="middle"
               className="pointer-events-none fill-text text-xs font-semibold"
             >
+              <title>{fullDisplayName}</title>
               {displayName}
-
               {attribute.optional && <tspan className="fill-text-muted font-normal"> (O)</tspan>}
             </text>
 

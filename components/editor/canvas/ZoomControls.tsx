@@ -117,6 +117,7 @@ export function ZoomControls({
 
   return (
     <g
+      data-export-exclude
       transform={`translate(${x} ${y})`}
       onPointerDown={(event) => {
         event.stopPropagation();

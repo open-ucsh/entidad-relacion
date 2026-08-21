@@ -35,7 +35,7 @@ export function ConnectionHandle({ x, y, onPointerDown }: ConnectionHandleProps)
         fill="var(--color-background)"
         stroke="var(--color-brand-primary)"
         strokeWidth={1.5}
-        className="transition-all duration-150 group-hover:r-[8]"
+        className="transition-[r,fill,stroke] duration-150 group-hover:r-[8]"
       />
 
       <path
@@ -43,7 +43,7 @@ export function ConnectionHandle({ x, y, onPointerDown }: ConnectionHandleProps)
         stroke="var(--color-brand-primary)"
         strokeWidth={1.5}
         strokeLinecap="round"
-        className="transition-all duration-150 group-hover:stroke-brand-primary-hover"
+        className="transition-colors duration-150 group-hover:stroke-brand-primary-hover"
         pointerEvents="none"
       />
     </g>

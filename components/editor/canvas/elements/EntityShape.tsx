@@ -1,9 +1,11 @@
 import type { MouseEvent, PointerEvent } from 'react';
 
 import { ELEMENT_GEOMETRY } from '@/domain/diagram/lib/geometry';
+
 import type { Entity } from '@/domain/diagram/models';
 
 import { ConnectionHandle, CONNECTION_HANDLE_OFFSET } from './ConnectionHandle';
+import { truncateLabel } from './element-geometry';
 import { ElementInteractionGroup } from './ElementInteractionGroup';
 
 const WIDTH = ELEMENT_GEOMETRY.entity.width;
@@ -41,8 +43,9 @@ export function EntityShape({
   onPointerDown,
   onConnectionPointerDown,
 }: EntityShapeProps) {
-  const { x: centerX, y: centerY } = entity.position;
+  const displayName = truncateLabel(entity.name, 16);
 
+  const { x: centerX, y: centerY } = entity.position;
   const x = centerX - WIDTH / 2;
   const y = centerY - HEIGHT / 2;
 
@@ -110,7 +113,7 @@ export function EntityShape({
           fillOpacity={isConnectionDropTarget ? 0.12 : 1}
           stroke={stroke}
           strokeWidth={strokeWidth}
-          className="transition-all duration-150 group-hover:fill-surface-hover group-hover:stroke-brand-primary"
+          className="transition-colors duration-150 group-hover:fill-surface-hover group-hover:stroke-brand-primary"
         />
 
         {isAssociative && (
@@ -120,7 +123,7 @@ export function EntityShape({
             fillOpacity={isConnectionDropTarget ? 0.12 : 1}
             stroke={stroke}
             strokeWidth={selected ? 2 : 1.5}
-            className="transition-all duration-150 group-hover:fill-surface-hover group-hover:stroke-brand-primary"
+            className="transition-colors duration-150 group-hover:fill-surface-hover group-hover:stroke-brand-primary"
             pointerEvents="none"
           />
         )}
@@ -132,7 +135,8 @@ export function EntityShape({
             textAnchor="middle"
             className="pointer-events-none fill-text text-xs font-semibold"
           >
-            {entity.name}
+            <title>{entity.name}</title>
+            {displayName}
           </text>
         )}
       </g>
