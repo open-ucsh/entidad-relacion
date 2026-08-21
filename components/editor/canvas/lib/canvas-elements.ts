@@ -1,7 +1,9 @@
 import type { Tool } from '@/domain/diagram/models';
 
-export function isCreatableTool(tool: Tool): tool is 'entity' | 'relationship' | 'attribute' {
-  return tool === 'entity' || tool === 'relationship' || tool === 'attribute';
+export function isCreatableTool(
+  tool: Tool,
+): tool is 'entity' | 'relationship' | 'attribute' | 'isa' {
+  return tool === 'entity' || tool === 'relationship' || tool === 'attribute' || tool === 'isa';
 }
 
 export function getElementIdAtPoint(clientX: number, clientY: number): string | null {

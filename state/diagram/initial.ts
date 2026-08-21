@@ -1,4 +1,5 @@
 import { createId } from '@/domain/diagram/lib/id';
+
 import type { Diagram } from '@/domain/diagram/models';
 
 export function createInitialDiagram(name = 'Diagrama sin título'): Diagram {
@@ -8,6 +9,7 @@ export function createInitialDiagram(name = 'Diagrama sin título'): Diagram {
     entities: [],
     relationships: [],
     attributes: [],
+    isas: [],
     connections: [],
     metadata: {
       name,

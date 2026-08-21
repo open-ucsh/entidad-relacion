@@ -12,6 +12,7 @@ const ELEMENT_TYPE_LABELS: Record<DiagramElement['type'], string> = {
   entity: 'Entidad',
   relationship: 'Relación',
   attribute: 'Atributo',
+  isa: 'ISA',
 };
 
 export function CanvasStatus({

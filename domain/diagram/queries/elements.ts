@@ -1,7 +1,7 @@
 import type { BaseElement, Diagram, DiagramElement } from '@/domain/diagram/models';
 
 export function getDiagramElements(diagram: Diagram): DiagramElement[] {
-  return [...diagram.entities, ...diagram.relationships, ...diagram.attributes];
+  return [...diagram.entities, ...diagram.relationships, ...diagram.attributes, ...diagram.isas];
 }
 
 export function findDiagramElement(diagram: Diagram, id: string): DiagramElement | undefined {

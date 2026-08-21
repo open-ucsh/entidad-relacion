@@ -1,8 +1,10 @@
 'use client';
 
 import { PanelHeader } from '@/components/ui';
+
 import { findDiagramConnection } from '@/domain/diagram/queries/connections';
 import { findDiagramElement, getDiagramElements } from '@/domain/diagram/queries/elements';
+
 import { selectActiveDiagram } from '@/state/diagram/selectors';
 import { useDiagramStore } from '@/state/diagram/store';
 
@@ -17,7 +19,6 @@ export function Inspector() {
   const diagram = useDiagramStore(selectActiveDiagram);
   const selectedElementId = useDiagramStore((state) => state.selectedElementId);
   const selectedElementIds = useDiagramStore((state) => state.selectedElementIds);
-
   const updateElement = useDiagramStore((state) => state.updateElement);
   const updateConnection = useDiagramStore((state) => state.updateConnection);
   const createConnectedAttribute = useDiagramStore((state) => state.createConnectedAttribute);
@@ -64,6 +65,7 @@ export function Inspector() {
             />
 
             <InspectorElementContent
+              diagram={diagram}
               element={element}
               updateElement={updateElement}
               onAddAttribute={createConnectedAttribute}

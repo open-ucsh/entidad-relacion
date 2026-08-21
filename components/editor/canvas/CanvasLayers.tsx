@@ -1,16 +1,20 @@
 import type { PointerEvent } from 'react';
 
 import type { Diagram, Tool } from '@/domain/diagram/models';
+
 import {
   formatConnectionCardinality,
   getConnectionEndpoints,
 } from '@/domain/diagram/queries/connections';
+
 import { findDiagramElement } from '@/domain/diagram/queries/elements';
+
 import { canConnectDiagramElements } from '@/domain/diagram/validation/connections';
 
 import { AttributeShape } from './elements/AttributeShape';
 import { ConnectionShape } from './elements/ConnectionShape';
 import { EntityShape } from './elements/EntityShape';
+import { IsaShape } from './elements/IsaShape';
 import { RelationshipShape } from './elements/RelationshipShape';
 import { useCanvasElementInteraction } from './hooks/useCanvasElementInteraction';
 
@@ -68,7 +72,6 @@ export function CanvasLayers({
     : undefined;
 
   const showConnectionTargets = Boolean(connectionSource);
-
   const showConnectionHandles = activeTool === 'select' || activeTool === 'connect';
 
   function getConnectionTargetState(id: string) {
@@ -168,6 +171,31 @@ export function CanvasLayers({
               }}
               onConnectionPointerDown={(event) => {
                 onConnectionHandlePointerDown(event, relationship.id);
+              }}
+            />
+          );
+        })}
+
+        {diagram.isas.map((isa) => {
+          const connectionTargetState = getConnectionTargetState(isa.id);
+
+          return (
+            <IsaShape
+              key={isa.id}
+              isa={isa}
+              selected={isSelected(isa.id)}
+              showConnectionHandle={showConnectionHandles}
+              isConnectionDropTarget={connectionDropTargetId === isa.id}
+              showConnectionTargets={showConnectionTargets}
+              {...connectionTargetState}
+              onClick={(event) => {
+                handleElementClick(event, isa.id);
+              }}
+              onPointerDown={(event) => {
+                handleElementPointerDown(event, isa.id);
+              }}
+              onConnectionPointerDown={(event) => {
+                onConnectionHandlePointerDown(event, isa.id);
               }}
             />
           );

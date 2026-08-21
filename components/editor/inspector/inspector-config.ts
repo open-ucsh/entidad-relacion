@@ -1,4 +1,4 @@
-import { Box, Circle, Diamond } from 'lucide-react';
+import { Box, Circle, Diamond, Triangle } from 'lucide-react';
 
 export const INSPECTOR_TYPE_CONFIG = {
   entity: {
@@ -23,5 +23,13 @@ export const INSPECTOR_TYPE_CONFIG = {
     text: 'text-emerald-600 dark:text-emerald-400',
     bg: 'bg-emerald-500/10',
     ring: 'ring-emerald-500/20',
+  },
+
+  isa: {
+    label: 'Isa',
+    icon: Triangle,
+    text: 'text-orange-600 dark:text-orange-400',
+    bg: 'bg-orange-500/10',
+    ring: 'ring-orange-500/20',
   },
 } as const;

@@ -5,6 +5,7 @@ import {
   MoveRight,
   Square,
   Trash2,
+  Triangle,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -43,6 +44,12 @@ export const TOOL_GROUPS: ToolbarToolGroup[] = [
         label: 'Atributo',
         icon: Circle,
         shortcut: 'A',
+      },
+      {
+        id: 'isa',
+        label: 'Isa',
+        icon: Triangle,
+        shortcut: 'I',
       },
     ],
   },

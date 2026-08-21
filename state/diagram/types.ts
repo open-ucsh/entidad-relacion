@@ -6,10 +6,12 @@ import type {
   Diagram,
   DiagramActivityType,
   DiagramDocument,
+  DiagramElement,
   Entity,
   Point,
   Relationship,
   Tool,
+  Isa,
 } from '@/domain/diagram/models';
 
 export interface ElementPositionUpdate {
@@ -57,9 +59,10 @@ export interface ElementSlice {
   addEntity: (entity: Entity) => void;
   addRelationship: (relationship: Relationship) => void;
   addAttribute: (attribute: Attribute) => void;
+  addIsa: (isa: Isa) => void;
   createConnectedAttribute: (parentId: string) => void;
 
-  updateElement: (id: string, updates: Partial<Entity | Relationship | Attribute>) => void;
+  updateElement: (id: string, updates: Partial<DiagramElement>) => void;
 
   duplicateSelectedElements: () => void;
   alignSelectedElements: (alignment: ElementAlignment) => void;

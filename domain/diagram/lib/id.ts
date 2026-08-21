@@ -1,5 +1,5 @@
 type DiagramIdPrefix =
-  'activity' | 'attribute' | 'connection' | 'document' | 'entity' | 'relationship';
+  'activity' | 'attribute' | 'connection' | 'document' | 'entity' | 'relationship' | 'isa';
 
 function createRandomValue(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {

@@ -1,10 +1,16 @@
-import type { Attribute, Connection, Diagram, Entity, Relationship } from '@/domain/diagram/models';
-
 import { createId } from '@/domain/diagram/lib/id';
 
-import type { ElementPositionUpdate } from './types';
+import type {
+  Attribute,
+  Connection,
+  Diagram,
+  DiagramElement,
+  Entity,
+  Isa,
+  Relationship,
+} from '@/domain/diagram/models';
 
-type DiagramElement = Entity | Relationship | Attribute;
+import type { ElementPositionUpdate } from './types';
 
 export interface DuplicateDiagramElementsResult {
   diagram: Diagram;
@@ -47,7 +53,7 @@ function duplicateCollection<
 >(
   items: T[],
   selectedIds: Set<string>,
-  prefix: 'entity' | 'relationship' | 'attribute',
+  prefix: 'entity' | 'relationship' | 'attribute' | 'isa',
   offset: number,
 ): T[] {
   return items
@@ -73,6 +79,7 @@ export function updateDiagram(
     entities: updateCollection(diagram.entities, id, updates as Partial<Entity>),
     relationships: updateCollection(diagram.relationships, id, updates as Partial<Relationship>),
     attributes: updateCollection(diagram.attributes, id, updates as Partial<Attribute>),
+    isas: updateCollection(diagram.isas, id, updates as Partial<Isa>),
   };
 }
 
@@ -95,6 +102,7 @@ export function moveDiagramElements(diagram: Diagram, updates: ElementPositionUp
     entities: moveCollection(diagram.entities, positions),
     relationships: moveCollection(diagram.relationships, positions),
     attributes: moveCollection(diagram.attributes, positions),
+    isas: moveCollection(diagram.isas, positions),
   };
 }
 
@@ -113,11 +121,13 @@ export function duplicateDiagramElements(
     offset,
   );
   const attributes = duplicateCollection(diagram.attributes, selectedIds, 'attribute', offset);
+  const isas = duplicateCollection(diagram.isas, selectedIds, 'isa', offset);
 
   const duplicatedIds = [
     ...entities.map((entity) => entity.id),
     ...relationships.map((relationship) => relationship.id),
     ...attributes.map((attribute) => attribute.id),
+    ...isas.map((isa) => isa.id),
   ];
 
   return {
@@ -126,6 +136,7 @@ export function duplicateDiagramElements(
       entities: [...diagram.entities, ...entities],
       relationships: [...diagram.relationships, ...relationships],
       attributes: [...diagram.attributes, ...attributes],
+      isas: [...diagram.isas, ...isas],
     },
     duplicatedIds,
   };
@@ -139,6 +150,7 @@ export function removeDiagramElements(diagram: Diagram, ids: string[]): Diagram 
     entities: diagram.entities.filter((item) => !removedIds.has(item.id)),
     relationships: diagram.relationships.filter((item) => !removedIds.has(item.id)),
     attributes: diagram.attributes.filter((item) => !removedIds.has(item.id)),
+    isas: diagram.isas.filter((item) => !removedIds.has(item.id)),
     connections: diagram.connections.filter(
       (item) =>
         !removedIds.has(item.id) && !removedIds.has(item.fromId) && !removedIds.has(item.toId),

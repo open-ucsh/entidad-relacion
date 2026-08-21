@@ -6,5 +6,6 @@ export * from './diagram';
 export * from './document';
 export * from './element';
 export * from './entity';
+export * from './isa';
 export * from './relationship';
 export * from './tool';

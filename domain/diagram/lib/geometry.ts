@@ -14,6 +14,10 @@ export const ELEMENT_GEOMETRY = {
     radiusY: 28,
     outerOutlineOffset: 5,
   },
+  isa: {
+    width: 64,
+    height: 52,
+  },
 } as const;
 
 export function distance(a: Point, b: Point): number {
@@ -82,15 +86,82 @@ function getEllipseBoundaryPoint(element: DiagramElement, target: Point): Point 
   };
 }
 
+function cross(first: Point, second: Point): number {
+  return first.x * second.y - first.y * second.x;
+}
+
+function getIsaBoundaryPoint(element: DiagramElement, target: Point): Point {
+  const { x, y } = element.position;
+  const halfWidth = ELEMENT_GEOMETRY.isa.width / 2;
+  const halfHeight = ELEMENT_GEOMETRY.isa.height / 2;
+
+  const direction = {
+    x: target.x - x,
+    y: target.y - y,
+  };
+
+  if (direction.x === 0 && direction.y === 0) {
+    return element.position;
+  }
+
+  const vertices = [
+    { x, y: y - halfHeight },
+    { x: x + halfWidth, y: y + halfHeight },
+    { x: x - halfWidth, y: y + halfHeight },
+  ];
+
+  let closestScale = Number.POSITIVE_INFINITY;
+
+  vertices.forEach((start, index) => {
+    const end = vertices[(index + 1) % vertices.length];
+
+    if (!end) {
+      return;
+    }
+
+    const edge = {
+      x: end.x - start.x,
+      y: end.y - start.y,
+    };
+
+    const relativeStart = {
+      x: start.x - x,
+      y: start.y - y,
+    };
+
+    const denominator = cross(direction, edge);
+
+    if (denominator === 0) {
+      return;
+    }
+
+    const scale = cross(relativeStart, edge) / denominator;
+    const edgePosition = cross(relativeStart, direction) / denominator;
+
+    if (scale >= 0 && edgePosition >= 0 && edgePosition <= 1) {
+      closestScale = Math.min(closestScale, scale);
+    }
+  });
+
+  if (!Number.isFinite(closestScale)) {
+    return element.position;
+  }
+
+  return {
+    x: x + direction.x * closestScale,
+    y: y + direction.y * closestScale,
+  };
+}
+
 export function getElementBoundaryPoint(element: DiagramElement, target: Point): Point {
   switch (element.type) {
     case 'entity':
       return getRectangleBoundaryPoint(element, target);
-
     case 'relationship':
       return getDiamondBoundaryPoint(element, target);
-
     case 'attribute':
       return getEllipseBoundaryPoint(element, target);
+    case 'isa':
+      return getIsaBoundaryPoint(element, target);
   }
 }

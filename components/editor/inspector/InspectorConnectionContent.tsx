@@ -30,6 +30,30 @@ export function InspectorConnectionContent({
   connection,
   updateConnection,
 }: InspectorConnectionContentProps) {
+  if (connection.isaRole === 'supertype' || connection.isaRole === 'subtype') {
+    const label =
+      connection.isaRole === 'supertype'
+        ? 'Supertipo de esta jerarquía'
+        : 'Subtipo de esta jerarquía';
+
+    return (
+      <>
+        <SectionTitle>Jerarquía ISA</SectionTitle>
+
+        <InspectorField label="Rol de la conexión">
+          <p className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-muted">
+            {label}
+          </p>
+        </InspectorField>
+
+        <p className="rounded-md border border-border bg-surface px-3 py-2 text-xs leading-5 text-text-muted">
+          Las conexiones ISA no usan cardinalidad. La dirección define el rol: entidad a ISA para el
+          supertipo; ISA a entidad para un subtipo.
+        </p>
+      </>
+    );
+  }
+
   return (
     <>
       <SectionTitle>Cardinalidad</SectionTitle>

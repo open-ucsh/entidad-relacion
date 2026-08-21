@@ -1,11 +1,16 @@
 import { createConnection } from '@/domain/diagram/factories/connection';
+
 import {
-  canConnectElementsById,
-  hasDiagramConnection,
+  canCreateConnection,
+  getIsaConnectionRole,
+  hasValidIsaConnectionRole,
 } from '@/domain/diagram/validation/connections';
+
+import { findDiagramElement } from '@/domain/diagram/queries/elements';
 
 import { appendDiagramActivity, replaceActiveDiagram } from '../helpers';
 import { updateDiagramConnection } from '../mutations';
+
 import type { ConnectionSlice, DiagramStoreSlice } from '../types';
 
 export const createConnectionSlice: DiagramStoreSlice<ConnectionSlice> = (set, get) => ({
@@ -13,8 +18,8 @@ export const createConnectionSlice: DiagramStoreSlice<ConnectionSlice> = (set, g
     const { diagram } = get();
 
     if (
-      !canConnectElementsById(diagram, connection.fromId, connection.toId) ||
-      hasDiagramConnection(diagram, connection.fromId, connection.toId)
+      !canCreateConnection(diagram, connection.fromId, connection.toId) ||
+      !hasValidIsaConnectionRole(diagram, connection)
     ) {
       return;
     }
@@ -26,7 +31,11 @@ export const createConnectionSlice: DiagramStoreSlice<ConnectionSlice> = (set, g
           connections: [...state.diagram.connections, connection],
         },
         'connection-created',
-        'Se creó una conexión.',
+        connection.isaRole === 'supertype'
+          ? 'Se conectó el supertipo a la jerarquía ISA.'
+          : connection.isaRole === 'subtype'
+            ? 'Se conectó un subtipo a la jerarquía ISA.'
+            : 'Se creó una conexión.',
       );
 
       return replaceActiveDiagram(state, nextDiagram);
@@ -60,14 +69,18 @@ export const createConnectionSlice: DiagramStoreSlice<ConnectionSlice> = (set, g
   connectElements: (fromId, toId) => {
     const { addConnection, diagram } = get();
 
-    if (
-      !canConnectElementsById(diagram, fromId, toId) ||
-      hasDiagramConnection(diagram, fromId, toId)
-    ) {
+    if (!canCreateConnection(diagram, fromId, toId)) {
       return;
     }
 
-    addConnection(createConnection(fromId, toId));
+    const source = findDiagramElement(diagram, fromId);
+    const target = findDiagramElement(diagram, toId);
+
+    if (!source || !target) {
+      return;
+    }
+
+    addConnection(createConnection(fromId, toId, getIsaConnectionRole(source, target)));
   },
 
   handleConnectClick: (id) => {

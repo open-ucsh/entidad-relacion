@@ -75,6 +75,21 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
     });
   },
 
+  addIsa: (isa) => {
+    set((state) => {
+      const diagram = appendDiagramActivity(
+        {
+          ...state.diagram,
+          isas: [...state.diagram.isas, isa],
+        },
+        'element-created',
+        'Se creó una jerarquía ISA.',
+      );
+
+      return replaceActiveDiagram(state, diagram);
+    });
+  },
+
   createConnectedAttribute: (parentId) => {
     set((state) => {
       const parent = findDiagramElement(state.diagram, parentId);

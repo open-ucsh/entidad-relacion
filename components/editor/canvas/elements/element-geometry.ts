@@ -38,6 +38,13 @@ function getElementBounds(element: DiagramElement): ElementBounds {
         halfHeight:
           ELEMENT_GEOMETRY.attribute.radiusY + ELEMENT_GEOMETRY.attribute.outerOutlineOffset,
       };
+
+    case 'isa':
+      return {
+        center: element.position,
+        halfWidth: ELEMENT_GEOMETRY.isa.width / 2,
+        halfHeight: ELEMENT_GEOMETRY.isa.height / 2,
+      };
   }
 }
 

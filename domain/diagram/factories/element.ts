@@ -4,6 +4,7 @@ import type {
   Attribute,
   DiagramElement,
   Entity,
+  Isa,
   Point,
   Relationship,
 } from '@/domain/diagram/models';
@@ -48,6 +49,16 @@ export function createAttribute(position: Point): Attribute {
   };
 }
 
+function createIsa(position: Point): Isa {
+  return {
+    id: createId('isa'),
+    type: 'isa',
+    name: 'ISA',
+    position,
+    color: 'neutral',
+  };
+}
+
 export function createDiagramElement(
   type: CreatableDiagramElementType,
   position: Point,
@@ -59,5 +70,7 @@ export function createDiagramElement(
       return createRelationship(position);
     case 'attribute':
       return createAttribute(position);
+    case 'isa':
+      return createIsa(position);
   }
 }

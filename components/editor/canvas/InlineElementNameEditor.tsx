@@ -52,6 +52,12 @@ function getEditableBounds(element: DiagramElement): EditableBounds {
         width: ELEMENT_GEOMETRY.attribute.radiusX * 2 - EDITOR_PADDING.attribute.horizontal,
         height: EDITOR_PADDING.attribute.height,
       };
+
+    case 'isa':
+      return {
+        width: ELEMENT_GEOMETRY.isa.width - 12,
+        height: ELEMENT_GEOMETRY.isa.height - 14,
+      };
   }
 }
 

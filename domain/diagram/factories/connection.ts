@@ -1,7 +1,12 @@
 import { createId } from '@/domain/diagram/lib/id';
-import type { Connection } from '@/domain/diagram/models';
 
-export function createConnection(fromId: string, toId: string): Connection {
+import type { Connection, IsaConnectionRole } from '@/domain/diagram/models';
+
+export function createConnection(
+  fromId: string,
+  toId: string,
+  isaRole: IsaConnectionRole = 'none',
+): Connection {
   return {
     id: createId('connection'),
     type: 'connection',
@@ -9,5 +14,6 @@ export function createConnection(fromId: string, toId: string): Connection {
     toId,
     minimum: 'unspecified',
     maximum: 'unspecified',
+    isaRole,
   };
 }

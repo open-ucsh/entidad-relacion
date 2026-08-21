@@ -167,7 +167,9 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
 
       const element = createDiagramElementAt(activeTool, point);
 
-      startEditingElement(element);
+      if (element.type !== 'isa') {
+        startEditingElement(element);
+      }
       setActiveTool('select');
       return;
     }

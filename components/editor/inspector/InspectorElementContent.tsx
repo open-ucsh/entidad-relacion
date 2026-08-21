@@ -1,7 +1,10 @@
 import { Plus } from 'lucide-react';
 
+import { getIsaHierarchy } from '@/domain/diagram/queries/isa';
+
 import type {
   AttributeKeyType,
+  Diagram,
   DiagramElement,
   EntityKind,
   RelationshipKind,
@@ -9,6 +12,7 @@ import type {
 
 import { InspectorField } from './InspectorField';
 import { ColorPicker, SectionTitle, SegmentedControl, SwitchControl } from './InspectorControls';
+import { IsaHierarchySummary } from './IsaHierarchySummary';
 
 const ENTITY_OPTIONS = [
   { label: 'Regular', value: 'regular' },
@@ -28,6 +32,7 @@ const RELATIONSHIP_KIND_OPTIONS = [
 ] satisfies ReadonlyArray<{ label: string; value: RelationshipKind }>;
 
 interface InspectorElementContentProps {
+  diagram: Diagram;
   element: DiagramElement;
   updateElement: (id: string, updates: Partial<DiagramElement>) => void;
   onAddAttribute: (parentId: string) => void;
@@ -75,6 +80,7 @@ function AppearanceControls({
 }
 
 export function InspectorElementContent({
+  diagram,
   element,
   updateElement,
   onAddAttribute,
@@ -169,27 +175,37 @@ export function InspectorElementContent({
     );
   }
 
+  if (element.type === 'relationship') {
+    return (
+      <>
+        <SectionTitle>Clasificación</SectionTitle>
+
+        <InspectorField label="Tipo de relación">
+          <SegmentedControl
+            value={element.kind}
+            options={RELATIONSHIP_KIND_OPTIONS}
+            onChange={(kind) => {
+              updateElement(element.id, { kind });
+            }}
+          />
+        </InspectorField>
+
+        <AppearanceControls element={element} updateElement={updateElement} />
+
+        <SectionTitle>Atributos</SectionTitle>
+
+        <InspectorField label="Añadir a esta relación">
+          <AddAttributeButton parentId={element.id} onAddAttribute={onAddAttribute} />
+        </InspectorField>
+      </>
+    );
+  }
+
   return (
     <>
-      <SectionTitle>Clasificación</SectionTitle>
-
-      <InspectorField label="Tipo de relación">
-        <SegmentedControl
-          value={element.kind}
-          options={RELATIONSHIP_KIND_OPTIONS}
-          onChange={(kind) => {
-            updateElement(element.id, { kind });
-          }}
-        />
-      </InspectorField>
+      <IsaHierarchySummary hierarchy={getIsaHierarchy(diagram, element)} />
 
       <AppearanceControls element={element} updateElement={updateElement} />
-
-      <SectionTitle>Atributos</SectionTitle>
-
-      <InspectorField label="Añadir a esta relación">
-        <AddAttributeButton parentId={element.id} onAddAttribute={onAddAttribute} />
-      </InspectorField>
     </>
   );
 }
