@@ -66,17 +66,13 @@ export function RelationshipShape({
 
   const stroke = isConnectionDropTarget
     ? 'var(--color-brand-primary-hover)'
-    : isValidTarget || selected
+    : isValidTarget
       ? 'var(--color-brand-primary)'
       : appearance.stroke;
 
   const strokeWidth = isConnectionDropTarget ? 3 : selected ? 2.5 : isValidTarget ? 2 : 1.5;
 
-  const fill = isConnectionDropTarget
-    ? 'var(--color-brand-primary)'
-    : selected
-      ? 'var(--color-surface)'
-      : appearance.fill;
+  const fill = isConnectionDropTarget ? 'var(--color-brand-primary)' : appearance.fill;
 
   return (
     <ElementInteractionGroup

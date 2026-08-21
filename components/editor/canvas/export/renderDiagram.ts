@@ -146,48 +146,57 @@ function prepareExportSvg(
   clone: SVGSVGElement;
   viewport: ExportViewport;
 } {
-  const clone = source.cloneNode(true) as SVGSVGElement;
-  const viewport = getExportViewport(diagram);
+  source.setAttribute('data-exporting', 'true');
 
-  inlineComputedStyles(source, clone);
+  try {
+    const clone = source.cloneNode(true) as SVGSVGElement;
+    const viewport = getExportViewport(diagram);
 
-  clone.setAttribute('xmlns', SVG_NAMESPACE);
-  clone.setAttribute('viewBox', `${viewport.x} ${viewport.y} ${viewport.width} ${viewport.height}`);
-  clone.setAttribute('width', String(viewport.width));
-  clone.setAttribute('height', String(viewport.height));
-  clone.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    inlineComputedStyles(source, clone);
 
-  clone.querySelector('#diagram-world')?.setAttribute('transform', '');
+    clone.setAttribute('xmlns', SVG_NAMESPACE);
+    clone.setAttribute(
+      'viewBox',
+      `${viewport.x} ${viewport.y} ${viewport.width} ${viewport.height}`,
+    );
+    clone.setAttribute('width', String(viewport.width));
+    clone.setAttribute('height', String(viewport.height));
+    clone.setAttribute('preserveAspectRatio', 'xMidYMid meet');
 
-  clone.querySelector('[data-canvas-grid]')?.remove();
+    clone.querySelector('#diagram-world')?.setAttribute('transform', '');
 
-  clone.querySelectorAll('[data-export-exclude]').forEach((element) => {
-    element.remove();
-  });
+    clone.querySelector('[data-canvas-grid]')?.remove();
 
-  const background = createSvgRect(viewport.x, viewport.y, viewport.width, viewport.height, {
-    fill: '#ffffff',
-  });
+    clone.querySelectorAll('[data-export-exclude]').forEach((element) => {
+      element.remove();
+    });
 
-  const documentBorder = createSvgRect(
-    viewport.x + 1,
-    viewport.y + 1,
-    viewport.width - 2,
-    viewport.height - 2,
-    {
-      fill: 'none',
-      stroke: DOCUMENT_BORDER_COLOR,
-      'stroke-width': '1',
-    },
-  );
+    const background = createSvgRect(viewport.x, viewport.y, viewport.width, viewport.height, {
+      fill: '#ffffff',
+    });
 
-  clone.insertBefore(background, clone.firstChild);
-  clone.appendChild(documentBorder);
+    const documentBorder = createSvgRect(
+      viewport.x + 1,
+      viewport.y + 1,
+      viewport.width - 2,
+      viewport.height - 2,
+      {
+        fill: 'none',
+        stroke: DOCUMENT_BORDER_COLOR,
+        'stroke-width': '1',
+      },
+    );
 
-  return {
-    clone,
-    viewport,
-  };
+    clone.insertBefore(background, clone.firstChild);
+    clone.appendChild(documentBorder);
+
+    return {
+      clone,
+      viewport,
+    };
+  } finally {
+    source.removeAttribute('data-exporting');
+  }
 }
 
 function drawWatermark(

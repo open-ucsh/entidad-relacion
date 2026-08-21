@@ -1,6 +1,7 @@
 'use client';
 
 import { type PointerEvent, type RefObject } from 'react';
+import styles from './Canvas.module.css';
 
 import { useCreateDiagramElement } from '@/components/editor/hooks/useCreateDiagramElement';
 import type { Diagram } from '@/domain/diagram/models';
@@ -214,7 +215,7 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
         <svg
           ref={svgRef}
           tabIndex={0}
-          className={`block h-full w-full touch-none ${
+          className={`${styles.canvas} block h-full w-full touch-none ${
             isPanning
               ? 'cursor-grabbing'
               : isSpacePressed

@@ -1,0 +1,8 @@
+.canvas[data-exporting='true'] [data-export-reset-selection] {
+  stroke-width: 1.5 !important;
+}
+
+.canvas[data-exporting='true'] [data-export-reset-connection] {
+  stroke: var(--color-border) !important;
+  stroke-width: 1.5 !important;
+}

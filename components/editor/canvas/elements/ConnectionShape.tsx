@@ -15,6 +15,7 @@ const CARDINALITY_OFFSET = 28;
 function getCardinalityPosition(from: Point, to: Point): Point {
   const dx = to.x - from.x;
   const dy = to.y - from.y;
+
   const lineLength = Math.hypot(dx, dy);
 
   if (lineLength === 0) {
@@ -58,6 +59,7 @@ export function ConnectionShape({
         strokeWidth={24}
         strokeLinecap="round"
         pointerEvents="stroke"
+        data-export-exclude
       />
 
       <line
@@ -70,6 +72,7 @@ export function ConnectionShape({
         strokeLinecap="round"
         className="transition-colors duration-150 group-hover:stroke-brand-primary"
         pointerEvents="none"
+        data-export-reset-connection
       />
 
       {cardinalityLabel && (
