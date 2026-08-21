@@ -1,12 +1,18 @@
-import { createAttribute } from '@/domain/diagram/factories/element';
 import { createConnection } from '@/domain/diagram/factories/connection';
-import { createId } from '@/domain/diagram/lib/id';
-import { distance } from '@/domain/diagram/lib/geometry';
-import type { Diagram } from '@/domain/diagram/models';
+import { createAttribute } from '@/domain/diagram/factories/element';
+
 import { findDiagramElement, getDiagramElements } from '@/domain/diagram/queries/elements';
 
 import { appendDiagramActivity, replaceActiveDiagram } from '../helpers';
-import { moveDiagramElements, removeDiagramElements, updateDiagram } from '../mutations';
+import { createAlignmentUpdates, createDistributionUpdates } from '../lib/element-arrangement';
+import { findConnectedAttributePosition } from '../lib/element-placement';
+import {
+  duplicateDiagramElements,
+  moveDiagramElements,
+  removeDiagramElements,
+  updateDiagram,
+} from '../mutations';
+
 import type {
   DiagramStoreSlice,
   ElementAlignment,
@@ -14,53 +20,13 @@ import type {
   ElementSlice,
 } from '../types';
 
-const DUPLICATE_OFFSET = 32;
-const ATTRIBUTE_DISTANCE = 120;
-const MIN_ATTRIBUTE_DISTANCE = 85;
+function getSelectedDiagramElements(
+  selectedElementIds: string[],
+  diagram: Parameters<typeof getDiagramElements>[0],
+) {
+  const selectedIds = new Set(selectedElementIds);
 
-const ATTRIBUTE_DIRECTIONS = [
-  { x: 1, y: 0 },
-  { x: 0.7, y: 0.7 },
-  { x: 0, y: 1 },
-  { x: -0.7, y: 0.7 },
-  { x: -1, y: 0 },
-  { x: -0.7, y: -0.7 },
-  { x: 0, y: -1 },
-  { x: 0.7, y: -0.7 },
-] as const;
-
-function getConnectedAttributePosition(diagram: Diagram, parentId: string) {
-  const parent = findDiagramElement(diagram, parentId);
-
-  if (!parent) {
-    return null;
-  }
-
-  const occupiedPositions = getDiagramElements(diagram).map((element) => element.position);
-
-  for (let ring = 1; ring <= 4; ring += 1) {
-    const distanceFromParent = ATTRIBUTE_DISTANCE * ring;
-
-    for (const direction of ATTRIBUTE_DIRECTIONS) {
-      const position = {
-        x: parent.position.x + direction.x * distanceFromParent,
-        y: parent.position.y + direction.y * distanceFromParent,
-      };
-
-      const isFree = occupiedPositions.every(
-        (occupiedPosition) => distance(occupiedPosition, position) > MIN_ATTRIBUTE_DISTANCE,
-      );
-
-      if (isFree) {
-        return position;
-      }
-    }
-  }
-
-  return {
-    x: parent.position.x + ATTRIBUTE_DISTANCE,
-    y: parent.position.y,
-  };
+  return getDiagramElements(diagram).filter((element) => selectedIds.has(element.id));
 }
 
 export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) => ({
@@ -117,7 +83,7 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
         return state;
       }
 
-      const position = getConnectedAttributePosition(state.diagram, parentId);
+      const position = findConnectedAttributePosition(state.diagram, parentId);
 
       if (!position) {
         return state;
@@ -149,15 +115,14 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
       const element = findDiagramElement(state.diagram, id);
       const updatedDiagram = updateDiagram(state.diagram, id, updates);
 
-      const details =
-        typeof updates.name === 'string' && element
-          ? `Se renombró “${element.name}” a “${updates.name}”.`
-          : 'Se actualizaron las propiedades de un elemento.';
+      const renamed = typeof updates.name === 'string' && element;
 
       const diagram = appendDiagramActivity(
         updatedDiagram,
-        typeof updates.name === 'string' ? 'element-renamed' : 'element-updated',
-        details,
+        renamed ? 'element-renamed' : 'element-updated',
+        renamed
+          ? `Se renombró “${element.name}” a “${updates.name}”.`
+          : 'Se actualizaron las propiedades de un elemento.',
       );
 
       return replaceActiveDiagram(state, diagram);
@@ -175,46 +140,16 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
       }),
     );
   },
+
   alignSelectedElements: (alignment: ElementAlignment) => {
     set((state) => {
-      const selectedIds = new Set(state.selectedElementIds);
-      const selectedElements = getDiagramElements(state.diagram).filter((element) =>
-        selectedIds.has(element.id),
-      );
+      const selectedElements = getSelectedDiagramElements(state.selectedElementIds, state.diagram);
 
-      if (selectedElements.length < 2) {
+      const updates = createAlignmentUpdates(selectedElements, alignment);
+
+      if (updates.length === 0) {
         return state;
       }
-
-      const xPositions = selectedElements.map((element) => element.position.x);
-      const yPositions = selectedElements.map((element) => element.position.y);
-
-      const left = Math.min(...xPositions);
-      const right = Math.max(...xPositions);
-      const top = Math.min(...yPositions);
-      const bottom = Math.max(...yPositions);
-
-      const updates = selectedElements.map((element) => ({
-        id: element.id,
-        position: {
-          x:
-            alignment === 'left'
-              ? left
-              : alignment === 'center'
-                ? (left + right) / 2
-                : alignment === 'right'
-                  ? right
-                  : element.position.x,
-          y:
-            alignment === 'top'
-              ? top
-              : alignment === 'middle'
-                ? (top + bottom) / 2
-                : alignment === 'bottom'
-                  ? bottom
-                  : element.position.y,
-        },
-      }));
 
       const diagram = appendDiagramActivity(
         moveDiagramElements(state.diagram, updates),
@@ -228,38 +163,13 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
 
   distributeSelectedElements: (distribution: ElementDistribution) => {
     set((state) => {
-      const selectedIds = new Set(state.selectedElementIds);
-      const selectedElements = getDiagramElements(state.diagram).filter((element) =>
-        selectedIds.has(element.id),
-      );
+      const selectedElements = getSelectedDiagramElements(state.selectedElementIds, state.diagram);
 
-      if (selectedElements.length < 3) {
+      const updates = createDistributionUpdates(selectedElements, distribution);
+
+      if (updates.length === 0) {
         return state;
       }
-
-      const axis = distribution === 'horizontal' ? 'x' : 'y';
-
-      const sortedElements = [...selectedElements].sort(
-        (first, second) => first.position[axis] - second.position[axis],
-      );
-
-      const firstElement = sortedElements.at(0);
-
-      if (!firstElement) {
-        return state;
-      }
-
-      const firstPosition = firstElement.position[axis];
-      const lastPosition = sortedElements.at(-1)?.position[axis] ?? firstPosition;
-      const spacing = (lastPosition - firstPosition) / (sortedElements.length - 1);
-
-      const updates = sortedElements.map((element, index) => ({
-        id: element.id,
-        position: {
-          ...element.position,
-          [axis]: firstPosition + spacing * index,
-        },
-      }));
 
       const diagram = appendDiagramActivity(
         moveDiagramElements(state.diagram, updates),
@@ -278,62 +188,18 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
       return;
     }
 
-    const selectedIds = new Set(selectedElementIds);
-
     set((state) => {
-      const duplicatedEntities = state.diagram.entities
-        .filter((entity) => selectedIds.has(entity.id))
-        .map((entity) => ({
-          ...entity,
-          id: createId('entity'),
-          name: `${entity.name} copia`,
-          position: {
-            x: entity.position.x + DUPLICATE_OFFSET,
-            y: entity.position.y + DUPLICATE_OFFSET,
-          },
-        }));
-
-      const duplicatedRelationships = state.diagram.relationships
-        .filter((relationship) => selectedIds.has(relationship.id))
-        .map((relationship) => ({
-          ...relationship,
-          id: createId('relationship'),
-          name: `${relationship.name} copia`,
-          position: {
-            x: relationship.position.x + DUPLICATE_OFFSET,
-            y: relationship.position.y + DUPLICATE_OFFSET,
-          },
-        }));
-
-      const duplicatedAttributes = state.diagram.attributes
-        .filter((attribute) => selectedIds.has(attribute.id))
-        .map((attribute) => ({
-          ...attribute,
-          id: createId('attribute'),
-          name: `${attribute.name} copia`,
-          position: {
-            x: attribute.position.x + DUPLICATE_OFFSET,
-            y: attribute.position.y + DUPLICATE_OFFSET,
-          },
-        }));
-
-      const duplicatedIds = [
-        ...duplicatedEntities.map((entity) => entity.id),
-        ...duplicatedRelationships.map((relationship) => relationship.id),
-        ...duplicatedAttributes.map((attribute) => attribute.id),
-      ];
+      const { diagram: duplicatedDiagram, duplicatedIds } = duplicateDiagramElements(
+        state.diagram,
+        selectedElementIds,
+      );
 
       if (duplicatedIds.length === 0) {
         return state;
       }
 
       const diagram = appendDiagramActivity(
-        {
-          ...state.diagram,
-          entities: [...state.diagram.entities, ...duplicatedEntities],
-          relationships: [...state.diagram.relationships, ...duplicatedRelationships],
-          attributes: [...state.diagram.attributes, ...duplicatedAttributes],
-        },
+        duplicatedDiagram,
         'element-created',
         `Se duplicó ${duplicatedIds.length} elemento${duplicatedIds.length === 1 ? '' : 's'}.`,
       );

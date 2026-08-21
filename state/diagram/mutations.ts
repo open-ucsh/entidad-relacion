@@ -1,9 +1,15 @@
-import type { Attribute, Diagram, Entity, Relationship } from '@/domain/diagram/models';
-import type { Connection } from '@/domain/diagram/models';
+import type { Attribute, Connection, Diagram, Entity, Relationship } from '@/domain/diagram/models';
+
+import { createId } from '@/domain/diagram/lib/id';
 
 import type { ElementPositionUpdate } from './types';
 
 type DiagramElement = Entity | Relationship | Attribute;
+
+export interface DuplicateDiagramElementsResult {
+  diagram: Diagram;
+  duplicatedIds: string[];
+}
 
 function updateCollection<T extends { id: string }>(
   items: T[],
@@ -34,6 +40,27 @@ function moveCollection<T extends { id: string; position: unknown }>(
         }
       : item;
   });
+}
+
+function duplicateCollection<
+  T extends { id: string; name: string; position: DiagramElement['position'] },
+>(
+  items: T[],
+  selectedIds: Set<string>,
+  prefix: 'entity' | 'relationship' | 'attribute',
+  offset: number,
+): T[] {
+  return items
+    .filter((item) => selectedIds.has(item.id))
+    .map((item) => ({
+      ...item,
+      id: createId(prefix),
+      name: `${item.name} copia`,
+      position: {
+        x: item.position.x + offset,
+        y: item.position.y + offset,
+      },
+    }));
 }
 
 export function updateDiagram(
@@ -68,6 +95,39 @@ export function moveDiagramElements(diagram: Diagram, updates: ElementPositionUp
     entities: moveCollection(diagram.entities, positions),
     relationships: moveCollection(diagram.relationships, positions),
     attributes: moveCollection(diagram.attributes, positions),
+  };
+}
+
+export function duplicateDiagramElements(
+  diagram: Diagram,
+  ids: string[],
+  offset = 32,
+): DuplicateDiagramElementsResult {
+  const selectedIds = new Set(ids);
+
+  const entities = duplicateCollection(diagram.entities, selectedIds, 'entity', offset);
+  const relationships = duplicateCollection(
+    diagram.relationships,
+    selectedIds,
+    'relationship',
+    offset,
+  );
+  const attributes = duplicateCollection(diagram.attributes, selectedIds, 'attribute', offset);
+
+  const duplicatedIds = [
+    ...entities.map((entity) => entity.id),
+    ...relationships.map((relationship) => relationship.id),
+    ...attributes.map((attribute) => attribute.id),
+  ];
+
+  return {
+    diagram: {
+      ...diagram,
+      entities: [...diagram.entities, ...entities],
+      relationships: [...diagram.relationships, ...relationships],
+      attributes: [...diagram.attributes, ...attributes],
+    },
+    duplicatedIds,
   };
 }
 
