@@ -1,5 +1,6 @@
 import type { MouseEvent, PointerEvent } from 'react';
 
+import { getElementAppearance } from '@/domain/diagram/lib/appearance';
 import { ELEMENT_GEOMETRY } from '@/domain/diagram/lib/geometry';
 
 import type { Relationship } from '@/domain/diagram/models';
@@ -42,6 +43,7 @@ export function RelationshipShape({
 }: RelationshipShapeProps) {
   const { x, y } = relationship.position;
   const displayName = truncateLabel(relationship.name, 12);
+  const appearance = getElementAppearance(relationship.color);
 
   const points = [
     `${x},${y - HEIGHT / 2}`,
@@ -66,7 +68,7 @@ export function RelationshipShape({
     ? 'var(--color-brand-primary-hover)'
     : isValidTarget || selected
       ? 'var(--color-brand-primary)'
-      : 'var(--color-border)';
+      : appearance.stroke;
 
   const strokeWidth = isConnectionDropTarget ? 3 : selected ? 2.5 : isValidTarget ? 2 : 1.5;
 
@@ -74,7 +76,7 @@ export function RelationshipShape({
     ? 'var(--color-brand-primary)'
     : selected
       ? 'var(--color-surface)'
-      : 'var(--color-background)';
+      : appearance.fill;
 
   return (
     <ElementInteractionGroup
@@ -102,7 +104,7 @@ export function RelationshipShape({
           stroke={stroke}
           strokeWidth={strokeWidth}
           strokeLinejoin="round"
-          className="transition-colors duration-150 group-hover:fill-surface-hover group-hover:stroke-brand-primary"
+          className="transition-colors duration-150"
         />
 
         {!isEditing && (

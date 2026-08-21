@@ -1,10 +1,14 @@
 import { Plus } from 'lucide-react';
 
-import type { AttributeKeyType, EntityKind, RelationshipKind } from '@/domain/diagram/models';
-import type { DiagramElement } from '@/domain/diagram/models';
+import type {
+  AttributeKeyType,
+  DiagramElement,
+  EntityKind,
+  RelationshipKind,
+} from '@/domain/diagram/models';
 
 import { InspectorField } from './InspectorField';
-import { SectionTitle, SegmentedControl, SwitchControl } from './InspectorControls';
+import { ColorPicker, SectionTitle, SegmentedControl, SwitchControl } from './InspectorControls';
 
 const ENTITY_OPTIONS = [
   { label: 'Regular', value: 'regular' },
@@ -50,6 +54,26 @@ function AddAttributeButton({
   );
 }
 
+function AppearanceControls({
+  element,
+  updateElement,
+}: Pick<InspectorElementContentProps, 'element' | 'updateElement'>) {
+  return (
+    <>
+      <SectionTitle>Apariencia</SectionTitle>
+
+      <InspectorField label="Color">
+        <ColorPicker
+          value={element.color}
+          onChange={(color) => {
+            updateElement(element.id, { color });
+          }}
+        />
+      </InspectorField>
+    </>
+  );
+}
+
 export function InspectorElementContent({
   element,
   updateElement,
@@ -69,6 +93,8 @@ export function InspectorElementContent({
             }}
           />
         </InspectorField>
+
+        <AppearanceControls element={element} updateElement={updateElement} />
 
         <SectionTitle>Atributos</SectionTitle>
 
@@ -137,6 +163,8 @@ export function InspectorElementContent({
             />
           </div>
         </InspectorField>
+
+        <AppearanceControls element={element} updateElement={updateElement} />
       </>
     );
   }
@@ -154,6 +182,8 @@ export function InspectorElementContent({
           }}
         />
       </InspectorField>
+
+      <AppearanceControls element={element} updateElement={updateElement} />
 
       <SectionTitle>Atributos</SectionTitle>
 

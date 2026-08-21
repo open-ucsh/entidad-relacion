@@ -1,4 +1,5 @@
 import { createId } from '@/domain/diagram/lib/id';
+
 import type {
   Attribute,
   DiagramElement,
@@ -15,6 +16,7 @@ function createEntity(position: Point): Entity {
     type: 'entity',
     name: 'Nueva Entidad',
     position,
+    color: 'neutral',
     kind: 'regular',
   };
 }
@@ -25,6 +27,7 @@ function createRelationship(position: Point): Relationship {
     type: 'relationship',
     name: 'Nueva Relación',
     position,
+    color: 'neutral',
     kind: 'regular',
   };
 }
@@ -35,6 +38,7 @@ export function createAttribute(position: Point): Attribute {
     type: 'attribute',
     name: 'Nuevo Atributo',
     position,
+    color: 'neutral',
     keyType: 'normal',
     unique: false,
     multivalued: false,
@@ -51,10 +55,8 @@ export function createDiagramElement(
   switch (type) {
     case 'entity':
       return createEntity(position);
-
     case 'relationship':
       return createRelationship(position);
-
     case 'attribute':
       return createAttribute(position);
   }

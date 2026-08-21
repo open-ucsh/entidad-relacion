@@ -1,5 +1,6 @@
 import type { MouseEvent, PointerEvent } from 'react';
 
+import { getElementAppearance } from '@/domain/diagram/lib/appearance';
 import { ELEMENT_GEOMETRY } from '@/domain/diagram/lib/geometry';
 
 import type { Entity } from '@/domain/diagram/models';
@@ -44,6 +45,7 @@ export function EntityShape({
   onConnectionPointerDown,
 }: EntityShapeProps) {
   const displayName = truncateLabel(entity.name, 16);
+  const appearance = getElementAppearance(entity.color);
 
   const { x: centerX, y: centerY } = entity.position;
   const x = centerX - WIDTH / 2;
@@ -71,7 +73,7 @@ export function EntityShape({
     ? 'var(--color-brand-primary-hover)'
     : isValidTarget || selected
       ? 'var(--color-brand-primary)'
-      : 'var(--color-border)';
+      : appearance.stroke;
 
   const strokeWidth = isConnectionDropTarget ? 3 : selected ? 2.5 : isValidTarget ? 2 : 1.5;
 
@@ -79,7 +81,7 @@ export function EntityShape({
     ? 'var(--color-brand-primary)'
     : selected
       ? 'var(--color-surface)'
-      : 'var(--color-background)';
+      : appearance.fill;
 
   return (
     <ElementInteractionGroup
@@ -113,7 +115,7 @@ export function EntityShape({
           fillOpacity={isConnectionDropTarget ? 0.12 : 1}
           stroke={stroke}
           strokeWidth={strokeWidth}
-          className="transition-colors duration-150 group-hover:fill-surface-hover group-hover:stroke-brand-primary"
+          className="transition-colors duration-150"
         />
 
         {isAssociative && (
@@ -123,7 +125,7 @@ export function EntityShape({
             fillOpacity={isConnectionDropTarget ? 0.12 : 1}
             stroke={stroke}
             strokeWidth={selected ? 2 : 1.5}
-            className="transition-colors duration-150 group-hover:fill-surface-hover group-hover:stroke-brand-primary"
+            className="transition-colors duration-150"
             pointerEvents="none"
           />
         )}

@@ -1,5 +1,6 @@
 import type { MouseEvent, PointerEvent } from 'react';
 
+import { getElementAppearance } from '@/domain/diagram/lib/appearance';
 import { ELEMENT_GEOMETRY } from '@/domain/diagram/lib/geometry';
 
 import type { Attribute } from '@/domain/diagram/models';
@@ -51,6 +52,7 @@ export function AttributeShape({
   const fullDisplayName = attribute.composite ? `(${attribute.name})` : attribute.name;
 
   const displayName = truncateLabel(fullDisplayName, 16);
+  const appearance = getElementAppearance(attribute.color);
   const halfTextWidth = estimateTextWidth(displayName) / 2;
 
   const isInvalidTarget = showConnectionTargets && isConnectionTargetInvalid && !selected;
@@ -62,7 +64,7 @@ export function AttributeShape({
     ? 'var(--color-brand-primary-hover)'
     : isValidTarget || selected
       ? 'var(--color-brand-primary)'
-      : 'var(--color-border)';
+      : appearance.stroke;
 
   const strokeWidth = isConnectionDropTarget ? 3 : selected ? 2.5 : isValidTarget ? 2 : 1.5;
 
@@ -70,7 +72,7 @@ export function AttributeShape({
     ? 'var(--color-brand-primary)'
     : selected
       ? 'var(--color-surface)'
-      : 'var(--color-background)';
+      : appearance.fill;
 
   return (
     <ElementInteractionGroup
@@ -103,7 +105,7 @@ export function AttributeShape({
           stroke={stroke}
           strokeWidth={strokeWidth}
           strokeDasharray={attribute.derived ? '5 4' : undefined}
-          className="transition-colors duration-150 group-hover:fill-surface-hover group-hover:stroke-brand-primary"
+          className="transition-colors duration-150"
         />
 
         {!isEditing && (
