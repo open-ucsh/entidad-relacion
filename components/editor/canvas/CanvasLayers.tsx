@@ -4,10 +4,8 @@ import type { Diagram, Tool } from '@/domain/diagram/models';
 
 import type { ElementColor } from '@/state/diagram/diagram-appearance';
 
-import {
-  formatConnectionCardinality,
-  getConnectionEndpoints,
-} from '@/domain/diagram/queries/connections';
+import { getConnectionEndpoints } from './lib/connection-endpoints';
+import { formatConnectionCardinality } from '@/domain/diagram/queries/connections';
 import { findDiagramElement } from '@/domain/diagram/queries/elements';
 import { canConnectDiagramElements } from '@/domain/diagram/validation/connections';
 

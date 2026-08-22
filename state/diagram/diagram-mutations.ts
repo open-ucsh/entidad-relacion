@@ -15,6 +15,7 @@ import type { ElementPositionUpdate } from './diagram-store.types';
 export interface DuplicateDiagramElementsResult {
   diagram: Diagram;
   duplicatedIds: string[];
+  duplicatedIdBySourceId: Record<string, string>;
 }
 
 function updateCollection<T extends { id: string }>(
@@ -55,18 +56,34 @@ function duplicateCollection<
   selectedIds: Set<string>,
   prefix: 'entity' | 'relationship' | 'attribute' | 'isa',
   offset: number,
-): T[] {
-  return items
+): {
+  elements: T[];
+  duplicatedIdBySourceId: Record<string, string>;
+} {
+  const duplicatedIdBySourceId: Record<string, string> = {};
+
+  const elements = items
     .filter((item) => selectedIds.has(item.id))
-    .map((item) => ({
-      ...item,
-      id: createId(prefix),
-      name: `${item.name} copia`,
-      position: {
-        x: item.position.x + offset,
-        y: item.position.y + offset,
-      },
-    }));
+    .map((item) => {
+      const duplicatedId = createId(prefix);
+
+      duplicatedIdBySourceId[item.id] = duplicatedId;
+
+      return {
+        ...item,
+        id: duplicatedId,
+        name: `${item.name} copia`,
+        position: {
+          x: item.position.x + offset,
+          y: item.position.y + offset,
+        },
+      };
+    });
+
+  return {
+    elements,
+    duplicatedIdBySourceId,
+  };
 }
 
 export function updateDiagram(
@@ -113,32 +130,48 @@ export function duplicateDiagramElements(
 ): DuplicateDiagramElementsResult {
   const selectedIds = new Set(ids);
 
-  const entities = duplicateCollection(diagram.entities, selectedIds, 'entity', offset);
-  const relationships = duplicateCollection(
+  const duplicatedEntities = duplicateCollection(diagram.entities, selectedIds, 'entity', offset);
+
+  const duplicatedRelationships = duplicateCollection(
     diagram.relationships,
     selectedIds,
     'relationship',
     offset,
   );
-  const attributes = duplicateCollection(diagram.attributes, selectedIds, 'attribute', offset);
-  const isas = duplicateCollection(diagram.isas, selectedIds, 'isa', offset);
+
+  const duplicatedAttributes = duplicateCollection(
+    diagram.attributes,
+    selectedIds,
+    'attribute',
+    offset,
+  );
+
+  const duplicatedIsas = duplicateCollection(diagram.isas, selectedIds, 'isa', offset);
 
   const duplicatedIds = [
-    ...entities.map((entity) => entity.id),
-    ...relationships.map((relationship) => relationship.id),
-    ...attributes.map((attribute) => attribute.id),
-    ...isas.map((isa) => isa.id),
+    ...duplicatedEntities.elements.map((entity) => entity.id),
+    ...duplicatedRelationships.elements.map((relationship) => relationship.id),
+    ...duplicatedAttributes.elements.map((attribute) => attribute.id),
+    ...duplicatedIsas.elements.map((isa) => isa.id),
   ];
+
+  const duplicatedIdBySourceId = {
+    ...duplicatedEntities.duplicatedIdBySourceId,
+    ...duplicatedRelationships.duplicatedIdBySourceId,
+    ...duplicatedAttributes.duplicatedIdBySourceId,
+    ...duplicatedIsas.duplicatedIdBySourceId,
+  };
 
   return {
     diagram: {
       ...diagram,
-      entities: [...diagram.entities, ...entities],
-      relationships: [...diagram.relationships, ...relationships],
-      attributes: [...diagram.attributes, ...attributes],
-      isas: [...diagram.isas, ...isas],
+      entities: [...diagram.entities, ...duplicatedEntities.elements],
+      relationships: [...diagram.relationships, ...duplicatedRelationships.elements],
+      attributes: [...diagram.attributes, ...duplicatedAttributes.elements],
+      isas: [...diagram.isas, ...duplicatedIsas.elements],
     },
     duplicatedIds,
+    duplicatedIdBySourceId,
   };
 }
 

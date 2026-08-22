@@ -2,7 +2,8 @@
 
 import { type PointerEvent, useCallback, useRef, useState } from 'react';
 
-import { getElementBoundaryPoint } from '../elements/element-shape-geometry';
+import { getElementBoundaryPoint } from '../elements/element-connection-geometry';
+
 import type { Diagram, Point } from '@/domain/diagram/models';
 import { findDiagramElement } from '@/domain/diagram/queries/elements';
 import { canConnectElementsById } from '@/domain/diagram/validation/connections';

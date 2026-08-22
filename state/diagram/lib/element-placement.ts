@@ -1,4 +1,4 @@
-import { distance } from '@/components/editor/canvas/elements/element-shape-geometry';
+import { distance } from './point';
 import type { Diagram, Point } from '@/domain/diagram/models';
 
 import { findDiagramElement, getDiagramElements } from '@/domain/diagram/queries/elements';

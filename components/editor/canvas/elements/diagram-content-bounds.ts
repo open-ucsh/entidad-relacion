@@ -2,7 +2,7 @@ import type { Diagram } from '@/domain/diagram/models';
 
 import { getDiagramElements } from '@/domain/diagram/queries/elements';
 
-import { getElementVisualBounds } from './element-shape-geometry';
+import { getElementVisualBounds } from './element-shape-dimensions';
 
 export interface DiagramBounds {
   x: number;

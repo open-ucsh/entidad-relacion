@@ -3,7 +3,7 @@ import type { MouseEvent, PointerEvent } from 'react';
 import type { ElementColor } from '@/state/diagram/diagram-appearance';
 
 import { getElementAppearance } from '../../element-appearance';
-import { ELEMENT_GEOMETRY } from './element-shape-geometry';
+import { ELEMENT_GEOMETRY } from './element-shape-dimensions';
 
 import type { Isa } from '@/domain/diagram/models';
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 
-import { ELEMENT_GEOMETRY } from './elements/element-shape-geometry';
+import { ELEMENT_GEOMETRY } from './elements/element-shape-dimensions';
 import type { DiagramElement } from '@/domain/diagram/models';
 
 interface InlineElementNameEditorProps {

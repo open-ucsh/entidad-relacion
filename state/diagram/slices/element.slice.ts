@@ -130,9 +130,13 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
   updateElement: (id, updates) => {
     set((state) => {
       const element = findDiagramElement(state.diagram, id);
-      const updatedDiagram = updateDiagram(state.diagram, id, updates);
 
-      const renamed = typeof updates.name === 'string' && element;
+      if (!element) {
+        return state;
+      }
+
+      const updatedDiagram = updateDiagram(state.diagram, id, updates);
+      const renamed = typeof updates.name === 'string';
 
       const diagram = appendDiagramActivity(
         updatedDiagram,
@@ -238,10 +242,11 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
     }
 
     set((state) => {
-      const { diagram: duplicatedDiagram, duplicatedIds } = duplicateDiagramElements(
-        state.diagram,
-        selectedElementIds,
-      );
+      const {
+        diagram: duplicatedDiagram,
+        duplicatedIds,
+        duplicatedIdBySourceId,
+      } = duplicateDiagramElements(state.diagram, selectedElementIds);
 
       if (duplicatedIds.length === 0) {
         return state;
@@ -253,8 +258,20 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
         `Se duplicó ${duplicatedIds.length} elemento${duplicatedIds.length === 1 ? '' : 's'}.`,
       );
 
+      const elementColors = { ...state.appearance.elementColors };
+
+      Object.entries(duplicatedIdBySourceId).forEach(([sourceId, duplicatedId]) => {
+        const color = state.appearance.elementColors[sourceId];
+
+        if (color) {
+          elementColors[duplicatedId] = color;
+        }
+      });
+
       return {
-        ...replaceActiveDiagram(state, diagram),
+        ...replaceActiveDiagram(state, diagram, {
+          appearance: { elementColors },
+        }),
         selectedElementIds: duplicatedIds,
         selectedElementId: duplicatedIds.at(-1) ?? null,
       };
