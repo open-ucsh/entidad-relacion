@@ -1,9 +1,9 @@
 'use client';
 
 import { Keyboard, X } from 'lucide-react';
-import { useEffect } from 'react';
 
 import { TOOL_GROUPS } from '@/components/editor/toolbar/tool-config';
+import { useCloseOnEscape } from '../hooks/useCloseOnEscape';
 
 interface KeyboardShortcutsDialogProps {
   isOpen: boolean;
@@ -23,23 +23,7 @@ const HISTORY_SHORTCUTS = [
 ] as const;
 
 export function KeyboardShortcutsDialog({ isOpen, onClose }: KeyboardShortcutsDialogProps) {
-  useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
-
-    function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        onClose();
-      }
-    }
-
-    window.addEventListener('keydown', closeOnEscape);
-
-    return () => {
-      window.removeEventListener('keydown', closeOnEscape);
-    };
-  }, [isOpen, onClose]);
+  useCloseOnEscape({ isOpen, onClose });
 
   if (!isOpen) {
     return null;

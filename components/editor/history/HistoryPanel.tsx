@@ -1,5 +1,6 @@
 'use client';
 
+import { useCloseOnEscape } from '@/components/editor/hooks/useCloseOnEscape';
 import { selectActiveDiagram } from '@/state/diagram/selectors';
 import { useDiagramStore } from '@/state/diagram/store';
 
@@ -14,6 +15,8 @@ interface HistoryPanelProps {
 
 export function HistoryPanel({ isOpen, onClose }: HistoryPanelProps) {
   const diagram = useDiagramStore(selectActiveDiagram);
+
+  useCloseOnEscape({ isOpen, onClose });
 
   if (!isOpen) {
     return null;
