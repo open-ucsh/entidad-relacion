@@ -6,9 +6,14 @@ import { getSvgPoint } from '../lib/coordinates';
 
 import type { CanvasCamera } from './useCanvasCamera';
 
+interface ClientPoint {
+  clientX: number;
+  clientY: number;
+}
+
 export function useWorldCoordinates(svgRef: RefObject<SVGSVGElement | null>, camera: CanvasCamera) {
   const getWorldPoint = useCallback(
-    (event: globalThis.PointerEvent) => {
+    (event: ClientPoint) => {
       const svg = svgRef.current;
 
       if (!svg) {

@@ -20,6 +20,8 @@ import { CanvasAlignmentGuides } from './CanvasAlignmentGuides';
 import { useCanvasCamera } from './hooks/useCanvasCamera';
 import { useCanvasConnection } from './hooks/useCanvasConnection';
 import { useCanvasDrag } from './hooks/useCanvasDrag';
+
+import { useCanvasToolDrop } from './hooks/useCanvasToolDrop';
 import { useCanvasKeyboard } from './hooks/useCanvasKeyboard';
 import { useCanvasSelectionBox } from './hooks/useCanvasSelectionBox';
 import { useInlineElementNameEditing } from './hooks/useInlineElementNameEditing';
@@ -35,6 +37,7 @@ interface CanvasProps {
 export function Canvas({ diagram, svgRef }: CanvasProps) {
   const activeTool = useDiagramStore((state) => state.activeTool);
   const appearance = useDiagramStore((state) => state.appearance);
+
   const selectedElementId = useDiagramStore((state) => state.selectedElementId);
   const selectedElementIds = useDiagramStore((state) => state.selectedElementIds);
   const connectionSourceId = useDiagramStore((state) => state.connectionSourceId);
@@ -137,6 +140,14 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
     updateElement,
   });
 
+  const { isToolDragOver, handleToolDragOver, handleToolDragLeave, handleToolDrop } =
+    useCanvasToolDrop({
+      getWorldPoint,
+      createDiagramElementAt,
+      startEditingElement,
+      setActiveTool,
+    });
+
   const selectedElement = selectedElementId
     ? findDiagramElement(diagram, selectedElementId)
     : undefined;
@@ -219,15 +230,17 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
           ref={svgRef}
           tabIndex={0}
           className={`${styles.canvas} block h-full w-full touch-none ${
-            isPanning
-              ? 'cursor-grabbing'
-              : isSpacePressed
-                ? 'cursor-grab'
-                : isCreatableTool(activeTool)
-                  ? 'cursor-crosshair'
-                  : activeTool === 'select'
-                    ? 'cursor-default'
-                    : 'cursor-grab'
+            isToolDragOver
+              ? 'cursor-copy'
+              : isPanning
+                ? 'cursor-grabbing'
+                : isSpacePressed
+                  ? 'cursor-grab'
+                  : isCreatableTool(activeTool)
+                    ? 'cursor-crosshair'
+                    : activeTool === 'select'
+                      ? 'cursor-default'
+                      : 'cursor-grab'
           }`}
           viewBox={`0 0 ${canvasSize.width} ${canvasSize.height}`}
           onWheel={handleWheel}
@@ -236,9 +249,26 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerCancel}
+          onDragOver={handleToolDragOver}
+          onDragLeave={handleToolDragLeave}
+          onDrop={handleToolDrop}
           role="application"
           aria-label="Lienzo del diagrama Entidad-Relación"
         >
+          {isToolDragOver && (
+            <rect
+              x={2}
+              y={2}
+              width={canvasSize.width - 4}
+              height={canvasSize.height - 4}
+              fill="none"
+              stroke="var(--color-brand-primary)"
+              strokeWidth={2}
+              strokeDasharray="8 6"
+              pointerEvents="none"
+            />
+          )}
+
           <CanvasGrid camera={camera} canvasSize={canvasSize} />
 
           <g id="canvas-interaction-layer">

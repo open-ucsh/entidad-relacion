@@ -1,6 +1,7 @@
 import type { Tool } from '@/domain/diagram/models';
 
 import { ToolbarButton } from './ToolbarButton';
+
 import type { ToolbarTool } from './tool-config';
 
 interface ToolbarGroupProps {
@@ -30,6 +31,7 @@ export function ToolbarGroup({
         {items.map((item) => (
           <ToolbarButton
             key={item.id}
+            tool={item.id}
             icon={item.icon}
             label={item.label}
             shortcut={item.shortcut}

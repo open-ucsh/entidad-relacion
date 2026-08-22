@@ -1,6 +1,11 @@
 import type { Point } from '@/domain/diagram/models';
 
-export function getSvgPoint(svg: SVGSVGElement, event: globalThis.PointerEvent): Point | null {
+interface ClientPoint {
+  clientX: number;
+  clientY: number;
+}
+
+export function getSvgPoint(svg: SVGSVGElement, event: ClientPoint): Point | null {
   const matrix = svg.getScreenCTM();
 
   if (!matrix) {
