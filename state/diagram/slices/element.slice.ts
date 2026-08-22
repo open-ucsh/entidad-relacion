@@ -279,6 +279,7 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
         diagram: duplicatedDiagram,
         duplicatedIds,
         duplicatedIdBySourceId,
+        duplicatedConnectionCount,
       } = duplicateDiagramElements(state.diagram, selectedElementIds);
 
       if (duplicatedIds.length === 0) {
@@ -288,7 +289,11 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
       const diagram = appendDiagramActivity(
         duplicatedDiagram,
         'element-created',
-        `Se duplicó ${duplicatedIds.length} elemento${duplicatedIds.length === 1 ? '' : 's'}.`,
+        `Se duplicaron ${duplicatedIds.length} elemento${duplicatedIds.length === 1 ? '' : 's'}${
+          duplicatedConnectionCount > 0
+            ? ` y ${duplicatedConnectionCount} conexi${duplicatedConnectionCount === 1 ? 'ón interna' : 'ones internas'}`
+            : ''
+        }.`,
       );
 
       const elementColors = { ...state.appearance.elementColors };

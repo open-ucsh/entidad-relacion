@@ -16,6 +16,7 @@ export interface DuplicateDiagramElementsResult {
   diagram: Diagram;
   duplicatedIds: string[];
   duplicatedIdBySourceId: Record<string, string>;
+  duplicatedConnectionCount: number;
 }
 
 function updateCollection<T extends { id: string }>(
@@ -86,6 +87,29 @@ function duplicateCollection<
   };
 }
 
+function duplicateInternalConnections(
+  connections: Connection[],
+  duplicatedIdBySourceId: Record<string, string>,
+): Connection[] {
+  return connections.flatMap((connection) => {
+    const fromId = duplicatedIdBySourceId[connection.fromId];
+    const toId = duplicatedIdBySourceId[connection.toId];
+
+    if (!fromId || !toId) {
+      return [];
+    }
+
+    return [
+      {
+        ...connection,
+        id: createId('connection'),
+        fromId,
+        toId,
+      },
+    ];
+  });
+}
+
 export function updateDiagram(
   diagram: Diagram,
   id: string,
@@ -129,23 +153,19 @@ export function duplicateDiagramElements(
   offset = 32,
 ): DuplicateDiagramElementsResult {
   const selectedIds = new Set(ids);
-
   const duplicatedEntities = duplicateCollection(diagram.entities, selectedIds, 'entity', offset);
-
   const duplicatedRelationships = duplicateCollection(
     diagram.relationships,
     selectedIds,
     'relationship',
     offset,
   );
-
   const duplicatedAttributes = duplicateCollection(
     diagram.attributes,
     selectedIds,
     'attribute',
     offset,
   );
-
   const duplicatedIsas = duplicateCollection(diagram.isas, selectedIds, 'isa', offset);
 
   const duplicatedIds = [
@@ -162,6 +182,11 @@ export function duplicateDiagramElements(
     ...duplicatedIsas.duplicatedIdBySourceId,
   };
 
+  const duplicatedConnections = duplicateInternalConnections(
+    diagram.connections,
+    duplicatedIdBySourceId,
+  );
+
   return {
     diagram: {
       ...diagram,
@@ -169,9 +194,11 @@ export function duplicateDiagramElements(
       relationships: [...diagram.relationships, ...duplicatedRelationships.elements],
       attributes: [...diagram.attributes, ...duplicatedAttributes.elements],
       isas: [...diagram.isas, ...duplicatedIsas.elements],
+      connections: [...diagram.connections, ...duplicatedConnections],
     },
     duplicatedIds,
     duplicatedIdBySourceId,
+    duplicatedConnectionCount: duplicatedConnections.length,
   };
 }
 
