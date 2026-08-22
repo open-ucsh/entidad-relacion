@@ -1,4 +1,4 @@
-import type { ElementColor } from '@/domain/diagram/models';
+import type { ElementColor } from '@/state/diagram/diagram-appearance';
 
 export interface ElementColorOption {
   value: ElementColor;

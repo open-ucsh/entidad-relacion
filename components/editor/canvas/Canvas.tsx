@@ -34,6 +34,7 @@ interface CanvasProps {
 
 export function Canvas({ diagram, svgRef }: CanvasProps) {
   const activeTool = useDiagramStore((state) => state.activeTool);
+  const appearance = useDiagramStore((state) => state.appearance);
   const selectedElementId = useDiagramStore((state) => state.selectedElementId);
   const selectedElementIds = useDiagramStore((state) => state.selectedElementIds);
   const connectionSourceId = useDiagramStore((state) => state.connectionSourceId);
@@ -253,6 +254,7 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
 
               <CanvasLayers
                 diagram={diagram}
+                elementColors={appearance.elementColors}
                 editingElementId={editingElement?.id ?? null}
                 selectedElementIds={selectedElementIds}
                 connectionSourceId={connectionSourceId}

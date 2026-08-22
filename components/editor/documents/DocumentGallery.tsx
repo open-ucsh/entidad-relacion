@@ -2,7 +2,7 @@
 
 import { Clock3, Copy, FilePlus, FileText, FolderInput, Trash2, X } from 'lucide-react';
 
-import type { DiagramDocument } from '@/domain/diagram/models';
+import type { DiagramDocument } from '@/state/diagram/diagram-document';
 import { useDiagramStore } from '@/state/diagram/store';
 
 interface DocumentGalleryProps {

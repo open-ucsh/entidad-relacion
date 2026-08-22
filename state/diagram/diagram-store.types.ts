@@ -5,14 +5,16 @@ import type {
   Connection,
   Diagram,
   DiagramActivityType,
-  DiagramDocument,
   DiagramElement,
   Entity,
+  Isa,
   Point,
   Relationship,
   Tool,
-  Isa,
 } from '@/domain/diagram/models';
+
+import type { DiagramAppearance, ElementColor } from './diagram-appearance';
+import type { DiagramDocument, DiagramDocumentSnapshot } from './diagram-document';
 
 export interface ElementPositionUpdate {
   id: string;
@@ -21,11 +23,12 @@ export interface ElementPositionUpdate {
 
 export interface DocumentSlice {
   diagram: Diagram;
+  appearance: DiagramAppearance;
   documents: DiagramDocument[];
   activeDocumentId: string;
 
   setDiagram: (diagram: Diagram) => void;
-  importDiagram: (diagram: Diagram) => void;
+  importDiagram: (diagram: Diagram, appearance?: DiagramAppearance) => void;
   resetDiagram: () => void;
 
   createDocument: (name?: string) => void;
@@ -63,6 +66,7 @@ export interface ElementSlice {
   createConnectedAttribute: (parentId: string) => void;
 
   updateElement: (id: string, updates: Partial<DiagramElement>) => void;
+  setElementColor: (id: string, color: ElementColor) => void;
 
   duplicateSelectedElements: () => void;
   alignSelectedElements: (alignment: ElementAlignment) => void;
@@ -76,7 +80,6 @@ export interface ElementSlice {
 
 export interface ConnectionSlice {
   addConnection: (connection: Connection) => void;
-
   updateConnection: (id: string, updates: Partial<Connection>) => void;
 
   beginConnection: (sourceId: string) => void;
@@ -87,7 +90,7 @@ export interface ConnectionSlice {
 }
 
 export interface HistorySlice {
-  pendingHistorySnapshot: Diagram | null;
+  pendingHistorySnapshot: DiagramDocumentSnapshot | null;
 
   undo: () => void;
   redo: () => void;

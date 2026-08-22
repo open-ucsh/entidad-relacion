@@ -1,4 +1,7 @@
-import type { Diagram, DiagramDocumentHistory } from '@/domain/diagram/models';
+import type { Diagram } from '@/domain/diagram/models';
+
+import type { DiagramAppearance } from './diagram-appearance';
+import type { DiagramDocumentHistory, DiagramDocumentSnapshot } from './diagram-document';
 
 const MAX_HISTORY_SIZE = 50;
 
@@ -9,12 +12,24 @@ export function createDocumentHistory(): DiagramDocumentHistory {
   };
 }
 
+export function createDocumentSnapshot(
+  diagram: Diagram,
+  appearance: DiagramAppearance,
+): DiagramDocumentSnapshot {
+  return {
+    diagram,
+    appearance: {
+      elementColors: { ...appearance.elementColors },
+    },
+  };
+}
+
 export function pushUndoSnapshot(
   history: DiagramDocumentHistory,
-  diagram: Diagram,
+  snapshot: DiagramDocumentSnapshot,
 ): DiagramDocumentHistory {
   return {
-    undoStack: [...history.undoStack, diagram].slice(-MAX_HISTORY_SIZE),
+    undoStack: [...history.undoStack, snapshot].slice(-MAX_HISTORY_SIZE),
     redoStack: [],
   };
 }

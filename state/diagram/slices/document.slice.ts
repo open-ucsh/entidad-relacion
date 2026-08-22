@@ -1,8 +1,10 @@
 import { createId } from '@/domain/diagram/lib/id';
-import type { DiagramDocument } from '@/domain/diagram/models';
+
+import type { DiagramDocument } from '../diagram-document';
+
 import { appendDiagramActivity } from '../diagram-activity';
-import { replaceActiveDiagram } from '../diagram-documents';
-import { createDiagramDocument } from '../diagram-documents';
+import { createDiagramAppearance } from '../diagram-appearance';
+import { createDiagramDocument, replaceActiveDiagram } from '../diagram-documents';
 import { createEditorResetState } from '../editor-reset-state';
 import { createDocumentHistory } from '../document-history';
 
@@ -13,6 +15,7 @@ export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) 
 
   return {
     diagram: initialDocument.diagram,
+    appearance: initialDocument.appearance,
     documents: [initialDocument],
     activeDocumentId: initialDocument.id,
 
@@ -23,7 +26,7 @@ export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) 
       }));
     },
 
-    importDiagram: (diagram) => {
+    importDiagram: (diagram, appearance = createDiagramAppearance()) => {
       const importedAt = new Date().toISOString();
 
       const importedDiagram = {
@@ -49,11 +52,13 @@ export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) 
       const importedDocument: DiagramDocument = {
         id: createId('document'),
         diagram: importedDiagram,
+        appearance,
         history: createDocumentHistory(),
       };
 
       set((state) => ({
         diagram: importedDiagram,
+        appearance,
         documents: [...state.documents, importedDocument],
         activeDocumentId: importedDocument.id,
         ...createEditorResetState(),
@@ -62,10 +67,12 @@ export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) 
 
     resetDiagram: () => {
       set((state) => {
-        const diagram = createDiagramDocument(state.diagram.metadata.name).diagram;
+        const document = createDiagramDocument(state.diagram.metadata.name);
 
         return {
-          ...replaceActiveDiagram(state, diagram),
+          ...replaceActiveDiagram(state, document.diagram, {
+            appearance: document.appearance,
+          }),
           ...createEditorResetState(),
         };
       });
@@ -76,6 +83,7 @@ export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) 
 
       set((state) => ({
         diagram: document.diagram,
+        appearance: document.appearance,
         documents: [...state.documents, document],
         activeDocumentId: document.id,
         ...createEditorResetState(),
@@ -91,6 +99,7 @@ export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) 
 
       set({
         diagram: document.diagram,
+        appearance: document.appearance,
         activeDocumentId: document.id,
         ...createEditorResetState(),
       });
@@ -125,11 +134,15 @@ export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) 
       const duplicatedDocument: DiagramDocument = {
         id: createId('document'),
         diagram: duplicatedDiagram,
+        appearance: {
+          elementColors: { ...source.appearance.elementColors },
+        },
         history: createDocumentHistory(),
       };
 
       set((state) => ({
         diagram: duplicatedDocument.diagram,
+        appearance: duplicatedDocument.appearance,
         documents: [...state.documents, duplicatedDocument],
         activeDocumentId: duplicatedDocument.id,
         ...createEditorResetState(),
@@ -160,6 +173,7 @@ export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) 
         documents: remainingDocuments,
         activeDocumentId: nextDocument.id,
         diagram: nextDocument.diagram,
+        appearance: nextDocument.appearance,
         ...createEditorResetState(),
       });
     },

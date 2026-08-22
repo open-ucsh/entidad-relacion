@@ -1,5 +1,6 @@
 import { createConnection } from '@/domain/diagram/factories/connection';
 import { createAttribute } from '@/domain/diagram/factories/element';
+import { getElementColor } from '../diagram-appearance';
 
 import { findDiagramElement, getDiagramElements } from '@/domain/diagram/queries/elements';
 
@@ -145,6 +146,38 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
     });
   },
 
+  setElementColor: (id, color) => {
+    set((state) => {
+      const element = findDiagramElement(state.diagram, id);
+
+      if (!element || getElementColor(state.appearance, id) === color) {
+        return state;
+      }
+
+      const elementColors =
+        color === 'neutral'
+          ? Object.fromEntries(
+              Object.entries(state.appearance.elementColors).filter(
+                ([elementId]) => elementId !== id,
+              ),
+            )
+          : {
+              ...state.appearance.elementColors,
+              [id]: color,
+            };
+
+      const diagram = appendDiagramActivity(
+        state.diagram,
+        'element-updated',
+        `Se actualizó el color de “${element.name}”.`,
+      );
+
+      return replaceActiveDiagram(state, diagram, {
+        appearance: { elementColors },
+      });
+    });
+  },
+
   moveElements: (updates) => {
     if (updates.length === 0) {
       return;
@@ -250,8 +283,16 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
         `Se eliminaron ${ids.length} elemento${ids.length === 1 ? '' : 's'}.`,
       );
 
+      const elementColors = Object.fromEntries(
+        Object.entries(state.appearance.elementColors).filter(
+          ([elementId]) => !removedIds.has(elementId),
+        ),
+      );
+
       return {
-        ...replaceActiveDiagram(state, diagram),
+        ...replaceActiveDiagram(state, diagram, {
+          appearance: { elementColors },
+        }),
         selectedElementIds,
         selectedElementId: selectedElementIds.at(-1) ?? null,
         connectionSourceId:

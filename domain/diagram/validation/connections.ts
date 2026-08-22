@@ -70,11 +70,7 @@ export function canConnectElementsById(
   return canConnectDiagramElements(source, target);
 }
 
-export function hasDiagramConnection(
-  diagram: Diagram,
-  sourceId: string,
-  targetId: string,
-): boolean {
+function hasDiagramConnection(diagram: Diagram, sourceId: string, targetId: string): boolean {
   return diagram.connections.some(
     (connection) =>
       (connection.fromId === sourceId && connection.toId === targetId) ||
@@ -82,7 +78,7 @@ export function hasDiagramConnection(
   );
 }
 
-export function hasIsaSupertypeConnection(diagram: Diagram, isaId: string): boolean {
+function hasIsaSupertypeConnection(diagram: Diagram, isaId: string): boolean {
   return diagram.connections.some(
     (connection) => connection.isaRole === 'supertype' && connection.toId === isaId,
   );

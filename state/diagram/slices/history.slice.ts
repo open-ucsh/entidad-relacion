@@ -1,6 +1,8 @@
-import { getActiveDocument, replaceActiveDiagram } from '../diagram-documents';
-import { pushUndoSnapshot } from '../document-history';
 import { appendDiagramActivity } from '../diagram-activity';
+import { getActiveDocument, replaceActiveDiagram } from '../diagram-documents';
+
+import { createDocumentSnapshot, pushUndoSnapshot } from '../document-history';
+
 import type { DiagramStoreSlice, HistorySlice } from '../diagram-store.types';
 
 export const createHistorySlice: DiagramStoreSlice<HistorySlice> = (set) => ({
@@ -13,7 +15,7 @@ export const createHistorySlice: DiagramStoreSlice<HistorySlice> = (set) => ({
       }
 
       return {
-        pendingHistorySnapshot: state.diagram,
+        pendingHistorySnapshot: createDocumentSnapshot(state.diagram, state.appearance),
       };
     });
   },
@@ -49,17 +51,21 @@ export const createHistorySlice: DiagramStoreSlice<HistorySlice> = (set) => ({
   undo: () => {
     set((state) => {
       const activeDocument = getActiveDocument(state);
-      const previousDiagram = activeDocument?.history.undoStack.at(-1);
+      const previousSnapshot = activeDocument?.history.undoStack.at(-1);
 
-      if (!activeDocument || !previousDiagram) {
+      if (!activeDocument || !previousSnapshot) {
         return state;
       }
 
       return {
-        ...replaceActiveDiagram(state, previousDiagram, {
+        ...replaceActiveDiagram(state, previousSnapshot.diagram, {
+          appearance: previousSnapshot.appearance,
           history: {
             undoStack: activeDocument.history.undoStack.slice(0, -1),
-            redoStack: [state.diagram, ...activeDocument.history.redoStack],
+            redoStack: [
+              createDocumentSnapshot(state.diagram, state.appearance),
+              ...activeDocument.history.redoStack,
+            ],
           },
         }),
         pendingHistorySnapshot: null,
@@ -73,16 +79,20 @@ export const createHistorySlice: DiagramStoreSlice<HistorySlice> = (set) => ({
   redo: () => {
     set((state) => {
       const activeDocument = getActiveDocument(state);
-      const nextDiagram = activeDocument?.history.redoStack.at(0);
+      const nextSnapshot = activeDocument?.history.redoStack.at(0);
 
-      if (!activeDocument || !nextDiagram) {
+      if (!activeDocument || !nextSnapshot) {
         return state;
       }
 
       return {
-        ...replaceActiveDiagram(state, nextDiagram, {
+        ...replaceActiveDiagram(state, nextSnapshot.diagram, {
+          appearance: nextSnapshot.appearance,
           history: {
-            undoStack: [...activeDocument.history.undoStack, state.diagram],
+            undoStack: [
+              ...activeDocument.history.undoStack,
+              createDocumentSnapshot(state.diagram, state.appearance),
+            ],
             redoStack: activeDocument.history.redoStack.slice(1),
           },
         }),

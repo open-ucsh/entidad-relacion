@@ -1,5 +1,7 @@
 import type { MouseEvent, PointerEvent } from 'react';
 
+import type { ElementColor } from '@/state/diagram/diagram-appearance';
+
 import { getElementAppearance } from '../../element-appearance';
 import { ELEMENT_GEOMETRY } from './element-shape-geometry';
 
@@ -14,6 +16,7 @@ const RY = ELEMENT_GEOMETRY.attribute.radiusY;
 
 interface AttributeShapeProps {
   attribute: Attribute;
+  color: ElementColor;
   selected: boolean;
   isEditing: boolean;
   showConnectionHandle: boolean;
@@ -35,6 +38,7 @@ function estimateTextWidth(text: string): number {
 
 export function AttributeShape({
   attribute,
+  color,
   selected,
   isEditing,
   showConnectionHandle,
@@ -52,7 +56,7 @@ export function AttributeShape({
   const fullDisplayName = attribute.composite ? `(${attribute.name})` : attribute.name;
 
   const displayName = truncateElementLabel(fullDisplayName, 16);
-  const appearance = getElementAppearance(attribute.color);
+  const appearance = getElementAppearance(color);
   const halfTextWidth = estimateTextWidth(displayName) / 2;
 
   const isInvalidTarget = showConnectionTargets && isConnectionTargetInvalid && !selected;

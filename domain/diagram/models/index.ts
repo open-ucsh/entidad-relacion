@@ -3,7 +3,6 @@ export * from './attribute';
 export * from './element-base';
 export * from './connection';
 export * from './diagram';
-export * from './document';
 export * from './element';
 export * from './entity';
 export * from './isa';

@@ -1,5 +1,7 @@
 import type { MouseEvent, PointerEvent } from 'react';
 
+import type { ElementColor } from '@/state/diagram/diagram-appearance';
+
 import { getElementAppearance } from '../../element-appearance';
 import { ELEMENT_GEOMETRY } from './element-shape-geometry';
 
@@ -13,6 +15,8 @@ const HEIGHT = ELEMENT_GEOMETRY.isa.height;
 
 interface IsaShapeProps {
   isa: Isa;
+
+  color: ElementColor;
   selected: boolean;
   showConnectionHandle: boolean;
   showConnectionTargets: boolean;
@@ -26,6 +30,7 @@ interface IsaShapeProps {
 
 export function IsaShape({
   isa,
+  color,
   selected,
   showConnectionHandle,
   showConnectionTargets,
@@ -37,7 +42,7 @@ export function IsaShape({
   onConnectionPointerDown,
 }: IsaShapeProps) {
   const { x, y } = isa.position;
-  const appearance = getElementAppearance(isa.color);
+  const appearance = getElementAppearance(color);
 
   const points = [
     `${x},${y - HEIGHT / 2}`,

@@ -3,7 +3,7 @@ import type { Diagram } from '@/domain/diagram/models';
 
 import { createDownloadFileBaseName } from './file-name';
 
-const DIAGRAM_FILE_FORMAT = 'er-designer';
+const DIAGRAM_FILE_FORMAT = 'MER-designer';
 const DIAGRAM_FILE_VERSION = 1;
 
 interface DiagramFile {

@@ -1,4 +1,5 @@
-import type { Diagram, DiagramDocument } from '@/domain/diagram/models';
+import type { Diagram } from '@/domain/diagram/models';
+import type { DiagramDocument } from './diagram-document';
 
 import type { DiagramState } from './diagram-store.types';
 

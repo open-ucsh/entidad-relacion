@@ -14,12 +14,16 @@ import { InspectorElementContent } from './InspectorElementContent';
 import { InspectorEmpty } from './InspectorEmpty';
 import { InspectorHeader } from './InspectorHeader';
 import { InspectorMultiSelection } from './InspectorMultiSelection';
+import { getElementColor } from '@/state/diagram/diagram-appearance';
 
 export function Inspector() {
   const diagram = useDiagramStore(selectActiveDiagram);
   const selectedElementId = useDiagramStore((state) => state.selectedElementId);
   const selectedElementIds = useDiagramStore((state) => state.selectedElementIds);
   const updateElement = useDiagramStore((state) => state.updateElement);
+  const appearance = useDiagramStore((state) => state.appearance);
+
+  const setElementColor = useDiagramStore((state) => state.setElementColor);
   const updateConnection = useDiagramStore((state) => state.updateConnection);
   const createConnectedAttribute = useDiagramStore((state) => state.createConnectedAttribute);
   const alignSelectedElements = useDiagramStore((state) => state.alignSelectedElements);
@@ -67,7 +71,9 @@ export function Inspector() {
             <InspectorElementContent
               diagram={diagram}
               element={element}
+              color={getElementColor(appearance, element.id)}
               updateElement={updateElement}
+              setElementColor={setElementColor}
               onAddAttribute={createConnectedAttribute}
             />
           </div>

@@ -2,15 +2,19 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { createId } from '@/domain/diagram/lib/id';
-import type { Diagram, DiagramDocument } from '@/domain/diagram/models';
 
+import type { Diagram } from '@/domain/diagram/models';
+
+import type { DiagramDocument } from './diagram-document';
+import { createDiagramAppearance } from './diagram-appearance';
 import { createDocumentHistory } from './document-history';
+import type { DiagramState } from './diagram-store.types';
+
 import { createConnectionSlice } from './slices/connection.slice';
 import { createDocumentSlice } from './slices/document.slice';
 import { createElementSlice } from './slices/element.slice';
 import { createHistorySlice } from './slices/history.slice';
 import { createSelectionSlice } from './slices/selection.slice';
-import type { DiagramState } from './diagram-store.types';
 
 interface PersistedDocumentLibrary {
   diagram: Diagram;
@@ -34,6 +38,7 @@ function migratePersistedState(persistedState: unknown, version: number): Persis
     const migratedDocument: DiagramDocument = {
       id: createId('document'),
       diagram: previousState.diagram,
+      appearance: createDiagramAppearance(),
       history: createDocumentHistory(),
     };
 

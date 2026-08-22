@@ -10,6 +10,8 @@ import type {
   RelationshipKind,
 } from '@/domain/diagram/models';
 
+import type { ElementColor } from '@/state/diagram/diagram-appearance';
+
 import { InspectorField } from './InspectorField';
 import { ColorPicker, SectionTitle, SegmentedControl, SwitchControl } from './InspectorControls';
 import { IsaHierarchySummary } from './IsaHierarchySummary';
@@ -34,7 +36,9 @@ const RELATIONSHIP_KIND_OPTIONS = [
 interface InspectorElementContentProps {
   diagram: Diagram;
   element: DiagramElement;
+  color: ElementColor;
   updateElement: (id: string, updates: Partial<DiagramElement>) => void;
+  setElementColor: (id: string, color: ElementColor) => void;
   onAddAttribute: (parentId: string) => void;
 }
 
@@ -61,17 +65,18 @@ function AddAttributeButton({
 
 function AppearanceControls({
   element,
-  updateElement,
-}: Pick<InspectorElementContentProps, 'element' | 'updateElement'>) {
+  color,
+  setElementColor,
+}: Pick<InspectorElementContentProps, 'element' | 'color' | 'setElementColor'>) {
   return (
     <>
       <SectionTitle>Apariencia</SectionTitle>
 
       <InspectorField label="Color">
         <ColorPicker
-          value={element.color}
-          onChange={(color) => {
-            updateElement(element.id, { color });
+          value={color}
+          onChange={(nextColor) => {
+            setElementColor(element.id, nextColor);
           }}
         />
       </InspectorField>
@@ -82,7 +87,9 @@ function AppearanceControls({
 export function InspectorElementContent({
   diagram,
   element,
+  color,
   updateElement,
+  setElementColor,
   onAddAttribute,
 }: InspectorElementContentProps) {
   if (element.type === 'entity') {
@@ -100,7 +107,7 @@ export function InspectorElementContent({
           />
         </InspectorField>
 
-        <AppearanceControls element={element} updateElement={updateElement} />
+        <AppearanceControls element={element} color={color} setElementColor={setElementColor} />
 
         <SectionTitle>Atributos</SectionTitle>
 
@@ -170,7 +177,7 @@ export function InspectorElementContent({
           </div>
         </InspectorField>
 
-        <AppearanceControls element={element} updateElement={updateElement} />
+        <AppearanceControls element={element} color={color} setElementColor={setElementColor} />
       </>
     );
   }
@@ -190,7 +197,7 @@ export function InspectorElementContent({
           />
         </InspectorField>
 
-        <AppearanceControls element={element} updateElement={updateElement} />
+        <AppearanceControls element={element} color={color} setElementColor={setElementColor} />
 
         <SectionTitle>Atributos</SectionTitle>
 
@@ -205,7 +212,7 @@ export function InspectorElementContent({
     <>
       <IsaHierarchySummary hierarchy={getIsaHierarchy(diagram, element)} />
 
-      <AppearanceControls element={element} updateElement={updateElement} />
+      <AppearanceControls element={element} color={color} setElementColor={setElementColor} />
     </>
   );
 }

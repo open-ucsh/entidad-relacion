@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 
-import { ELEMENT_COLOR_OPTIONS, type ElementColorOption } from '../element-appearance';
+import type { ElementColor } from '@/state/diagram/diagram-appearance';
 
-import type { ElementColor } from '@/domain/diagram/models';
+import { ELEMENT_COLOR_OPTIONS, type ElementColorOption } from '../element-appearance';
 
 interface Option<T extends string | number> {
   label: string;

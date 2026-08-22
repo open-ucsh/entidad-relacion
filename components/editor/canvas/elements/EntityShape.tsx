@@ -1,5 +1,7 @@
 import type { MouseEvent, PointerEvent } from 'react';
 
+import type { ElementColor } from '@/state/diagram/diagram-appearance';
+
 import { getElementAppearance } from '../../element-appearance';
 import { ELEMENT_GEOMETRY } from './element-shape-geometry';
 
@@ -17,6 +19,8 @@ const DIAMOND_MARGIN_Y = 10;
 
 interface EntityShapeProps {
   entity: Entity;
+
+  color: ElementColor;
   selected: boolean;
   isEditing: boolean;
   showConnectionHandle: boolean;
@@ -32,6 +36,7 @@ interface EntityShapeProps {
 
 export function EntityShape({
   entity,
+  color,
   selected,
   isEditing,
   showConnectionHandle,
@@ -45,7 +50,7 @@ export function EntityShape({
   onConnectionPointerDown,
 }: EntityShapeProps) {
   const displayName = truncateElementLabel(entity.name, 16);
-  const appearance = getElementAppearance(entity.color);
+  const appearance = getElementAppearance(color);
 
   const { x: centerX, y: centerY } = entity.position;
   const x = centerX - WIDTH / 2;

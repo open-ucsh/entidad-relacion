@@ -2,13 +2,13 @@ import type { PointerEvent } from 'react';
 
 import type { Diagram, Tool } from '@/domain/diagram/models';
 
+import type { ElementColor } from '@/state/diagram/diagram-appearance';
+
 import {
   formatConnectionCardinality,
   getConnectionEndpoints,
 } from '@/domain/diagram/queries/connections';
-
 import { findDiagramElement } from '@/domain/diagram/queries/elements';
-
 import { canConnectDiagramElements } from '@/domain/diagram/validation/connections';
 
 import { AttributeShape } from './elements/AttributeShape';
@@ -20,6 +20,7 @@ import { useCanvasElementInteraction } from './hooks/useCanvasElementInteraction
 
 interface CanvasLayersProps {
   diagram: Diagram;
+  elementColors: Record<string, ElementColor>;
   editingElementId: string | null;
   connectionDropTargetId: string | null;
   selectedElementIds: string[];
@@ -36,6 +37,7 @@ interface CanvasLayersProps {
 
 export function CanvasLayers({
   diagram,
+  elementColors,
   editingElementId,
   selectedElementIds,
   connectionSourceId,
@@ -125,6 +127,7 @@ export function CanvasLayers({
             <EntityShape
               key={entity.id}
               entity={entity}
+              color={elementColors[entity.id] ?? 'neutral'}
               selected={isSelected(entity.id)}
               isEditing={editingElementId === entity.id}
               showConnectionHandle={showConnectionHandles}
@@ -154,6 +157,7 @@ export function CanvasLayers({
             <RelationshipShape
               key={relationship.id}
               relationship={relationship}
+              color={elementColors[relationship.id] ?? 'neutral'}
               selected={isSelected(relationship.id)}
               isEditing={editingElementId === relationship.id}
               showConnectionHandle={showConnectionHandles}
@@ -183,6 +187,7 @@ export function CanvasLayers({
             <IsaShape
               key={isa.id}
               isa={isa}
+              color={elementColors[isa.id] ?? 'neutral'}
               selected={isSelected(isa.id)}
               showConnectionHandle={showConnectionHandles}
               isConnectionDropTarget={connectionDropTargetId === isa.id}
@@ -208,6 +213,7 @@ export function CanvasLayers({
             <AttributeShape
               key={attribute.id}
               attribute={attribute}
+              color={elementColors[attribute.id] ?? 'neutral'}
               selected={isSelected(attribute.id)}
               isEditing={editingElementId === attribute.id}
               showConnectionHandle={showConnectionHandles}

@@ -1,5 +1,7 @@
 import type { MouseEvent, PointerEvent } from 'react';
 
+import type { ElementColor } from '@/state/diagram/diagram-appearance';
+
 import { getElementAppearance } from '../../element-appearance';
 import { ELEMENT_GEOMETRY } from './element-shape-geometry';
 
@@ -14,6 +16,8 @@ const HEIGHT = ELEMENT_GEOMETRY.relationship.height;
 
 interface RelationshipShapeProps {
   relationship: Relationship;
+
+  color: ElementColor;
   selected: boolean;
   isEditing: boolean;
   showConnectionHandle: boolean;
@@ -29,6 +33,7 @@ interface RelationshipShapeProps {
 
 export function RelationshipShape({
   relationship,
+  color,
   selected,
   isEditing,
   showConnectionHandle,
@@ -43,7 +48,7 @@ export function RelationshipShape({
 }: RelationshipShapeProps) {
   const { x, y } = relationship.position;
   const displayName = truncateElementLabel(relationship.name, 12);
-  const appearance = getElementAppearance(relationship.color);
+  const appearance = getElementAppearance(color);
 
   const points = [
     `${x},${y - HEIGHT / 2}`,
