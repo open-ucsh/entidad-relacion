@@ -1,6 +1,6 @@
 import type { Tool } from '@/domain/diagram/models';
 
-export const EDITOR_TOOL_DRAG_TYPE = 'application/x-mer-designer-tool';
+const EDITOR_TOOL_DRAG_TYPE = 'application/x-mer-designer-tool';
 
 export type DraggableEditorTool = Extract<Tool, 'entity' | 'relationship' | 'attribute' | 'isa'>;
 

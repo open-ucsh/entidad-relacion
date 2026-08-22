@@ -1,12 +1,14 @@
 'use client';
 
 import { FilePlus, X } from 'lucide-react';
+import { useMemo, useState } from 'react';
 
 import { useCloseOnEscape } from '@/components/editor/hooks/useCloseOnEscape';
-import type { DiagramDocument } from '@/state/diagram/diagram-document';
+import { MAX_DOCUMENTS, getStoredDocuments } from '@/state/diagram/document-library';
 import { useDiagramStore } from '@/state/diagram/store';
 
-import { DocumentCard } from './DocumentCard';
+import { DocumentDetail } from './DocumentDetail';
+import { DocumentListItem } from './DocumentListItem';
 
 interface DocumentGalleryProps {
   isOpen: boolean;
@@ -20,6 +22,9 @@ export function DocumentGallery({ isOpen, onClose }: DocumentGalleryProps) {
   const openDocument = useDiagramStore((state) => state.openDocument);
   const duplicateDocument = useDiagramStore((state) => state.duplicateDocument);
   const deleteDocument = useDiagramStore((state) => state.deleteDocument);
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
+
+  const storedDocuments = useMemo(() => getStoredDocuments(documents), [documents]);
 
   useCloseOnEscape({ isOpen, onClose });
 
@@ -27,13 +32,27 @@ export function DocumentGallery({ isOpen, onClose }: DocumentGalleryProps) {
     return null;
   }
 
-  const sortedDocuments = [...documents].sort(
+  const canCreateDocument = storedDocuments.length < MAX_DOCUMENTS;
+
+  const sortedDocuments = [...storedDocuments].sort(
     (first, second) =>
       new Date(second.diagram.metadata.updatedAt).getTime() -
       new Date(first.diagram.metadata.updatedAt).getTime(),
   );
 
-  function handleDelete(document: DiagramDocument) {
+  const selectedDocument =
+    sortedDocuments.find((document) => document.id === selectedDocumentId) ??
+    sortedDocuments.find((document) => document.id === activeDocumentId) ??
+    sortedDocuments[0] ??
+    null;
+
+  function handleDelete(documentId: string) {
+    const document = storedDocuments.find((item) => item.id === documentId);
+
+    if (!document) {
+      return;
+    }
+
     const shouldDelete = window.confirm(
       `¿Eliminar “${document.diagram.metadata.name}”? Esta acción no se puede deshacer.`,
     );
@@ -47,7 +66,7 @@ export function DocumentGallery({ isOpen, onClose }: DocumentGalleryProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8">
       <button
         type="button"
-        className="absolute inset-0 bg-text/25 backdrop-blur-sm"
+        className="absolute inset-0 bg-text/30 backdrop-blur-sm"
         aria-label="Cerrar documentos"
         onClick={onClose}
       />
@@ -56,30 +75,38 @@ export function DocumentGallery({ isOpen, onClose }: DocumentGalleryProps) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="documents-title"
-        className="relative flex max-h-full w-full max-w-5xl flex-col overflow-hidden rounded-xl border border-border bg-background shadow-2xl"
+        className="relative flex max-h-full w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl"
       >
-        <header className="flex items-center justify-between border-b border-border px-5 py-4">
+        <header className="flex items-center justify-between border-b border-border px-7 py-6">
           <div>
-            <h2 id="documents-title" className="text-base font-semibold text-text">
+            <p className="text-xs font-medium uppercase tracking-wider text-text-muted">
+              Documentos locales
+            </p>
+
+            <h2
+              id="documents-title"
+              className="mt-1 text-2xl font-semibold tracking-tight text-text"
+            >
               Mis documentos
             </h2>
-
-            <p className="mt-0.5 text-xs text-text-muted">
-              {documents.length} proyecto{documents.length === 1 ? '' : 's'} guardado
-              {documents.length === 1 ? '' : 's'} localmente
-            </p>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               type="button"
+              disabled={!canCreateDocument}
+              title={
+                canCreateDocument
+                  ? 'Crear documento'
+                  : `Máximo de ${MAX_DOCUMENTS} documentos guardados`
+              }
               onClick={() => {
                 createDocument();
                 onClose();
               }}
-              className="flex items-center gap-2 rounded-md bg-brand-primary px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-brand-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40"
+              className="flex items-center gap-2 rounded-xl bg-text px-4 py-2.5 text-sm font-semibold text-background transition-colors hover:bg-text/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              <FilePlus size={15} aria-hidden="true" />
+              <FilePlus size={16} aria-hidden="true" />
               Nuevo documento
             </button>
 
@@ -87,35 +114,68 @@ export function DocumentGallery({ isOpen, onClose }: DocumentGalleryProps) {
               type="button"
               onClick={onClose}
               aria-label="Cerrar documentos"
-              className="flex size-8 items-center justify-center rounded-md text-text-muted transition-colors hover:bg-surface-hover hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40"
+              className="ml-1 flex size-9 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-hover hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40"
             >
               <X size={18} aria-hidden="true" />
             </button>
           </div>
         </header>
 
-        <div className="min-h-0 overflow-y-auto p-5">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {sortedDocuments.map((document) => (
-              <DocumentCard
-                key={document.id}
-                document={document}
-                isActive={document.id === activeDocumentId}
-                canDelete={documents.length > 1}
+        {sortedDocuments.length > 0 ? (
+          <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(15rem,0.8fr)_minmax(0,1.2fr)]">
+            <aside className="min-h-0 overflow-y-auto border-b border-border bg-surface lg:border-b-0 lg:border-r">
+              <div className="border-b border-border px-5 py-3">
+                <p className="text-xs text-text-muted">
+                  {storedDocuments.length} de {MAX_DOCUMENTS} documentos guardados
+                </p>
+              </div>
+
+              {sortedDocuments.map((document) => (
+                <DocumentListItem
+                  key={document.id}
+                  document={document}
+                  selected={document.id === selectedDocument?.id}
+                  isActive={document.id === activeDocumentId}
+                  onSelect={() => {
+                    setSelectedDocumentId(document.id);
+                  }}
+                />
+              ))}
+            </aside>
+
+            {selectedDocument && (
+              <DocumentDetail
+                document={selectedDocument}
+                canDuplicate={canCreateDocument}
                 onOpen={() => {
-                  openDocument(document.id);
+                  openDocument(selectedDocument.id);
                   onClose();
                 }}
                 onDuplicate={() => {
-                  duplicateDocument(document.id);
+                  duplicateDocument(selectedDocument.id);
                 }}
                 onDelete={() => {
-                  handleDelete(document);
+                  handleDelete(selectedDocument.id);
                 }}
               />
-            ))}
+            )}
           </div>
-        </div>
+        ) : (
+          <div className="flex min-h-72 flex-1 flex-col items-center justify-center px-6 text-center">
+            <p className="text-sm font-semibold text-text">Aún no hay diagramas guardados</p>
+
+            <p className="mt-1 max-w-sm text-sm leading-6 text-text-muted">
+              Los documentos aparecerán aquí cuando agregues al menos un elemento al lienzo.
+            </p>
+          </div>
+        )}
+
+        <footer className="border-t border-border px-7 py-4">
+          <p className="text-xs text-text-muted">
+            {storedDocuments.length} proyecto{storedDocuments.length === 1 ? '' : 's'} guardado
+            {storedDocuments.length === 1 ? '' : 's'} localmente
+          </p>
+        </footer>
       </section>
     </div>
   );

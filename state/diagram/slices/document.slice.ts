@@ -10,6 +10,8 @@ import { createDocumentHistory } from '../document-history';
 
 import type { DiagramStoreSlice, DocumentSlice } from '../diagram-store.types';
 
+import { discardEmptyDocuments, hasDiagramContent, hasDocumentCapacity } from '../document-library';
+
 export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) => {
   const initialDocument = createDiagramDocument();
 
@@ -27,46 +29,51 @@ export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) 
     },
 
     importDiagram: (diagram, appearance = createDiagramAppearance()) => {
-      const importedAt = new Date().toISOString();
+      set((state) => {
+        const documents = discardEmptyDocuments(state.documents);
 
-      const importedAppearance = {
-        elementColors: { ...appearance.elementColors },
-      };
+        if (!hasDocumentCapacity(documents)) {
+          return state;
+        }
 
-      const importedDiagram = {
-        ...diagram,
-        metadata: {
-          ...diagram.metadata,
-          name: diagram.metadata.name || 'Diagrama importado',
-          origin: 'imported' as const,
-          importedAt,
-          updatedAt: importedAt,
-        },
-        activity: [
-          ...diagram.activity,
-          {
-            id: createId('activity'),
-            type: 'diagram-imported' as const,
-            occurredAt: importedAt,
-            details: 'Se importó un proyecto JSON en ER Designer.',
+        const importedAt = new Date().toISOString();
+        const importedAppearance = {
+          elementColors: { ...appearance.elementColors },
+        };
+        const importedDiagram = {
+          ...diagram,
+          metadata: {
+            ...diagram.metadata,
+            name: diagram.metadata.name || 'Diagrama importado',
+            origin: 'imported' as const,
+            importedAt,
+            updatedAt: importedAt,
           },
-        ],
-      };
+          activity: [
+            ...diagram.activity,
+            {
+              id: createId('activity'),
+              type: 'diagram-imported' as const,
+              occurredAt: importedAt,
+              details: 'Se importó un proyecto JSON en ER Designer.',
+            },
+          ],
+        };
+        const importedDocument: DiagramDocument = {
+          id: createId('document'),
+          diagram: importedDiagram,
+          appearance: importedAppearance,
+          history: createDocumentHistory(),
+        };
 
-      const importedDocument: DiagramDocument = {
-        id: createId('document'),
-        diagram: importedDiagram,
-        appearance: importedAppearance,
-        history: createDocumentHistory(),
-      };
-
-      set((state) => ({
-        diagram: importedDiagram,
-        appearance: importedAppearance,
-        documents: [...state.documents, importedDocument],
-        activeDocumentId: importedDocument.id,
-        ...createEditorResetState(),
-      }));
+        return {
+          diagram: importedDiagram,
+          appearance: importedAppearance,
+          documents: [...documents, importedDocument],
+          activeDocumentId: importedDocument.id,
+          ...createEditorResetState(),
+        };
+      });
     },
 
     resetDiagram: () => {
@@ -83,15 +90,23 @@ export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) 
     },
 
     createDocument: (name) => {
-      const document = createDiagramDocument(name);
+      set((state) => {
+        const documents = discardEmptyDocuments(state.documents);
 
-      set((state) => ({
-        diagram: document.diagram,
-        appearance: document.appearance,
-        documents: [...state.documents, document],
-        activeDocumentId: document.id,
-        ...createEditorResetState(),
-      }));
+        if (!hasDocumentCapacity(documents)) {
+          return state;
+        }
+
+        const document = createDiagramDocument(name);
+
+        return {
+          diagram: document.diagram,
+          appearance: document.appearance,
+          documents: [...documents, document],
+          activeDocumentId: document.id,
+          ...createEditorResetState(),
+        };
+      });
     },
 
     openDocument: (id) => {
@@ -101,84 +116,102 @@ export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) 
         return;
       }
 
-      set({
+      set((state) => ({
         diagram: document.diagram,
         appearance: document.appearance,
+        documents: discardEmptyDocuments(state.documents, id),
         activeDocumentId: document.id,
         ...createEditorResetState(),
-      });
+      }));
     },
 
     duplicateDocument: (id) => {
       const source = get().documents.find((document) => document.id === id);
 
-      if (!source) {
+      if (!source || !hasDiagramContent(source.diagram)) {
         return;
       }
 
-      const createdAt = new Date().toISOString();
-      const duplicatedName = `${source.diagram.metadata.name} copia`;
+      set((state) => {
+        const documents = discardEmptyDocuments(state.documents);
 
-      const duplicatedDiagram = appendDiagramActivity(
-        {
-          ...source.diagram,
-          metadata: {
-            ...source.diagram.metadata,
-            name: duplicatedName,
-            createdAt,
-            updatedAt: createdAt,
-            origin: 'created-in-app',
-            importedAt: null,
+        if (!hasDocumentCapacity(documents)) {
+          return state;
+        }
+
+        const createdAt = new Date().toISOString();
+        const duplicatedName = `${source.diagram.metadata.name} copia`;
+        const duplicatedDiagram = appendDiagramActivity(
+          {
+            ...source.diagram,
+            metadata: {
+              ...source.diagram.metadata,
+              name: duplicatedName,
+              createdAt,
+              updatedAt: createdAt,
+              origin: 'created-in-app',
+              importedAt: null,
+            },
           },
-        },
-        'diagram-created',
-        `Se creó una copia de “${source.diagram.metadata.name}”.`,
-      );
+          'diagram-created',
+          `Se creó una copia de “${source.diagram.metadata.name}”.`,
+        );
 
-      const duplicatedDocument: DiagramDocument = {
-        id: createId('document'),
-        diagram: duplicatedDiagram,
-        appearance: {
-          elementColors: { ...source.appearance.elementColors },
-        },
-        history: createDocumentHistory(),
-      };
+        const duplicatedDocument: DiagramDocument = {
+          id: createId('document'),
+          diagram: duplicatedDiagram,
+          appearance: {
+            elementColors: { ...source.appearance.elementColors },
+          },
+          history: createDocumentHistory(),
+        };
 
-      set((state) => ({
-        diagram: duplicatedDocument.diagram,
-        appearance: duplicatedDocument.appearance,
-        documents: [...state.documents, duplicatedDocument],
-        activeDocumentId: duplicatedDocument.id,
-        ...createEditorResetState(),
-      }));
+        return {
+          diagram: duplicatedDocument.diagram,
+          appearance: duplicatedDocument.appearance,
+          documents: [...documents, duplicatedDocument],
+          activeDocumentId: duplicatedDocument.id,
+          ...createEditorResetState(),
+        };
+      });
     },
 
     deleteDocument: (id) => {
-      const documents = get().documents;
+      set((state) => {
+        const documents = discardEmptyDocuments(state.documents, id);
+        const remainingDocuments = documents.filter((document) => document.id !== id);
 
-      if (documents.length <= 1) {
-        return;
-      }
+        if (remainingDocuments.length === 0) {
+          const document = createDiagramDocument();
 
-      const remainingDocuments = documents.filter((document) => document.id !== id);
+          return {
+            diagram: document.diagram,
+            appearance: document.appearance,
+            documents: [document],
+            activeDocumentId: document.id,
+            ...createEditorResetState(),
+          };
+        }
 
-      if (id !== get().activeDocumentId) {
-        set({ documents: remainingDocuments });
-        return;
-      }
+        if (id !== state.activeDocumentId) {
+          return {
+            documents: remainingDocuments,
+          };
+        }
 
-      const nextDocument = remainingDocuments[0];
+        const nextDocument = remainingDocuments[0];
 
-      if (!nextDocument) {
-        return;
-      }
+        if (!nextDocument) {
+          return state;
+        }
 
-      set({
-        documents: remainingDocuments,
-        activeDocumentId: nextDocument.id,
-        diagram: nextDocument.diagram,
-        appearance: nextDocument.appearance,
-        ...createEditorResetState(),
+        return {
+          documents: remainingDocuments,
+          activeDocumentId: nextDocument.id,
+          diagram: nextDocument.diagram,
+          appearance: nextDocument.appearance,
+          ...createEditorResetState(),
+        };
       });
     },
 

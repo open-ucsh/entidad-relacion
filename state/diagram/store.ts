@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { createId } from '@/domain/diagram/lib/id';
-
 import type { Diagram } from '@/domain/diagram/models';
 
 import {
@@ -10,12 +9,10 @@ import {
   type DiagramAppearance,
   type ElementColor,
 } from './diagram-appearance';
-
 import type { DiagramDocument } from './diagram-document';
-
+import { getStoredDocuments } from './document-library';
 import { createDocumentHistory } from './document-history';
 import type { DiagramState } from './diagram-store.types';
-
 import { createConnectionSlice } from './slices/connection.slice';
 import { createDocumentSlice } from './slices/document.slice';
 import { createElementSlice } from './slices/element.slice';
@@ -90,12 +87,10 @@ function migrateLegacyDiagram(diagram: Diagram): {
 
 function migratePersistedState(persistedState: unknown, version: number): PersistedDocumentLibrary {
   const previousState = persistedState as Partial<PersistedDocumentLibrary>;
-
   let migratedState: PersistedDocumentLibrary;
 
   if (version < 2 && previousState.diagram) {
     const migratedDiagram = migrateLegacyDiagram(previousState.diagram);
-
     const migratedDocument: DiagramDocument = {
       id: createId('document'),
       diagram: migratedDiagram.diagram,
@@ -158,6 +153,20 @@ function migratePersistedState(persistedState: unknown, version: number): Persis
     };
   }
 
+  if (version < 6) {
+    const documents = getStoredDocuments(migratedState.documents).map(clearDocumentHistory);
+    const activeDocument =
+      documents.find((document) => document.id === migratedState.activeDocumentId) ?? documents[0];
+
+    migratedState = {
+      ...migratedState,
+      diagram: activeDocument?.diagram ?? migratedState.diagram,
+      appearance: activeDocument?.appearance ?? migratedState.appearance,
+      documents,
+      activeDocumentId: activeDocument?.id ?? '',
+    };
+  }
+
   return migratedState;
 }
 
@@ -172,15 +181,40 @@ export const useDiagramStore = create<DiagramState>()(
     }),
     {
       name: 'er-designer-documents',
-      version: 5,
+      version: 6,
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({
-        diagram: state.diagram,
-        appearance: state.appearance,
-        documents: state.documents.map(clearDocumentHistory),
-        activeDocumentId: state.activeDocumentId,
-      }),
+      partialize: (state) => {
+        const documents = getStoredDocuments(state.documents).map(clearDocumentHistory);
+        const activeDocument =
+          documents.find((document) => document.id === state.activeDocumentId) ?? documents[0];
+
+        return {
+          diagram: activeDocument?.diagram ?? state.diagram,
+          appearance: activeDocument?.appearance ?? state.appearance,
+          documents,
+          activeDocumentId: activeDocument?.id ?? '',
+        };
+      },
       migrate: migratePersistedState,
+      merge: (persistedState, currentState) => {
+        const persisted = persistedState as Partial<PersistedDocumentLibrary>;
+        const documents = persisted.documents ?? [];
+        const activeDocument =
+          documents.find((document) => document.id === persisted.activeDocumentId) ?? documents[0];
+
+        if (!activeDocument) {
+          return currentState;
+        }
+
+        return {
+          ...currentState,
+          ...persisted,
+          diagram: activeDocument.diagram,
+          appearance: activeDocument.appearance,
+          documents,
+          activeDocumentId: activeDocument.id,
+        };
+      },
     },
   ),
 );
