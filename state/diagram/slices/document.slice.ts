@@ -29,6 +29,10 @@ export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) 
     importDiagram: (diagram, appearance = createDiagramAppearance()) => {
       const importedAt = new Date().toISOString();
 
+      const importedAppearance = {
+        elementColors: { ...appearance.elementColors },
+      };
+
       const importedDiagram = {
         ...diagram,
         metadata: {
@@ -52,13 +56,13 @@ export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) 
       const importedDocument: DiagramDocument = {
         id: createId('document'),
         diagram: importedDiagram,
-        appearance,
+        appearance: importedAppearance,
         history: createDocumentHistory(),
       };
 
       set((state) => ({
         diagram: importedDiagram,
-        appearance,
+        appearance: importedAppearance,
         documents: [...state.documents, importedDocument],
         activeDocumentId: importedDocument.id,
         ...createEditorResetState(),

@@ -1,4 +1,4 @@
-import { distance } from './point';
+import { distance } from '@/domain/diagram/lib/point';
 import type { Diagram, Point } from '@/domain/diagram/models';
 
 import { findDiagramElement, getDiagramElements } from '@/domain/diagram/queries/elements';

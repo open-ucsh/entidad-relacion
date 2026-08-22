@@ -4,24 +4,27 @@ import { useCallback } from 'react';
 
 import type { Diagram } from '@/domain/diagram/models';
 
+import type { DiagramAppearance } from '@/state/diagram/diagram-appearance';
+
 import { downloadDiagramFile, parseDiagramFile } from '../files/diagram-file';
 
 interface UseDiagramFileProps {
   diagram: Diagram;
-  onImportDiagram: (diagram: Diagram) => void;
+  appearance: DiagramAppearance;
+  onImportDiagram: (diagram: Diagram, appearance: DiagramAppearance) => void;
 }
 
-export function useDiagramFile({ diagram, onImportDiagram }: UseDiagramFileProps) {
+export function useDiagramFile({ diagram, appearance, onImportDiagram }: UseDiagramFileProps) {
   const exportJson = useCallback(() => {
-    downloadDiagramFile(diagram);
-  }, [diagram]);
+    downloadDiagramFile(diagram, appearance);
+  }, [appearance, diagram]);
 
   const importJson = useCallback(
     async (file: File) => {
       const content = await file.text();
-      const importedDiagram = parseDiagramFile(content);
+      const importedFile = parseDiagramFile(content);
 
-      onImportDiagram(importedDiagram);
+      onImportDiagram(importedFile.diagram, importedFile.appearance);
     },
     [onImportDiagram],
   );

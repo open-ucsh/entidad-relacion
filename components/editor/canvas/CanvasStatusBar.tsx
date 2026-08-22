@@ -1,7 +1,6 @@
-import type { Diagram } from '@/domain/diagram/models';
-import type { DiagramElement } from '@/domain/diagram/models';
+import type { DiagramElement, Diagram } from '@/domain/diagram/models';
 
-interface CanvasStatusProps {
+interface CanvasStatusBarProps {
   diagram: Diagram;
   selectedElement?: DiagramElement | undefined;
   selectedElementCount: number;
@@ -15,12 +14,12 @@ const ELEMENT_TYPE_LABELS: Record<DiagramElement['type'], string> = {
   isa: 'ISA',
 };
 
-export function CanvasStatus({
+export function CanvasStatusBar({
   diagram,
   selectedElement,
   selectedElementCount,
   isConnectionSelected,
-}: CanvasStatusProps) {
+}: CanvasStatusBarProps) {
   return (
     <div className="pointer-events-none absolute bottom-5 right-5 rounded-lg border border-border bg-background/90 px-3 py-2 text-xs text-text-muted shadow-sm backdrop-blur">
       {selectedElementCount > 1 ? (

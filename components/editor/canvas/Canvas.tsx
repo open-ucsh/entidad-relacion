@@ -11,7 +11,7 @@ import { useDiagramStore } from '@/state/diagram/store';
 import { CanvasConnectionPreview } from './CanvasConnectionPreview';
 import { CanvasGrid } from './CanvasGrid';
 import { CanvasLayers } from './CanvasLayers';
-import { CanvasStatus } from './CanvasStatus';
+import { CanvasStatusBar } from './CanvasStatusBar';
 import { InlineElementNameEditor } from './InlineElementNameEditor';
 import { SelectionBox } from './SelectionBox';
 import { ZoomControls } from './ZoomControls';
@@ -295,7 +295,7 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
           />
         </svg>
 
-        <CanvasStatus
+        <CanvasStatusBar
           diagram={diagram}
           selectedElement={selectedElement}
           selectedElementCount={selectedElementIds.length}

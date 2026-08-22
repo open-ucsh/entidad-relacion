@@ -1,32 +1,87 @@
-import { isValidDiagram } from '@/domain/diagram/validation/diagram';
 import type { Diagram } from '@/domain/diagram/models';
+
+import { type DiagramAppearance, type ElementColor } from '@/state/diagram/diagram-appearance';
+
+import { isValidDiagram } from '@/domain/diagram/validation/diagram';
 
 import { createDownloadFileBaseName } from './file-name';
 
 const DIAGRAM_FILE_FORMAT = 'MER-designer';
-const DIAGRAM_FILE_VERSION = 1;
+const DIAGRAM_FILE_VERSION = 2;
+const LEGACY_DIAGRAM_FILE_VERSION = 1;
+
+const VALID_ELEMENT_COLORS = new Set<ElementColor>([
+  'neutral',
+  'blue',
+  'emerald',
+  'violet',
+  'orange',
+  'rose',
+]);
 
 interface DiagramFile {
   format: typeof DIAGRAM_FILE_FORMAT;
   version: typeof DIAGRAM_FILE_VERSION;
   exportedAt: string;
   diagram: Diagram;
+  appearance: DiagramAppearance;
+}
+
+export interface ImportedDiagramFile {
+  diagram: Diagram;
+  appearance: DiagramAppearance;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
-function createDiagramFile(diagram: Diagram): DiagramFile {
+function getLegacyAppearance(diagram: Diagram): DiagramAppearance {
+  const elementColors: Record<string, ElementColor> = {};
+
+  const collectColors = (elements: Array<{ id: string; color?: unknown }>) => {
+    elements.forEach((element) => {
+      if (
+        typeof element.color === 'string' &&
+        VALID_ELEMENT_COLORS.has(element.color as ElementColor) &&
+        element.color !== 'neutral'
+      ) {
+        elementColors[element.id] = element.color as ElementColor;
+      }
+    });
+  };
+
+  collectColors(diagram.entities);
+  collectColors(diagram.relationships);
+  collectColors(diagram.attributes);
+  collectColors(diagram.isas);
+
+  return {
+    elementColors,
+  };
+}
+
+function isValidAppearance(value: unknown): value is DiagramAppearance {
+  if (!isRecord(value) || !isRecord(value.elementColors)) {
+    return false;
+  }
+
+  return Object.values(value.elementColors).every(
+    (color) => typeof color === 'string' && VALID_ELEMENT_COLORS.has(color as ElementColor),
+  );
+}
+
+function createDiagramFile(diagram: Diagram, appearance: DiagramAppearance): DiagramFile {
   return {
     format: DIAGRAM_FILE_FORMAT,
     version: DIAGRAM_FILE_VERSION,
     exportedAt: new Date().toISOString(),
     diagram,
+    appearance,
   };
 }
 
-export function parseDiagramFile(content: string): Diagram {
+export function parseDiagramFile(content: string): ImportedDiagramFile {
   let parsed: unknown;
 
   try {
@@ -43,7 +98,7 @@ export function parseDiagramFile(content: string): Diagram {
     throw new Error('Este archivo no corresponde a un proyecto de ER Designer.');
   }
 
-  if (parsed.version !== DIAGRAM_FILE_VERSION) {
+  if (parsed.version !== LEGACY_DIAGRAM_FILE_VERSION && parsed.version !== DIAGRAM_FILE_VERSION) {
     throw new Error('La versión del archivo no es compatible.');
   }
 
@@ -53,12 +108,29 @@ export function parseDiagramFile(content: string): Diagram {
     );
   }
 
-  return parsed.diagram;
+  const diagram = parsed.diagram;
+
+  if (parsed.version === LEGACY_DIAGRAM_FILE_VERSION) {
+    return {
+      diagram,
+      appearance: getLegacyAppearance(diagram),
+    };
+  }
+
+  if (!isValidAppearance(parsed.appearance)) {
+    throw new Error('La apariencia visual del archivo no es válida.');
+  }
+
+  return {
+    diagram,
+    appearance: parsed.appearance,
+  };
 }
 
-export function downloadDiagramFile(diagram: Diagram): void {
-  const file = createDiagramFile(diagram);
+export function downloadDiagramFile(diagram: Diagram, appearance: DiagramAppearance): void {
+  const file = createDiagramFile(diagram, appearance);
   const content = JSON.stringify(file, null, 2);
+
   const blob = new Blob([content], {
     type: 'application/json;charset=utf-8',
   });

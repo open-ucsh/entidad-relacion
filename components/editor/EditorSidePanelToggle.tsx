@@ -5,7 +5,7 @@ import type { ComponentType } from 'react';
 
 type PanelSide = 'left' | 'right';
 
-interface EditorPanelToggleProps {
+interface EditorSidePanelToggleProps {
   side: PanelSide;
   isOpen: boolean;
   onToggle: () => void;
@@ -22,7 +22,7 @@ const ICONS: Record<PanelSide, Record<'open' | 'closed', ComponentType<{ size?: 
   },
 };
 
-export function EditorPanelToggle({ side, isOpen, onToggle }: EditorPanelToggleProps) {
+export function EditorSidePanelToggle({ side, isOpen, onToggle }: EditorSidePanelToggleProps) {
   const Icon = ICONS[side][isOpen ? 'open' : 'closed'];
 
   const label =

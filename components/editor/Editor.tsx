@@ -8,7 +8,7 @@ import { useDiagramStore } from '@/state/diagram/store';
 import { Canvas } from './canvas/Canvas';
 import { useCanvasExport } from './canvas/hooks/useCanvasExport';
 import { DocumentGallery } from './documents/DocumentGallery';
-import { EditorPanelToggle } from './EditorPanelToggle';
+import { EditorSidePanelToggle } from './EditorSidePanelToggle';
 import { Header } from './header/Header';
 import { KeyboardShortcutsDialog } from './header/KeyboardShortcutsDialog';
 import { HistoryPanel } from './history/HistoryPanel';
@@ -24,7 +24,7 @@ export function Editor() {
   const importDiagram = useDiagramStore((state) => state.importDiagram);
   const undo = useDiagramStore((state) => state.undo);
   const redo = useDiagramStore((state) => state.redo);
-
+  const appearance = useDiagramStore((state) => state.appearance);
   const canUndo = useDiagramStore(selectCanUndo);
   const canRedo = useDiagramStore(selectCanRedo);
 
@@ -37,6 +37,7 @@ export function Editor() {
 
   const { exportJson, importJson } = useDiagramFile({
     diagram,
+    appearance,
     onImportDiagram: importDiagram,
   });
 
@@ -105,8 +106,8 @@ export function Editor() {
           </div>
         </div>
 
-        <EditorPanelToggle side="left" isOpen={isToolbarOpen} onToggle={toggleToolbar} />
-        <EditorPanelToggle side="right" isOpen={isInspectorOpen} onToggle={toggleInspector} />
+        <EditorSidePanelToggle side="left" isOpen={isToolbarOpen} onToggle={toggleToolbar} />
+        <EditorSidePanelToggle side="right" isOpen={isInspectorOpen} onToggle={toggleInspector} />
       </main>
 
       <HistoryPanel
