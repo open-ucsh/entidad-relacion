@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { ELEMENT_COLOR_OPTIONS, type ElementColorOption } from '@/domain/diagram/lib/appearance';
+import { ELEMENT_COLOR_OPTIONS, type ElementColorOption } from '../element-appearance';
 
 import type { ElementColor } from '@/domain/diagram/models';
 

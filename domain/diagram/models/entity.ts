@@ -1,4 +1,4 @@
-import type { BaseElement } from './base';
+import type { BaseElement } from './element-base';
 
 export type EntityKind = 'regular' | 'weak' | 'associative';
 

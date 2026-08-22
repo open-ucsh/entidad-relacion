@@ -9,7 +9,7 @@ import {
   BetweenVerticalEnd,
 } from 'lucide-react';
 
-import type { ElementAlignment, ElementDistribution } from '@/state/diagram/types';
+import type { ElementAlignment, ElementDistribution } from '@/state/diagram/diagram-store.types';
 
 import { SectionTitle } from './InspectorControls';
 

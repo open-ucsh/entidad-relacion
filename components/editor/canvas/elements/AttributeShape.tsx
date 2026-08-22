@@ -1,12 +1,12 @@
 import type { MouseEvent, PointerEvent } from 'react';
 
-import { getElementAppearance } from '@/domain/diagram/lib/appearance';
-import { ELEMENT_GEOMETRY } from '@/domain/diagram/lib/geometry';
+import { getElementAppearance } from '../../element-appearance';
+import { ELEMENT_GEOMETRY } from './element-shape-geometry';
 
 import type { Attribute } from '@/domain/diagram/models';
 
 import { CONNECTION_HANDLE_OFFSET, ConnectionHandle } from './ConnectionHandle';
-import { truncateLabel } from './element-geometry';
+import { truncateElementLabel } from './element-label';
 import { ElementInteractionGroup } from './ElementInteractionGroup';
 
 const RX = ELEMENT_GEOMETRY.attribute.radiusX;
@@ -51,7 +51,7 @@ export function AttributeShape({
 
   const fullDisplayName = attribute.composite ? `(${attribute.name})` : attribute.name;
 
-  const displayName = truncateLabel(fullDisplayName, 16);
+  const displayName = truncateElementLabel(fullDisplayName, 16);
   const appearance = getElementAppearance(attribute.color);
   const halfTextWidth = estimateTextWidth(displayName) / 2;
 

@@ -1,7 +1,7 @@
 import type { MouseEvent, PointerEvent } from 'react';
 
-import { getElementAppearance } from '@/domain/diagram/lib/appearance';
-import { ELEMENT_GEOMETRY } from '@/domain/diagram/lib/geometry';
+import { getElementAppearance } from '../../element-appearance';
+import { ELEMENT_GEOMETRY } from './element-shape-geometry';
 
 import type { Isa } from '@/domain/diagram/models';
 

@@ -1,6 +1,6 @@
 import type { Diagram, DiagramDocument } from '@/domain/diagram/models';
 
-import type { DiagramState } from './types';
+import type { DiagramState } from './diagram-store.types';
 
 export function selectActiveDiagram(state: DiagramState): Diagram {
   return state.diagram;

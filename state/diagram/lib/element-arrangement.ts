@@ -1,6 +1,10 @@
 import type { DiagramElement } from '@/domain/diagram/models';
 
-import type { ElementAlignment, ElementDistribution, ElementPositionUpdate } from '../types';
+import type {
+  ElementAlignment,
+  ElementDistribution,
+  ElementPositionUpdate,
+} from '../diagram-store.types';
 
 export function createAlignmentUpdates(
   elements: DiagramElement[],

@@ -10,7 +10,7 @@ import type {
   Relationship,
 } from '@/domain/diagram/models';
 
-import type { ElementPositionUpdate } from './types';
+import type { ElementPositionUpdate } from './diagram-store.types';
 
 export interface DuplicateDiagramElementsResult {
   diagram: Diagram;

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 
-import { getEditorWorkspaceColumns } from '../editor-layout';
+import { getEditorWorkspaceColumns } from '../editor-workspace-layout';
 
 export function useEditorPanels() {
   const [isToolbarOpen, setIsToolbarOpen] = useState(true);

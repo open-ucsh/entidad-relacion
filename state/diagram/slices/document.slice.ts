@@ -1,14 +1,12 @@
 import { createId } from '@/domain/diagram/lib/id';
 import type { DiagramDocument } from '@/domain/diagram/models';
+import { appendDiagramActivity } from '../diagram-activity';
+import { replaceActiveDiagram } from '../diagram-documents';
+import { createDiagramDocument } from '../diagram-documents';
+import { createEditorResetState } from '../editor-reset-state';
+import { createDocumentHistory } from '../document-history';
 
-import {
-  appendDiagramActivity,
-  createDiagramDocument,
-  createEditorResetState,
-  replaceActiveDiagram,
-  createDocumentHistory,
-} from '../helpers';
-import type { DiagramStoreSlice, DocumentSlice } from '../types';
+import type { DiagramStoreSlice, DocumentSlice } from '../diagram-store.types';
 
 export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) => {
   const initialDocument = createDiagramDocument();

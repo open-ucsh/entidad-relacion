@@ -3,7 +3,8 @@ import { createAttribute } from '@/domain/diagram/factories/element';
 
 import { findDiagramElement, getDiagramElements } from '@/domain/diagram/queries/elements';
 
-import { appendDiagramActivity, replaceActiveDiagram } from '../helpers';
+import { appendDiagramActivity } from '../diagram-activity';
+import { replaceActiveDiagram } from '../diagram-documents';
 import { createAlignmentUpdates, createDistributionUpdates } from '../lib/element-arrangement';
 import { findConnectedAttributePosition } from '../lib/element-placement';
 import {
@@ -11,14 +12,14 @@ import {
   moveDiagramElements,
   removeDiagramElements,
   updateDiagram,
-} from '../mutations';
+} from '../diagram-mutations';
 
 import type {
   DiagramStoreSlice,
   ElementAlignment,
   ElementDistribution,
   ElementSlice,
-} from '../types';
+} from '../diagram-store.types';
 
 function getSelectedDiagramElements(
   selectedElementIds: string[],

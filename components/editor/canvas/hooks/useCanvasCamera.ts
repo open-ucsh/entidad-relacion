@@ -12,7 +12,7 @@ import {
 
 import type { Diagram } from '@/domain/diagram/models';
 
-import { getDiagramContentBounds } from '../elements/element-geometry';
+import { getDiagramContentBounds } from '../elements/diagram-content-bounds';
 
 export interface CanvasSize {
   width: number;

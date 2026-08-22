@@ -1,10 +1,7 @@
-import {
-  appendDiagramActivity,
-  getActiveDocument,
-  pushUndoSnapshot,
-  replaceActiveDiagram,
-} from '../helpers';
-import type { DiagramStoreSlice, HistorySlice } from '../types';
+import { getActiveDocument, replaceActiveDiagram } from '../diagram-documents';
+import { pushUndoSnapshot } from '../document-history';
+import { appendDiagramActivity } from '../diagram-activity';
+import type { DiagramStoreSlice, HistorySlice } from '../diagram-store.types';
 
 export const createHistorySlice: DiagramStoreSlice<HistorySlice> = (set) => ({
   pendingHistorySnapshot: null,

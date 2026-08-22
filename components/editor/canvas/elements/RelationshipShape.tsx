@@ -1,12 +1,12 @@
 import type { MouseEvent, PointerEvent } from 'react';
 
-import { getElementAppearance } from '@/domain/diagram/lib/appearance';
-import { ELEMENT_GEOMETRY } from '@/domain/diagram/lib/geometry';
+import { getElementAppearance } from '../../element-appearance';
+import { ELEMENT_GEOMETRY } from './element-shape-geometry';
 
 import type { Relationship } from '@/domain/diagram/models';
 
 import { ConnectionHandle, CONNECTION_HANDLE_OFFSET } from './ConnectionHandle';
-import { truncateLabel } from './element-geometry';
+import { truncateElementLabel } from './element-label';
 import { ElementInteractionGroup } from './ElementInteractionGroup';
 
 const WIDTH = ELEMENT_GEOMETRY.relationship.width;
@@ -42,7 +42,7 @@ export function RelationshipShape({
   onConnectionPointerDown,
 }: RelationshipShapeProps) {
   const { x, y } = relationship.position;
-  const displayName = truncateLabel(relationship.name, 12);
+  const displayName = truncateElementLabel(relationship.name, 12);
   const appearance = getElementAppearance(relationship.color);
 
   const points = [

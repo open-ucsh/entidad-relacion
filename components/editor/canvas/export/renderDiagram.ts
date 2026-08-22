@@ -1,7 +1,7 @@
 import { BRANDING } from '@/config/branding';
 import type { Diagram } from '@/domain/diagram/models';
 
-import { getDiagramContentBounds } from '../elements/element-geometry';
+import { getDiagramContentBounds } from '../elements/diagram-content-bounds';
 
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
 

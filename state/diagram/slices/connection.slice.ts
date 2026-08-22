@@ -8,10 +8,11 @@ import {
 
 import { findDiagramElement } from '@/domain/diagram/queries/elements';
 
-import { appendDiagramActivity, replaceActiveDiagram } from '../helpers';
-import { updateDiagramConnection } from '../mutations';
+import { appendDiagramActivity } from '../diagram-activity';
+import { replaceActiveDiagram } from '../diagram-documents';
+import { updateDiagramConnection } from '../diagram-mutations';
 
-import type { ConnectionSlice, DiagramStoreSlice } from '../types';
+import type { ConnectionSlice, DiagramStoreSlice } from '../diagram-store.types';
 
 export const createConnectionSlice: DiagramStoreSlice<ConnectionSlice> = (set, get) => ({
   addConnection: (connection) => {

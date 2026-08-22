@@ -1,4 +1,4 @@
-import { getElementBoundaryPoint } from '@/domain/diagram/lib/geometry';
+import { getElementBoundaryPoint } from '@/components/editor/canvas/elements/element-shape-geometry';
 import type { Connection, Diagram, Point } from '@/domain/diagram/models';
 
 import { findDiagramElement } from './elements';

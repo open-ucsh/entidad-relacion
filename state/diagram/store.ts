@@ -4,13 +4,13 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import { createId } from '@/domain/diagram/lib/id';
 import type { Diagram, DiagramDocument } from '@/domain/diagram/models';
 
-import { createDocumentHistory } from './helpers';
+import { createDocumentHistory } from './document-history';
 import { createConnectionSlice } from './slices/connection.slice';
 import { createDocumentSlice } from './slices/document.slice';
 import { createElementSlice } from './slices/element.slice';
 import { createHistorySlice } from './slices/history.slice';
 import { createSelectionSlice } from './slices/selection.slice';
-import type { DiagramState } from './types';
+import type { DiagramState } from './diagram-store.types';
 
 interface PersistedDocumentLibrary {
   diagram: Diagram;

@@ -20,15 +20,53 @@ export const ELEMENT_GEOMETRY = {
   },
 } as const;
 
+export interface ElementVisualBounds {
+  center: Point;
+  halfWidth: number;
+  halfHeight: number;
+}
+
 export function distance(a: Point, b: Point): number {
   return Math.hypot(b.x - a.x, b.y - a.y);
+}
+
+export function getElementVisualBounds(element: DiagramElement): ElementVisualBounds {
+  switch (element.type) {
+    case 'entity':
+      return {
+        center: element.position,
+        halfWidth: ELEMENT_GEOMETRY.entity.width / 2,
+        halfHeight: ELEMENT_GEOMETRY.entity.height / 2,
+      };
+
+    case 'relationship':
+      return {
+        center: element.position,
+        halfWidth: ELEMENT_GEOMETRY.relationship.width / 2,
+        halfHeight: ELEMENT_GEOMETRY.relationship.height / 2,
+      };
+
+    case 'attribute':
+      return {
+        center: element.position,
+        halfWidth: ELEMENT_GEOMETRY.attribute.radiusX,
+        halfHeight:
+          ELEMENT_GEOMETRY.attribute.radiusY + ELEMENT_GEOMETRY.attribute.outerOutlineOffset,
+      };
+
+    case 'isa':
+      return {
+        center: element.position,
+        halfWidth: ELEMENT_GEOMETRY.isa.width / 2,
+        halfHeight: ELEMENT_GEOMETRY.isa.height / 2,
+      };
+  }
 }
 
 function getRectangleBoundaryPoint(element: DiagramElement, target: Point): Point {
   const { x, y } = element.position;
   const halfWidth = ELEMENT_GEOMETRY.entity.width / 2;
   const halfHeight = ELEMENT_GEOMETRY.entity.height / 2;
-
   const dx = target.x - x;
   const dy = target.y - y;
 
@@ -50,7 +88,6 @@ function getDiamondBoundaryPoint(element: DiagramElement, target: Point): Point 
   const { x, y } = element.position;
   const halfWidth = ELEMENT_GEOMETRY.relationship.width / 2;
   const halfHeight = ELEMENT_GEOMETRY.relationship.height / 2;
-
   const dx = target.x - x;
   const dy = target.y - y;
 
@@ -70,7 +107,6 @@ function getEllipseBoundaryPoint(element: DiagramElement, target: Point): Point 
   const { x, y } = element.position;
   const radiusX = ELEMENT_GEOMETRY.attribute.radiusX;
   const radiusY = ELEMENT_GEOMETRY.attribute.radiusY;
-
   const dx = target.x - x;
   const dy = target.y - y;
 
@@ -94,7 +130,6 @@ function getIsaBoundaryPoint(element: DiagramElement, target: Point): Point {
   const { x, y } = element.position;
   const halfWidth = ELEMENT_GEOMETRY.isa.width / 2;
   const halfHeight = ELEMENT_GEOMETRY.isa.height / 2;
-
   const direction = {
     x: target.x - x,
     y: target.y - y,
@@ -157,10 +192,13 @@ export function getElementBoundaryPoint(element: DiagramElement, target: Point):
   switch (element.type) {
     case 'entity':
       return getRectangleBoundaryPoint(element, target);
+
     case 'relationship':
       return getDiamondBoundaryPoint(element, target);
+
     case 'attribute':
       return getEllipseBoundaryPoint(element, target);
+
     case 'isa':
       return getIsaBoundaryPoint(element, target);
   }

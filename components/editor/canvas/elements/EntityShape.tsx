@@ -1,12 +1,12 @@
 import type { MouseEvent, PointerEvent } from 'react';
 
-import { getElementAppearance } from '@/domain/diagram/lib/appearance';
-import { ELEMENT_GEOMETRY } from '@/domain/diagram/lib/geometry';
+import { getElementAppearance } from '../../element-appearance';
+import { ELEMENT_GEOMETRY } from './element-shape-geometry';
 
 import type { Entity } from '@/domain/diagram/models';
 
 import { ConnectionHandle, CONNECTION_HANDLE_OFFSET } from './ConnectionHandle';
-import { truncateLabel } from './element-geometry';
+import { truncateElementLabel } from './element-label';
 import { ElementInteractionGroup } from './ElementInteractionGroup';
 
 const WIDTH = ELEMENT_GEOMETRY.entity.width;
@@ -44,7 +44,7 @@ export function EntityShape({
   onPointerDown,
   onConnectionPointerDown,
 }: EntityShapeProps) {
-  const displayName = truncateLabel(entity.name, 16);
+  const displayName = truncateElementLabel(entity.name, 16);
   const appearance = getElementAppearance(entity.color);
 
   const { x: centerX, y: centerY } = entity.position;

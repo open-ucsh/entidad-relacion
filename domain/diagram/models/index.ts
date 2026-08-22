@@ -1,6 +1,6 @@
 export * from './activity';
 export * from './attribute';
-export * from './base';
+export * from './element-base';
 export * from './connection';
 export * from './diagram';
 export * from './document';
