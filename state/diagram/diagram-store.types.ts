@@ -67,6 +67,7 @@ export interface ElementSlice {
 
   updateElement: (id: string, updates: Partial<DiagramElement>) => void;
   setElementColor: (id: string, color: ElementColor) => void;
+  setSelectedElementsColor: (color: ElementColor) => void;
 
   duplicateSelectedElements: () => void;
   alignSelectedElements: (alignment: ElementAlignment) => void;

@@ -1,10 +1,9 @@
 import { createConnection } from '@/domain/diagram/factories/connection';
 import { createAttribute } from '@/domain/diagram/factories/element';
-import { getElementColor } from '../diagram-appearance';
-
 import { findDiagramElement, getDiagramElements } from '@/domain/diagram/queries/elements';
 
 import { appendDiagramActivity } from '../diagram-activity';
+import { getElementColor } from '../diagram-appearance';
 import { replaceActiveDiagram } from '../diagram-documents';
 import { createAlignmentUpdates, createDistributionUpdates } from '../lib/element-arrangement';
 import { findConnectedAttributePosition } from '../lib/element-placement';
@@ -14,7 +13,6 @@ import {
   removeDiagramElements,
   updateDiagram,
 } from '../diagram-mutations';
-
 import type {
   DiagramStoreSlice,
   ElementAlignment,
@@ -108,7 +106,6 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
 
       const attribute = createAttribute(position);
       const connection = createConnection(parent.id, attribute.id);
-
       const diagram = appendDiagramActivity(
         {
           ...state.diagram,
@@ -137,7 +134,6 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
 
       const updatedDiagram = updateDiagram(state.diagram, id, updates);
       const renamed = typeof updates.name === 'string';
-
       const diagram = appendDiagramActivity(
         updatedDiagram,
         renamed ? 'element-renamed' : 'element-updated',
@@ -182,6 +178,45 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
     });
   },
 
+  setSelectedElementsColor: (color) => {
+    set((state) => {
+      const selectedElements = getSelectedDiagramElements(state.selectedElementIds, state.diagram);
+
+      const changedElements = selectedElements.filter(
+        (element) => getElementColor(state.appearance, element.id) !== color,
+      );
+
+      if (changedElements.length === 0) {
+        return state;
+      }
+
+      const changedIds = new Set(changedElements.map((element) => element.id));
+      const elementColors =
+        color === 'neutral'
+          ? Object.fromEntries(
+              Object.entries(state.appearance.elementColors).filter(
+                ([elementId]) => !changedIds.has(elementId),
+              ),
+            )
+          : {
+              ...state.appearance.elementColors,
+              ...Object.fromEntries(changedElements.map((element) => [element.id, color])),
+            };
+
+      const diagram = appendDiagramActivity(
+        state.diagram,
+        'element-updated',
+        `Se actualizó el color de ${changedElements.length} elemento${
+          changedElements.length === 1 ? '' : 's'
+        }.`,
+      );
+
+      return replaceActiveDiagram(state, diagram, {
+        appearance: { elementColors },
+      });
+    });
+  },
+
   moveElements: (updates) => {
     if (updates.length === 0) {
       return;
@@ -197,7 +232,6 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
   alignSelectedElements: (alignment: ElementAlignment) => {
     set((state) => {
       const selectedElements = getSelectedDiagramElements(state.selectedElementIds, state.diagram);
-
       const updates = createAlignmentUpdates(selectedElements, alignment);
 
       if (updates.length === 0) {
@@ -217,7 +251,6 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
   distributeSelectedElements: (distribution: ElementDistribution) => {
     set((state) => {
       const selectedElements = getSelectedDiagramElements(state.selectedElementIds, state.diagram);
-
       const updates = createDistributionUpdates(selectedElements, distribution);
 
       if (updates.length === 0) {
@@ -293,13 +326,11 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
       const selectedElementIds = state.selectedElementIds.filter(
         (selectedId) => !removedIds.has(selectedId),
       );
-
       const diagram = appendDiagramActivity(
         removeDiagramElements(state.diagram, ids),
         'elements-removed',
         `Se eliminaron ${ids.length} elemento${ids.length === 1 ? '' : 's'}.`,
       );
-
       const elementColors = Object.fromEntries(
         Object.entries(state.appearance.elementColors).filter(
           ([elementId]) => !removedIds.has(elementId),

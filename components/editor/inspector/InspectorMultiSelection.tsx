@@ -9,12 +9,15 @@ import {
   BetweenVerticalEnd,
 } from 'lucide-react';
 
+import type { ElementColor } from '@/state/diagram/diagram-appearance';
 import type { ElementAlignment, ElementDistribution } from '@/state/diagram/diagram-store.types';
 
-import { SectionTitle } from './InspectorControls';
+import { ColorPicker, SectionTitle } from './InspectorControls';
 
 interface InspectorMultiSelectionProps {
   count: number;
+  color: ElementColor | null;
+  onColorChange: (color: ElementColor) => void;
   onAlign: (alignment: ElementAlignment) => void;
   onDistribute: (distribution: ElementDistribution) => void;
 }
@@ -43,6 +46,8 @@ function ActionButton({ label, icon: Icon, onClick, disabled = false }: ActionBu
 
 export function InspectorMultiSelection({
   count,
+  color,
+  onColorChange,
   onAlign,
   onDistribute,
 }: InspectorMultiSelectionProps) {
@@ -52,9 +57,28 @@ export function InspectorMultiSelection({
     <div className="space-y-6">
       <div>
         <p className="text-base font-semibold text-text">{count} elementos seleccionados</p>
-
-        <p className="mt-1 text-sm leading-6 text-text-muted">Organiza su posición en el lienzo.</p>
+        <p className="mt-1 text-sm leading-6 text-text-muted">
+          Aplica cambios a todos los elementos seleccionados.
+        </p>
       </div>
+
+      <section>
+        <SectionTitle>Color</SectionTitle>
+
+        <div className="mt-3">
+          <ColorPicker
+            value={color}
+            ariaLabel="Color de los elementos seleccionados"
+            onChange={onColorChange}
+          />
+        </div>
+
+        {color === null && (
+          <p className="mt-2 text-xs leading-5 text-text-muted">
+            La selección tiene colores distintos. Elige uno para unificarlos.
+          </p>
+        )}
+      </section>
 
       <section>
         <SectionTitle>Alinear horizontalmente</SectionTitle>

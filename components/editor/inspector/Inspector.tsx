@@ -4,7 +4,7 @@ import { PanelHeader } from '@/components/ui';
 
 import { findDiagramConnection } from '@/domain/diagram/queries/connections';
 import { findDiagramElement, getDiagramElements } from '@/domain/diagram/queries/elements';
-
+import { getElementColor } from '@/state/diagram/diagram-appearance';
 import { selectActiveDiagram } from '@/state/diagram/selectors';
 import { useDiagramStore } from '@/state/diagram/store';
 
@@ -14,16 +14,15 @@ import { InspectorElementContent } from './InspectorElementContent';
 import { InspectorEmpty } from './InspectorEmpty';
 import { InspectorHeader } from './InspectorHeader';
 import { InspectorMultiSelection } from './InspectorMultiSelection';
-import { getElementColor } from '@/state/diagram/diagram-appearance';
 
 export function Inspector() {
   const diagram = useDiagramStore(selectActiveDiagram);
+  const appearance = useDiagramStore((state) => state.appearance);
   const selectedElementId = useDiagramStore((state) => state.selectedElementId);
   const selectedElementIds = useDiagramStore((state) => state.selectedElementIds);
   const updateElement = useDiagramStore((state) => state.updateElement);
-  const appearance = useDiagramStore((state) => state.appearance);
-
   const setElementColor = useDiagramStore((state) => state.setElementColor);
+  const setSelectedElementsColor = useDiagramStore((state) => state.setSelectedElementsColor);
   const updateConnection = useDiagramStore((state) => state.updateConnection);
   const createConnectedAttribute = useDiagramStore((state) => state.createConnectedAttribute);
   const alignSelectedElements = useDiagramStore((state) => state.alignSelectedElements);
@@ -32,6 +31,16 @@ export function Inspector() {
   const selectedElements = getDiagramElements(diagram).filter((element) =>
     selectedElementIds.includes(element.id),
   );
+
+  const selectedColors = selectedElements.map((element) => getElementColor(appearance, element.id));
+
+  const [firstSelectedColor] = selectedColors;
+
+  const selectedColor =
+    firstSelectedColor !== undefined &&
+    selectedColors.every((color) => color === firstSelectedColor)
+      ? firstSelectedColor
+      : null;
 
   const element = selectedElementId ? findDiagramElement(diagram, selectedElementId) : undefined;
 
@@ -47,6 +56,8 @@ export function Inspector() {
           <div className="p-5">
             <InspectorMultiSelection
               count={selectedElements.length}
+              color={selectedColor}
+              onColorChange={setSelectedElementsColor}
               onAlign={alignSelectedElements}
               onDistribute={distributeSelectedElements}
             />

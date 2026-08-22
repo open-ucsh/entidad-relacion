@@ -26,7 +26,8 @@ interface SectionTitleProps {
 }
 
 interface ColorPickerProps {
-  value: ElementColor;
+  value: ElementColor | null;
+  ariaLabel?: string;
   onChange: (color: ElementColor) => void;
 }
 
@@ -67,9 +68,13 @@ export function SegmentedControl<T extends string | number>({
   );
 }
 
-export function ColorPicker({ value, onChange }: ColorPickerProps) {
+export function ColorPicker({
+  value,
+  ariaLabel = 'Color del elemento',
+  onChange,
+}: ColorPickerProps) {
   return (
-    <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Color del elemento">
+    <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label={ariaLabel}>
       {ELEMENT_COLOR_OPTIONS.map((option: ElementColorOption) => {
         const selected = value === option.value;
 
