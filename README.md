@@ -1,38 +1,22 @@
-# Entity Editor
+![MER Designer](./.github/assets/banner.jpeg)
 
-Base de proyecto Next.js (App Router) con TypeScript estricto y Tailwind CSS v4, preparada para desarrollo y producción.
+# MER Designer ✨
 
-## Requisitos
+Un editor visual para crear diagramas **Entidad–Relación (MER)** con la modelado de Peter Chen.
 
-- Node.js 22+
-- pnpm 11+
+![Vista previa del editor](./docs/images/editor-preview.png)
 
-## Desarrollo local
+## 🎓 ¿Para qué sirve?
 
-```bash
-pnpm install
-pnpm dev
-```
+Creado para estudiantes de **Fundamentos a las Bases de Datos**.
 
-La app se levanta en `http://localhost:3000`.
+Diseña entidades, relaciones y atributos antes de pasar a tablas, claves foráneas o SQL. Ideal para ejercicios, tareas y evaluaciones.
 
-## Scripts
+## 🚀 Cómo usarlo
 
-- `pnpm dev`: inicia el servidor de desarrollo.
-- `pnpm build`: genera build de producción.
-- `pnpm start`: ejecuta la build de producción.
-- `pnpm lint`: ejecuta ESLint.
-- `pnpm lint:fix`: corrige problemas de lint automáticamente.
-- `pnpm format`: aplica Prettier a todo el proyecto.
-- `pnpm format:check`: valida formato con Prettier.
-- `pnpm typecheck`: ejecuta chequeo de tipos sin emitir archivos.
-- `pnpm knip`: detecta código/dependencias/exports no usados.
-- `pnpm prepare`: instala hooks de Husky.
+1. Crea las entidades de tu problema.
+2. Añade atributos y relaciones.
+3. Conecta y organiza el modelo en el canvas.
+4. Guarda o exporta tu diagrama.
 
-## Commits
-
-Se valida Conventional Commits con commitlint en el hook `commit-msg`. Revisa `CONTRIBUTING.md` para ejemplos.
-
-## Testing
-
-Aún no hay framework de testing configurado. Se agregará en una fase posterior.
+> Primero entiende los datos. Después construye la base de datos.
