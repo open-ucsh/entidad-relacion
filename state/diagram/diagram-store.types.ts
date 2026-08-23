@@ -29,7 +29,6 @@ export interface DocumentSlice {
 
   setDiagram: (diagram: Diagram) => void;
   importDiagram: (diagram: Diagram, appearance?: DiagramAppearance) => void;
-  resetDiagram: () => void;
 
   createDocument: (name?: string) => void;
   openDocument: (id: string) => void;

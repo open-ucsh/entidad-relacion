@@ -9,14 +9,16 @@ interface HeaderProps {
   diagramName: string;
   canRedo: boolean;
   canUndo: boolean;
-  onNewDiagram: () => void;
+
   onUndo: () => void;
   onRedo: () => void;
   onOpenHistory: () => void;
   onRenameDiagram: (name: string) => void;
+
   onExport: (format: ExportFormat) => void;
   onExportJson: () => void;
   onImportJson: (file: File) => Promise<void>;
+
   onOpenDocuments: () => void;
   onOpenShortcuts: () => void;
 }
@@ -25,7 +27,6 @@ export function Header({
   diagramName,
   canRedo,
   canUndo,
-  onNewDiagram,
   onUndo,
   onRedo,
   onOpenHistory,
@@ -54,7 +55,6 @@ export function Header({
         <HeaderToolbar
           canRedo={canRedo}
           canUndo={canUndo}
-          onNewDiagram={onNewDiagram}
           onUndo={onUndo}
           onRedo={onRedo}
           onImportJson={onImportJson}

@@ -19,11 +19,12 @@ import { Toolbar } from './toolbar/Toolbar';
 export function Editor() {
   const diagram = useDiagramStore(selectActiveDiagram);
 
-  const resetDiagram = useDiagramStore((state) => state.resetDiagram);
   const setDiagramName = useDiagramStore((state) => state.setDiagramName);
   const importDiagram = useDiagramStore((state) => state.importDiagram);
+
   const undo = useDiagramStore((state) => state.undo);
   const redo = useDiagramStore((state) => state.redo);
+
   const appearance = useDiagramStore((state) => state.appearance);
 
   const canUndo = useDiagramStore(selectCanUndo);
@@ -52,16 +53,6 @@ export function Editor() {
     openInspector,
   } = useEditorPanels();
 
-  function handleNewDiagram() {
-    const shouldReset = window.confirm(
-      'Se eliminarán los elementos actuales del diagrama. ¿Deseas continuar?',
-    );
-
-    if (shouldReset) {
-      resetDiagram();
-    }
-  }
-
   function handleOpenHistory() {
     openInspector();
     setActiveRightPanel('history');
@@ -74,7 +65,6 @@ export function Editor() {
         canUndo={canUndo}
         canRedo={canRedo}
         onRenameDiagram={setDiagramName}
-        onNewDiagram={handleNewDiagram}
         onUndo={undo}
         onRedo={redo}
         onOpenHistory={handleOpenHistory}

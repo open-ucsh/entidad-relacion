@@ -76,19 +76,6 @@ export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) 
       });
     },
 
-    resetDiagram: () => {
-      set((state) => {
-        const document = createDiagramDocument(state.diagram.metadata.name);
-
-        return {
-          ...replaceActiveDiagram(state, document.diagram, {
-            appearance: document.appearance,
-          }),
-          ...createEditorResetState(),
-        };
-      });
-    },
-
     createDocument: (name) => {
       set((state) => {
         const documents = discardEmptyDocuments(state.documents);

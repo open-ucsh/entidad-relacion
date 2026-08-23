@@ -1,6 +1,7 @@
 'use client';
 
-import { CircleHelp, FilePlus, FileUp, FolderOpen, History, Redo2, Undo2 } from 'lucide-react';
+import { CircleHelp, FileUp, FolderOpen, History, Redo2, Undo2 } from 'lucide-react';
+
 import { useRef } from 'react';
 
 import { HeaderDivider } from './HeaderDivider';
@@ -9,10 +10,12 @@ import { HeaderIconButton } from './HeaderIconButton';
 interface HeaderToolbarProps {
   canRedo: boolean;
   canUndo: boolean;
-  onNewDiagram: () => void;
+
   onUndo: () => void;
   onRedo: () => void;
+
   onImportJson: (file: File) => Promise<void>;
+
   onOpenHistory: () => void;
   onOpenDocuments: () => void;
   onOpenShortcuts: () => void;
@@ -21,7 +24,6 @@ interface HeaderToolbarProps {
 export function HeaderToolbar({
   canRedo,
   canUndo,
-  onNewDiagram,
   onUndo,
   onRedo,
   onImportJson,
@@ -44,11 +46,20 @@ export function HeaderToolbar({
 
   return (
     <div className="flex items-center gap-1">
-      <HeaderIconButton icon={FilePlus} label="Nuevo diagrama" onClick={onNewDiagram} />
+      <button
+        type="button"
+        onClick={onOpenDocuments}
+        aria-haspopup="dialog"
+        className="flex h-8 items-center gap-2 rounded-md px-3 text-xs font-semibold text-white transition-colors hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+      >
+        <FolderOpen size={17} aria-hidden="true" />
+        Documentos
+      </button>
 
       <HeaderDivider />
 
       <HeaderIconButton icon={Undo2} label="Deshacer" onClick={onUndo} disabled={!canUndo} />
+
       <HeaderIconButton icon={Redo2} label="Rehacer" onClick={onRedo} disabled={!canRedo} />
 
       <HeaderDivider />
@@ -80,7 +91,7 @@ export function HeaderToolbar({
       <HeaderDivider />
 
       <HeaderIconButton icon={History} label="Historial del proyecto" onClick={onOpenHistory} />
-      <HeaderIconButton icon={FolderOpen} label="Mis documentos" onClick={onOpenDocuments} />
+
       <HeaderIconButton icon={CircleHelp} label="Ver atajos de teclado" onClick={onOpenShortcuts} />
     </div>
   );

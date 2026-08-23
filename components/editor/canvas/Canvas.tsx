@@ -1,13 +1,18 @@
 'use client';
 
 import { type PointerEvent, type RefObject } from 'react';
+
 import styles from './Canvas.module.css';
 
 import { useCreateDiagramElement } from '@/components/editor/hooks/useCreateDiagramElement';
+
 import type { Diagram } from '@/domain/diagram/models';
+
 import { findDiagramElement } from '@/domain/diagram/queries/elements';
+
 import { useDiagramStore } from '@/state/diagram/store';
 
+import { CanvasAlignmentGuides } from './CanvasAlignmentGuides';
 import { CanvasConnectionPreview } from './CanvasConnectionPreview';
 import { CanvasGrid } from './CanvasGrid';
 import { CanvasLayers } from './CanvasLayers';
@@ -15,18 +20,18 @@ import { CanvasStatusBar } from './CanvasStatusBar';
 import { InlineElementNameEditor } from './InlineElementNameEditor';
 import { SelectionBox } from './SelectionBox';
 import { ZoomControls } from './ZoomControls';
-import { CanvasAlignmentGuides } from './CanvasAlignmentGuides';
 
+import { useCanvasAlignmentGuides } from './hooks/useCanvasAlignmentGuides';
 import { useCanvasCamera } from './hooks/useCanvasCamera';
 import { useCanvasConnection } from './hooks/useCanvasConnection';
 import { useCanvasDrag } from './hooks/useCanvasDrag';
-
-import { useCanvasToolDrop } from './hooks/useCanvasToolDrop';
 import { useCanvasKeyboard } from './hooks/useCanvasKeyboard';
 import { useCanvasSelectionBox } from './hooks/useCanvasSelectionBox';
+import { useCanvasToolDrop } from './hooks/useCanvasToolDrop';
+import { useFitOnDocumentChange } from './hooks/useFitOnDocumentChange';
 import { useInlineElementNameEditing } from './hooks/useInlineElementNameEditing';
 import { useWorldCoordinates } from './hooks/useWorldCoordinates';
-import { useCanvasAlignmentGuides } from './hooks/useCanvasAlignmentGuides';
+
 import { isCreatableTool } from './lib/canvas-elements';
 
 interface CanvasProps {
@@ -36,18 +41,24 @@ interface CanvasProps {
 
 export function Canvas({ diagram, svgRef }: CanvasProps) {
   const activeTool = useDiagramStore((state) => state.activeTool);
+  const activeDocumentId = useDiagramStore((state) => state.activeDocumentId);
+
   const appearance = useDiagramStore((state) => state.appearance);
 
   const selectedElementId = useDiagramStore((state) => state.selectedElementId);
   const selectedElementIds = useDiagramStore((state) => state.selectedElementIds);
+
   const connectionSourceId = useDiagramStore((state) => state.connectionSourceId);
 
   const setActiveTool = useDiagramStore((state) => state.setActiveTool);
+
   const removeElement = useDiagramStore((state) => state.removeElement);
+
   const setSelectedElement = useDiagramStore((state) => state.setSelectedElement);
   const setSelectedElements = useDiagramStore((state) => state.setSelectedElements);
   const toggleSelectedElement = useDiagramStore((state) => state.toggleSelectedElement);
   const clearSelection = useDiagramStore((state) => state.clearSelection);
+
   const updateElement = useDiagramStore((state) => state.updateElement);
   const moveElements = useDiagramStore((state) => state.moveElements);
 
@@ -61,6 +72,7 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
   const handleConnectClick = useDiagramStore((state) => state.handleConnectClick);
 
   const { createDiagramElementAt } = useCreateDiagramElement();
+
   const { isSpacePressed, spacePressedRef } = useCanvasKeyboard();
 
   const {
@@ -80,7 +92,14 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
     canZoomOut,
   } = useCanvasCamera(svgRef);
 
+  useFitOnDocumentChange({
+    activeDocumentId,
+    diagram,
+    fitToDiagram,
+  });
+
   const { getWorldPoint } = useWorldCoordinates(svgRef, camera);
+
   const { alignmentGuides, updateAlignmentGuides, clearAlignmentGuides } =
     useCanvasAlignmentGuides(diagram);
 
@@ -183,6 +202,7 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
       if (element.type !== 'isa') {
         startEditingElement(element);
       }
+
       setActiveTool('select');
       return;
     }
@@ -218,6 +238,7 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
 
   function handlePointerCancel() {
     clearAlignmentGuides();
+
     cancelCanvasConnection();
     stopPan();
     stopDrag();
