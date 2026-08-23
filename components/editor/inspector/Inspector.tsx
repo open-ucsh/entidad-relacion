@@ -2,11 +2,12 @@
 
 import { PanelHeader } from '@/components/ui';
 
-import { findDiagramConnection } from '@/domain/diagram/queries/connections';
-import { findDiagramElement, getDiagramElements } from '@/domain/diagram/queries/elements';
 import { getElementColor } from '@/state/diagram/diagram-appearance';
 import { selectActiveDiagram } from '@/state/diagram/selectors';
 import { useDiagramStore } from '@/state/diagram/store';
+
+import { findDiagramConnection } from '@/domain/diagram/queries/connections';
+import { findDiagramElement, getDiagramElements } from '@/domain/diagram/queries/elements';
 
 import { InspectorConnectionContent } from './InspectorConnectionContent';
 import { InspectorConnectionHeader } from './InspectorConnectionHeader';
@@ -15,16 +16,24 @@ import { InspectorEmpty } from './InspectorEmpty';
 import { InspectorHeader } from './InspectorHeader';
 import { InspectorMultiSelection } from './InspectorMultiSelection';
 
-export function Inspector() {
+interface InspectorProps {
+  showPanelHeader?: boolean;
+}
+
+export function Inspector({ showPanelHeader = true }: InspectorProps) {
   const diagram = useDiagramStore(selectActiveDiagram);
-  const appearance = useDiagramStore((state) => state.appearance);
+
   const selectedElementId = useDiagramStore((state) => state.selectedElementId);
   const selectedElementIds = useDiagramStore((state) => state.selectedElementIds);
+
   const updateElement = useDiagramStore((state) => state.updateElement);
+  const appearance = useDiagramStore((state) => state.appearance);
   const setElementColor = useDiagramStore((state) => state.setElementColor);
   const setSelectedElementsColor = useDiagramStore((state) => state.setSelectedElementsColor);
+
   const updateConnection = useDiagramStore((state) => state.updateConnection);
   const createConnectedAttribute = useDiagramStore((state) => state.createConnectedAttribute);
+
   const alignSelectedElements = useDiagramStore((state) => state.alignSelectedElements);
   const distributeSelectedElements = useDiagramStore((state) => state.distributeSelectedElements);
 
@@ -32,14 +41,14 @@ export function Inspector() {
     selectedElementIds.includes(element.id),
   );
 
-  const selectedColors = selectedElements.map((element) => getElementColor(appearance, element.id));
-
-  const [firstSelectedColor] = selectedColors;
+  const selectedElementColors = selectedElements.map((element) =>
+    getElementColor(appearance, element.id),
+  );
 
   const selectedColor =
-    firstSelectedColor !== undefined &&
-    selectedColors.every((color) => color === firstSelectedColor)
-      ? firstSelectedColor
+    selectedElementColors.length > 0 &&
+    selectedElementColors.every((color) => color === selectedElementColors[0])
+      ? (selectedElementColors[0] ?? null)
       : null;
 
   const element = selectedElementId ? findDiagramElement(diagram, selectedElementId) : undefined;
@@ -49,7 +58,7 @@ export function Inspector() {
 
   return (
     <aside className="flex h-full min-h-0 flex-col bg-surface">
-      <PanelHeader title="Propiedades" />
+      {showPanelHeader && <PanelHeader title="Propiedades" />}
 
       <div className="min-h-0 flex-1 overflow-y-auto">
         {selectedElements.length >= 2 ? (

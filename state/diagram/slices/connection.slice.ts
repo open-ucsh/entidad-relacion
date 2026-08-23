@@ -1,14 +1,15 @@
 import { createConnection } from '@/domain/diagram/factories/connection';
 
+import { findDiagramElement } from '@/domain/diagram/queries/elements';
+
 import {
   canCreateConnection,
   getIsaConnectionRole,
   hasValidIsaConnectionRole,
 } from '@/domain/diagram/validation/connections';
 
-import { findDiagramElement } from '@/domain/diagram/queries/elements';
-
 import { appendDiagramActivity } from '../diagram-activity';
+import { getConnectionUpdateDetails } from '../diagram-activity-details';
 import { replaceActiveDiagram } from '../diagram-documents';
 import { updateDiagramConnection } from '../diagram-mutations';
 
@@ -37,6 +38,7 @@ export const createConnectionSlice: DiagramStoreSlice<ConnectionSlice> = (set, g
           : connection.isaRole === 'subtype'
             ? 'Se conectó un subtipo a la jerarquía ISA.'
             : 'Se creó una conexión.',
+        { id: connection.id, kind: 'connection' },
       );
 
       return replaceActiveDiagram(state, nextDiagram);
@@ -45,10 +47,26 @@ export const createConnectionSlice: DiagramStoreSlice<ConnectionSlice> = (set, g
 
   updateConnection: (id, updates) => {
     set((state) => {
+      const connection = state.diagram.connections.find((item) => item.id === id);
+
+      if (!connection) {
+        return state;
+      }
+
+      const hasChanges =
+        (updates.minimum !== undefined && updates.minimum !== connection.minimum) ||
+        (updates.maximum !== undefined && updates.maximum !== connection.maximum) ||
+        (updates.isaRole !== undefined && updates.isaRole !== connection.isaRole);
+
+      if (!hasChanges) {
+        return state;
+      }
+
       const diagram = appendDiagramActivity(
         updateDiagramConnection(state.diagram, id, updates),
         'connection-updated',
-        'Se actualizó la cardinalidad de una conexión.',
+        getConnectionUpdateDetails(connection, updates),
+        { id: connection.id, kind: 'connection' },
       );
 
       return replaceActiveDiagram(state, diagram);

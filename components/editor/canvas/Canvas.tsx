@@ -110,6 +110,7 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
       completeHistoryTransaction(
         'elements-moved',
         `Se movió ${movedElementCount} elemento${movedElementCount === 1 ? '' : 's'}.`,
+        { recordActivity: false },
       );
     },
     onMoveCancelled: cancelHistoryTransaction,

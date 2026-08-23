@@ -1,6 +1,7 @@
 'use client';
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+
 import type { ComponentType } from 'react';
 
 type PanelSide = 'left' | 'right';
@@ -8,6 +9,7 @@ type PanelSide = 'left' | 'right';
 interface EditorSidePanelToggleProps {
   side: PanelSide;
   isOpen: boolean;
+  panelName?: string;
   onToggle: () => void;
 }
 
@@ -22,17 +24,16 @@ const ICONS: Record<PanelSide, Record<'open' | 'closed', ComponentType<{ size?: 
   },
 };
 
-export function EditorSidePanelToggle({ side, isOpen, onToggle }: EditorSidePanelToggleProps) {
+export function EditorSidePanelToggle({
+  side,
+  isOpen,
+  panelName,
+  onToggle,
+}: EditorSidePanelToggleProps) {
   const Icon = ICONS[side][isOpen ? 'open' : 'closed'];
-
-  const label =
-    side === 'left'
-      ? isOpen
-        ? 'Ocultar herramientas'
-        : 'Mostrar herramientas'
-      : isOpen
-        ? 'Ocultar inspector'
-        : 'Mostrar inspector';
+  const defaultPanelName = side === 'left' ? 'herramientas' : 'inspector';
+  const resolvedPanelName = panelName ?? defaultPanelName;
+  const label = `${isOpen ? 'Ocultar' : 'Mostrar'} ${resolvedPanelName}`;
 
   const positionClassName =
     side === 'left'

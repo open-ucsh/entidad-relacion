@@ -1,18 +1,27 @@
 import { createConnection } from '@/domain/diagram/factories/connection';
 import { createAttribute } from '@/domain/diagram/factories/element';
+
 import { findDiagramElement, getDiagramElements } from '@/domain/diagram/queries/elements';
 
 import { appendDiagramActivity } from '../diagram-activity';
+import {
+  getElementColorDetails,
+  getElementUpdateDetails,
+  getSelectedElementsColorDetails,
+} from '../diagram-activity-details';
 import { getElementColor } from '../diagram-appearance';
 import { replaceActiveDiagram } from '../diagram-documents';
+
 import { createAlignmentUpdates, createDistributionUpdates } from '../lib/element-arrangement';
 import { findConnectedAttributePosition } from '../lib/element-placement';
+
 import {
   duplicateDiagramElements,
   moveDiagramElements,
   removeDiagramElements,
   updateDiagram,
 } from '../diagram-mutations';
+
 import type {
   DiagramStoreSlice,
   ElementAlignment,
@@ -39,6 +48,7 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
         },
         'element-created',
         `Se creó la entidad “${entity.name}”.`,
+        { id: entity.id, kind: 'element' },
       );
 
       return replaceActiveDiagram(state, diagram);
@@ -54,6 +64,7 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
         },
         'element-created',
         `Se creó la relación “${relationship.name}”.`,
+        { id: relationship.id, kind: 'element' },
       );
 
       return replaceActiveDiagram(state, diagram);
@@ -69,6 +80,7 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
         },
         'element-created',
         `Se creó el atributo “${attribute.name}”.`,
+        { id: attribute.id, kind: 'element' },
       );
 
       return replaceActiveDiagram(state, diagram);
@@ -84,6 +96,7 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
         },
         'element-created',
         'Se creó una jerarquía ISA.',
+        { id: isa.id, kind: 'element' },
       );
 
       return replaceActiveDiagram(state, diagram);
@@ -106,6 +119,7 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
 
       const attribute = createAttribute(position);
       const connection = createConnection(parent.id, attribute.id);
+
       const diagram = appendDiagramActivity(
         {
           ...state.diagram,
@@ -114,6 +128,7 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
         },
         'element-created',
         `Se agregó el atributo “${attribute.name}” a “${parent.name}”.`,
+        { id: attribute.id, kind: 'element' },
       );
 
       return {
@@ -132,14 +147,20 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
         return state;
       }
 
+      if (typeof updates.name === 'string' && updates.name.trim() === element.name) {
+        return state;
+      }
+
       const updatedDiagram = updateDiagram(state.diagram, id, updates);
       const renamed = typeof updates.name === 'string';
+
       const diagram = appendDiagramActivity(
         updatedDiagram,
         renamed ? 'element-renamed' : 'element-updated',
         renamed
           ? `Se renombró “${element.name}” a “${updates.name}”.`
-          : 'Se actualizaron las propiedades de un elemento.',
+          : getElementUpdateDetails(element, updates),
+        { id: element.id, kind: 'element' },
       );
 
       return replaceActiveDiagram(state, diagram);
@@ -169,7 +190,8 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
       const diagram = appendDiagramActivity(
         state.diagram,
         'element-updated',
-        `Se actualizó el color de “${element.name}”.`,
+        getElementColorDetails(element, color),
+        { id: element.id, kind: 'element' },
       );
 
       return replaceActiveDiagram(state, diagram, {
@@ -191,6 +213,7 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
       }
 
       const changedIds = new Set(changedElements.map((element) => element.id));
+
       const elementColors =
         color === 'neutral'
           ? Object.fromEntries(
@@ -206,9 +229,7 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
       const diagram = appendDiagramActivity(
         state.diagram,
         'element-updated',
-        `Se actualizó el color de ${changedElements.length} elemento${
-          changedElements.length === 1 ? '' : 's'
-        }.`,
+        getSelectedElementsColorDetails(changedElements.length, color),
       );
 
       return replaceActiveDiagram(state, diagram, {
@@ -232,6 +253,7 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
   alignSelectedElements: (alignment: ElementAlignment) => {
     set((state) => {
       const selectedElements = getSelectedDiagramElements(state.selectedElementIds, state.diagram);
+
       const updates = createAlignmentUpdates(selectedElements, alignment);
 
       if (updates.length === 0) {
@@ -251,6 +273,7 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
   distributeSelectedElements: (distribution: ElementDistribution) => {
     set((state) => {
       const selectedElements = getSelectedDiagramElements(state.selectedElementIds, state.diagram);
+
       const updates = createDistributionUpdates(selectedElements, distribution);
 
       if (updates.length === 0) {
@@ -291,7 +314,9 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
         'element-created',
         `Se duplicaron ${duplicatedIds.length} elemento${duplicatedIds.length === 1 ? '' : 's'}${
           duplicatedConnectionCount > 0
-            ? ` y ${duplicatedConnectionCount} conexi${duplicatedConnectionCount === 1 ? 'ón interna' : 'ones internas'}`
+            ? ` y ${duplicatedConnectionCount} conexi${
+                duplicatedConnectionCount === 1 ? 'ón interna' : 'ones internas'
+              }`
             : ''
         }.`,
       );
@@ -331,11 +356,13 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
       const selectedElementIds = state.selectedElementIds.filter(
         (selectedId) => !removedIds.has(selectedId),
       );
+
       const diagram = appendDiagramActivity(
         removeDiagramElements(state.diagram, ids),
         'elements-removed',
         `Se eliminaron ${ids.length} elemento${ids.length === 1 ? '' : 's'}.`,
       );
+
       const elementColors = Object.fromEntries(
         Object.entries(state.appearance.elementColors).filter(
           ([elementId]) => !removedIds.has(elementId),

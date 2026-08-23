@@ -1,6 +1,7 @@
 'use client';
 
-import { useCloseOnEscape } from '@/components/editor/hooks/useCloseOnEscape';
+import { getDiagramElements } from '@/domain/diagram/queries/elements';
+
 import { selectActiveDiagram } from '@/state/diagram/selectors';
 import { useDiagramStore } from '@/state/diagram/store';
 
@@ -9,43 +10,49 @@ import { HistoryPanelHeader } from './HistoryPanelHeader';
 import { HistorySummary } from './HistorySummary';
 
 interface HistoryPanelProps {
-  isOpen: boolean;
-  onClose: () => void;
+  onSelectTarget: () => void;
 }
 
-export function HistoryPanel({ isOpen, onClose }: HistoryPanelProps) {
+export function HistoryPanel({ onSelectTarget }: HistoryPanelProps) {
   const diagram = useDiagramStore(selectActiveDiagram);
-
-  useCloseOnEscape({ isOpen, onClose });
-
-  if (!isOpen) {
-    return null;
-  }
+  const setSelectedElement = useDiagramStore((state) => state.setSelectedElement);
 
   const activities = [...diagram.activity].reverse();
+
+  const selectableTargetIds = new Set([
+    ...getDiagramElements(diagram).map((element) => element.id),
+    ...diagram.connections.map((connection) => connection.id),
+  ]);
+
   const originLabel =
-    diagram.metadata.origin === 'imported' ? 'Proyecto importado' : 'Creado en ER Designer';
+    diagram.metadata.origin === 'imported' ? 'Proyecto importado' : 'Creado en MER UCSH';
 
   return (
-    <div className="fixed inset-0 z-40 bg-text/20">
-      <aside
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="history-title"
-        className="absolute inset-y-0 right-0 flex w-full max-w-sm flex-col border-l border-border bg-background shadow-2xl"
-      >
-        <HistoryPanelHeader subtitle={originLabel} onClose={onClose} />
+    <section aria-labelledby="history-title" className="flex h-full min-h-0 flex-col bg-surface">
+      <HistoryPanelHeader subtitle={originLabel} />
 
-        <HistorySummary
-          createdAt={diagram.metadata.createdAt}
-          updatedAt={diagram.metadata.updatedAt}
-          importedAt={diagram.metadata.importedAt}
+      <HistorySummary
+        createdAt={diagram.metadata.createdAt}
+        updatedAt={diagram.metadata.updatedAt}
+        importedAt={diagram.metadata.importedAt}
+      />
+
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <HistoryActivityList
+          activities={activities}
+          isActivitySelectable={(activity) =>
+            Boolean(activity.target && selectableTargetIds.has(activity.target.id))
+          }
+          onSelectActivity={(activity) => {
+            if (!activity.target) {
+              return;
+            }
+
+            setSelectedElement(activity.target.id);
+            onSelectTarget();
+          }}
         />
-
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          <HistoryActivityList activities={activities} />
-        </div>
-      </aside>
-    </div>
+      </div>
+    </section>
   );
 }

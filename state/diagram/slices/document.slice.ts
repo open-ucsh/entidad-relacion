@@ -55,7 +55,7 @@ export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) 
               id: createId('activity'),
               type: 'diagram-imported' as const,
               occurredAt: importedAt,
-              details: 'Se importó un proyecto JSON en ER Designer.',
+              details: 'Se importó un proyecto JSON en la web de MER UCSH.',
             },
           ],
         };

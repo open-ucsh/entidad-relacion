@@ -23,7 +23,7 @@ export function createInitialDiagram(name = 'Diagrama sin título'): Diagram {
         id: createId('activity'),
         type: 'diagram-created',
         occurredAt: createdAt,
-        details: 'Se creó el proyecto en ER Designer.',
+        details: 'Se creó el proyecto en la web de MER UCSH.',
       },
     ],
   };

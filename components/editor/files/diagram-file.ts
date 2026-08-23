@@ -95,7 +95,7 @@ export function parseDiagramFile(content: string): ImportedDiagramFile {
   }
 
   if (parsed.format !== DIAGRAM_FILE_FORMAT) {
-    throw new Error('Este archivo no corresponde a un proyecto de ER Designer.');
+    throw new Error('Este archivo no corresponde a un proyecto de MER UCSH .');
   }
 
   if (parsed.version !== LEGACY_DIAGRAM_FILE_VERSION && parsed.version !== DIAGRAM_FILE_VERSION) {

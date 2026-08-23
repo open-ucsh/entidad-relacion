@@ -17,11 +17,17 @@ export function useEditorPanels() {
     isToolbarOpen,
     isInspectorOpen,
     workspaceColumns,
+
     toggleToolbar: () => {
       setIsToolbarOpen((open) => !open);
     },
+
     toggleInspector: () => {
       setIsInspectorOpen((open) => !open);
+    },
+
+    openInspector: () => {
+      setIsInspectorOpen(true);
     },
   };
 }

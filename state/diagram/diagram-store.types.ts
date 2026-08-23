@@ -97,7 +97,13 @@ export interface HistorySlice {
   redo: () => void;
 
   beginHistoryTransaction: () => void;
-  completeHistoryTransaction: (type: DiagramActivityType, details: string) => void;
+  completeHistoryTransaction: (
+    type: DiagramActivityType,
+    details: string,
+    options?: {
+      recordActivity?: boolean;
+    },
+  ) => void;
   cancelHistoryTransaction: () => void;
 }
 

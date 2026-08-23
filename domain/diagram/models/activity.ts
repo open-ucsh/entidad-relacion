@@ -12,6 +12,11 @@ export type DiagramActivityType =
   | 'connection-created'
   | 'connection-updated';
 
+export interface DiagramActivityTarget {
+  id: string;
+  kind: 'element' | 'connection';
+}
+
 export interface DiagramMetadata {
   name: string;
   createdAt: string;
@@ -25,4 +30,5 @@ export interface DiagramActivity {
   type: DiagramActivityType;
   occurredAt: string;
   details: string;
+  target?: DiagramActivityTarget;
 }

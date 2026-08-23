@@ -22,6 +22,7 @@ function collapseConsecutive(activities: Activity[]): ActivityRow[] {
 
     if (last && last.type === activity.type && last.details === activity.details) {
       last.count += 1;
+      last.lastOccurredAt = activity.occurredAt;
       continue;
     }
 

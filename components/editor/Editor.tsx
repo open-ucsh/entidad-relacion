@@ -11,28 +11,30 @@ import { DocumentGallery } from './documents/DocumentGallery';
 import { EditorSidePanelToggle } from './EditorSidePanelToggle';
 import { Header } from './header/Header';
 import { KeyboardShortcutsDialog } from './header/KeyboardShortcutsDialog';
-import { HistoryPanel } from './history/HistoryPanel';
 import { useDiagramFile } from './hooks/useDiagramFile';
 import { useEditorPanels } from './hooks/useEditorPanels';
-import { Inspector } from './inspector/Inspector';
+import { EditorRightPanel, type RightPanelTab } from './right-panel/EditorRightPanel';
 import { Toolbar } from './toolbar/Toolbar';
 
 export function Editor() {
   const diagram = useDiagramStore(selectActiveDiagram);
+
   const resetDiagram = useDiagramStore((state) => state.resetDiagram);
   const setDiagramName = useDiagramStore((state) => state.setDiagramName);
   const importDiagram = useDiagramStore((state) => state.importDiagram);
   const undo = useDiagramStore((state) => state.undo);
   const redo = useDiagramStore((state) => state.redo);
   const appearance = useDiagramStore((state) => state.appearance);
+
   const canUndo = useDiagramStore(selectCanUndo);
   const canRedo = useDiagramStore(selectCanRedo);
 
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [activeRightPanel, setActiveRightPanel] = useState<RightPanelTab>('inspector');
   const [isDocumentGalleryOpen, setIsDocumentGalleryOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
 
   const svgRef = useRef<SVGSVGElement | null>(null);
+
   const { exportDiagram } = useCanvasExport(svgRef, diagram);
 
   const { exportJson, importJson } = useDiagramFile({
@@ -41,8 +43,14 @@ export function Editor() {
     onImportDiagram: importDiagram,
   });
 
-  const { isToolbarOpen, isInspectorOpen, workspaceColumns, toggleToolbar, toggleInspector } =
-    useEditorPanels();
+  const {
+    isToolbarOpen,
+    isInspectorOpen,
+    workspaceColumns,
+    toggleToolbar,
+    toggleInspector,
+    openInspector,
+  } = useEditorPanels();
 
   function handleNewDiagram() {
     const shouldReset = window.confirm(
@@ -52,6 +60,11 @@ export function Editor() {
     if (shouldReset) {
       resetDiagram();
     }
+  }
+
+  function handleOpenHistory() {
+    openInspector();
+    setActiveRightPanel('history');
   }
 
   return (
@@ -64,9 +77,7 @@ export function Editor() {
         onNewDiagram={handleNewDiagram}
         onUndo={undo}
         onRedo={redo}
-        onOpenHistory={() => {
-          setIsHistoryOpen(true);
-        }}
+        onOpenHistory={handleOpenHistory}
         onOpenShortcuts={() => {
           setIsShortcutsOpen(true);
         }}
@@ -102,20 +113,14 @@ export function Editor() {
               isInspectorOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
             }`}
           >
-            <Inspector />
+            <EditorRightPanel activeTab={activeRightPanel} onChangeTab={setActiveRightPanel} />
           </div>
         </div>
 
         <EditorSidePanelToggle side="left" isOpen={isToolbarOpen} onToggle={toggleToolbar} />
+
         <EditorSidePanelToggle side="right" isOpen={isInspectorOpen} onToggle={toggleInspector} />
       </main>
-
-      <HistoryPanel
-        isOpen={isHistoryOpen}
-        onClose={() => {
-          setIsHistoryOpen(false);
-        }}
-      />
 
       <DocumentGallery
         isOpen={isDocumentGalleryOpen}
