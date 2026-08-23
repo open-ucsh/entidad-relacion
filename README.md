@@ -1,5 +1,3 @@
-![MER Designer](./.github/assets/banner.jpeg)
-
 # MER Designer ✨
 
 Un editor visual para crear diagramas **Entidad–Relación (MER)** con la modelado de Peter Chen.
@@ -20,3 +18,5 @@ Diseña entidades, relaciones y atributos antes de pasar a tablas, claves forán
 4. Guarda o exporta tu diagrama.
 
 > Primero entiende los datos. Después construye la base de datos.
+
+![MER Designer](https://raw.githubusercontent.com/open-ucsh/.github/main/assets/banner.jpeg)
