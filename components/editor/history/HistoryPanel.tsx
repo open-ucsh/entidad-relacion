@@ -15,7 +15,8 @@ interface HistoryPanelProps {
 
 export function HistoryPanel({ onSelectTarget }: HistoryPanelProps) {
   const diagram = useDiagramStore(selectActiveDiagram);
-  const setSelectedElement = useDiagramStore((state) => state.setSelectedElement);
+
+  const focusDiagramTarget = useDiagramStore((state) => state.focusDiagramTarget);
 
   const activities = [...diagram.activity].reverse();
 
@@ -48,7 +49,7 @@ export function HistoryPanel({ onSelectTarget }: HistoryPanelProps) {
               return;
             }
 
-            setSelectedElement(activity.target.id);
+            focusDiagramTarget(activity.target.id);
             onSelectTarget();
           }}
         />

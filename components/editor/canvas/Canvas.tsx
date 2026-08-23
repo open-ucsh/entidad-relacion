@@ -31,6 +31,7 @@ import { useCanvasToolDrop } from './hooks/useCanvasToolDrop';
 import { useFitOnDocumentChange } from './hooks/useFitOnDocumentChange';
 import { useInlineElementNameEditing } from './hooks/useInlineElementNameEditing';
 import { useWorldCoordinates } from './hooks/useWorldCoordinates';
+import { useCanvasFocusRequest } from './hooks/useCanvasFocusRequest';
 
 import { isCreatableTool } from './lib/canvas-elements';
 
@@ -49,6 +50,7 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
   const selectedElementIds = useDiagramStore((state) => state.selectedElementIds);
 
   const connectionSourceId = useDiagramStore((state) => state.connectionSourceId);
+  const canvasFocusRequest = useDiagramStore((state) => state.canvasFocusRequest);
 
   const setActiveTool = useDiagramStore((state) => state.setActiveTool);
 
@@ -87,6 +89,7 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
     zoomOut,
     resetView,
     fitToDiagram,
+    centerOnPoint,
     zoomPercentage,
     canZoomIn,
     canZoomOut,
@@ -96,6 +99,12 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
     activeDocumentId,
     diagram,
     fitToDiagram,
+  });
+
+  useCanvasFocusRequest({
+    focusRequest: canvasFocusRequest,
+    diagram,
+    centerOnPoint,
   });
 
   const { getWorldPoint } = useWorldCoordinates(svgRef, camera);

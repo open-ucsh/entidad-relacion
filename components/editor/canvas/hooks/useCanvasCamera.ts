@@ -10,7 +10,7 @@ import {
   type WheelEvent,
 } from 'react';
 
-import type { Diagram } from '@/domain/diagram/models';
+import type { Diagram, Point } from '@/domain/diagram/models';
 
 import { getDiagramContentBounds } from '../elements/diagram-content-bounds';
 
@@ -184,6 +184,17 @@ export function useCanvasCamera(svgRef: RefObject<SVGSVGElement | null>) {
     [canvasSize, resetView],
   );
 
+  const centerOnPoint = useCallback(
+    (point: Point) => {
+      setCamera((current) => ({
+        ...current,
+        x: canvasSize.width / 2 - point.x * current.zoom,
+        y: canvasSize.height / 2 - point.y * current.zoom,
+      }));
+    },
+    [canvasSize],
+  );
+
   const startPan = useCallback((event: PointerEvent) => {
     if (event.button !== 0 && event.button !== 1) {
       return;
@@ -246,6 +257,7 @@ export function useCanvasCamera(svgRef: RefObject<SVGSVGElement | null>) {
     zoomOut,
     resetView,
     fitToDiagram,
+    centerOnPoint,
     zoomPercentage: Math.round(camera.zoom * 100),
     canZoomIn: camera.zoom < MAX_ZOOM,
     canZoomOut: camera.zoom > MIN_ZOOM,

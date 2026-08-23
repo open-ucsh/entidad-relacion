@@ -21,6 +21,11 @@ export interface ElementPositionUpdate {
   position: Point;
 }
 
+export interface CanvasFocusRequest {
+  targetId: string;
+  requestId: number;
+}
+
 export interface DocumentSlice {
   diagram: Diagram;
   appearance: DiagramAppearance;
@@ -43,12 +48,14 @@ export interface SelectionSlice {
   selectedElementIds: string[];
   connectionSourceId: string | null;
   activeTool: Tool;
+  canvasFocusRequest: CanvasFocusRequest | null;
 
   setSelectedElement: (id: string | null) => void;
   toggleSelectedElement: (id: string) => void;
   selectAllElements: () => void;
   clearSelection: () => void;
   setSelectedElements: (ids: string[]) => void;
+  focusDiagramTarget: (id: string) => void;
 
   setActiveTool: (tool: Tool) => void;
 }

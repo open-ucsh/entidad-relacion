@@ -2,9 +2,14 @@ import type { DiagramStoreSlice, SelectionSlice } from '../diagram-store.types';
 
 export const createSelectionSlice: DiagramStoreSlice<SelectionSlice> = (set) => ({
   selectedElementId: null,
+
   selectedElementIds: [],
+
   connectionSourceId: null,
+
   activeTool: 'select',
+
+  canvasFocusRequest: null,
 
   setSelectedElement: (id) => {
     set({
@@ -20,6 +25,17 @@ export const createSelectionSlice: DiagramStoreSlice<SelectionSlice> = (set) => 
       selectedElementIds,
       selectedElementId: selectedElementIds.at(-1) ?? null,
     });
+  },
+
+  focusDiagramTarget: (id) => {
+    set((state) => ({
+      selectedElementId: id,
+      selectedElementIds: [id],
+      canvasFocusRequest: {
+        targetId: id,
+        requestId: (state.canvasFocusRequest?.requestId ?? 0) + 1,
+      },
+    }));
   },
 
   toggleSelectedElement: (id) => {
@@ -43,6 +59,7 @@ export const createSelectionSlice: DiagramStoreSlice<SelectionSlice> = (set) => 
         ...state.diagram.entities.map((element) => element.id),
         ...state.diagram.relationships.map((element) => element.id),
         ...state.diagram.attributes.map((element) => element.id),
+        ...state.diagram.isas.map((element) => element.id),
       ];
 
       return {
