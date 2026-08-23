@@ -1,0 +1,257 @@
+{
+  "format": "MER-designer",
+  "version": 2,
+  "exportedAt": "2026-08-23T19:30:00.000Z",
+  "appearance": {
+    "elementColors": {
+      "socio": "violet",
+      "libro": "blue",
+      "prestamo": "orange",
+      "socio-numero": "violet",
+      "socio-nombre": "violet",
+      "socio-correo": "violet",
+      "libro-isbn": "blue",
+      "libro-titulo": "blue",
+      "libro-autor": "blue",
+      "libro-anio": "blue",
+      "prestamo-inicio": "orange",
+      "prestamo-devolucion": "orange"
+    }
+  },
+  "diagram": {
+    "entities": [
+      {
+        "id": "socio",
+        "type": "entity",
+        "name": "Socio",
+        "position": { "x": 250, "y": 400 },
+        "kind": "regular"
+      },
+      {
+        "id": "libro",
+        "type": "entity",
+        "name": "Libro",
+        "position": { "x": 890, "y": 400 },
+        "kind": "regular"
+      }
+    ],
+    "relationships": [
+      {
+        "id": "prestamo",
+        "type": "relationship",
+        "name": "Préstamo",
+        "position": { "x": 570, "y": 400 },
+        "kind": "regular"
+      }
+    ],
+    "attributes": [
+      {
+        "id": "socio-numero",
+        "type": "attribute",
+        "name": "N.º de registro",
+        "position": { "x": 85, "y": 270 },
+        "keyType": "primary",
+        "unique": true,
+        "multivalued": false,
+        "optional": false,
+        "composite": false,
+        "derived": false
+      },
+      {
+        "id": "socio-nombre",
+        "type": "attribute",
+        "name": "Nombre",
+        "position": { "x": 85, "y": 400 },
+        "keyType": "normal",
+        "unique": false,
+        "multivalued": false,
+        "optional": false,
+        "composite": false,
+        "derived": false
+      },
+      {
+        "id": "socio-correo",
+        "type": "attribute",
+        "name": "Correo",
+        "position": { "x": 85, "y": 530 },
+        "keyType": "normal",
+        "unique": true,
+        "multivalued": false,
+        "optional": false,
+        "composite": false,
+        "derived": false
+      },
+      {
+        "id": "libro-isbn",
+        "type": "attribute",
+        "name": "ISBN",
+        "position": { "x": 1055, "y": 225 },
+        "keyType": "primary",
+        "unique": true,
+        "multivalued": false,
+        "optional": false,
+        "composite": false,
+        "derived": false
+      },
+      {
+        "id": "libro-titulo",
+        "type": "attribute",
+        "name": "Título",
+        "position": { "x": 1055, "y": 345 },
+        "keyType": "normal",
+        "unique": false,
+        "multivalued": false,
+        "optional": false,
+        "composite": false,
+        "derived": false
+      },
+      {
+        "id": "libro-autor",
+        "type": "attribute",
+        "name": "Autor",
+        "position": { "x": 1055, "y": 465 },
+        "keyType": "normal",
+        "unique": false,
+        "multivalued": false,
+        "optional": false,
+        "composite": false,
+        "derived": false
+      },
+      {
+        "id": "libro-anio",
+        "type": "attribute",
+        "name": "Año",
+        "position": { "x": 1055, "y": 585 },
+        "keyType": "normal",
+        "unique": false,
+        "multivalued": false,
+        "optional": false,
+        "composite": false,
+        "derived": false
+      },
+      {
+        "id": "prestamo-inicio",
+        "type": "attribute",
+        "name": "Fecha de inicio",
+        "position": { "x": 570, "y": 190 },
+        "keyType": "normal",
+        "unique": false,
+        "multivalued": false,
+        "optional": false,
+        "composite": false,
+        "derived": false
+      },
+      {
+        "id": "prestamo-devolucion",
+        "type": "attribute",
+        "name": "Fecha de devolución",
+        "position": { "x": 570, "y": 610 },
+        "keyType": "normal",
+        "unique": false,
+        "multivalued": false,
+        "optional": true,
+        "composite": false,
+        "derived": false
+      }
+    ],
+    "isas": [],
+    "connections": [
+      {
+        "id": "socio-numero-link",
+        "type": "connection",
+        "fromId": "socio-numero",
+        "toId": "socio",
+        "minimum": "unspecified",
+        "maximum": "unspecified"
+      },
+      {
+        "id": "socio-nombre-link",
+        "type": "connection",
+        "fromId": "socio-nombre",
+        "toId": "socio",
+        "minimum": "unspecified",
+        "maximum": "unspecified"
+      },
+      {
+        "id": "socio-correo-link",
+        "type": "connection",
+        "fromId": "socio-correo",
+        "toId": "socio",
+        "minimum": "unspecified",
+        "maximum": "unspecified"
+      },
+      {
+        "id": "libro-isbn-link",
+        "type": "connection",
+        "fromId": "libro-isbn",
+        "toId": "libro",
+        "minimum": "unspecified",
+        "maximum": "unspecified"
+      },
+      {
+        "id": "libro-titulo-link",
+        "type": "connection",
+        "fromId": "libro-titulo",
+        "toId": "libro",
+        "minimum": "unspecified",
+        "maximum": "unspecified"
+      },
+      {
+        "id": "libro-autor-link",
+        "type": "connection",
+        "fromId": "libro-autor",
+        "toId": "libro",
+        "minimum": "unspecified",
+        "maximum": "unspecified"
+      },
+      {
+        "id": "libro-anio-link",
+        "type": "connection",
+        "fromId": "libro-anio",
+        "toId": "libro",
+        "minimum": "unspecified",
+        "maximum": "unspecified"
+      },
+      {
+        "id": "prestamo-inicio-link",
+        "type": "connection",
+        "fromId": "prestamo-inicio",
+        "toId": "prestamo",
+        "minimum": "unspecified",
+        "maximum": "unspecified"
+      },
+      {
+        "id": "prestamo-devolucion-link",
+        "type": "connection",
+        "fromId": "prestamo-devolucion",
+        "toId": "prestamo",
+        "minimum": "unspecified",
+        "maximum": "unspecified"
+      },
+      {
+        "id": "socio-prestamo-link",
+        "type": "connection",
+        "fromId": "socio",
+        "toId": "prestamo",
+        "minimum": 0,
+        "maximum": "N"
+      },
+      {
+        "id": "prestamo-libro-link",
+        "type": "connection",
+        "fromId": "prestamo",
+        "toId": "libro",
+        "minimum": 0,
+        "maximum": "N"
+      }
+    ],
+    "metadata": {
+      "name": "Biblioteca · Préstamos de libros",
+      "createdAt": "2026-08-23T19:30:00.000Z",
+      "updatedAt": "2026-08-23T19:30:00.000Z",
+      "origin": "imported",
+      "importedAt": "2026-08-23T19:30:00.000Z"
+    },
+    "activity": []
+  }
+}
