@@ -4,6 +4,10 @@ import { CircleHelp, FileUp, FolderOpen, History, Redo2, Undo2 } from 'lucide-re
 
 import { useRef } from 'react';
 
+import { MAX_DOCUMENTS, getStoredDocuments } from '@/state/diagram/document-library';
+import { useDiagramStore } from '@/state/diagram/store';
+
+import { useEditorFeedback } from '../../feedback/EditorFeedbackProvider';
 import { HeaderDivider } from './HeaderDivider';
 import { HeaderIconButton } from './HeaderIconButton';
 
@@ -33,14 +37,34 @@ export function HeaderToolbar({
 }: HeaderToolbarProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
+  const documents = useDiagramStore((state) => state.documents);
+
+  const { showFeedback } = useEditorFeedback();
+
   async function handleImport(file: File) {
+    const storedDocuments = getStoredDocuments(documents);
+
+    if (storedDocuments.length >= MAX_DOCUMENTS) {
+      showFeedback({
+        tone: 'info',
+        message: `Llegaste al límite de ${MAX_DOCUMENTS} documentos locales. Elimina uno para importar otro.`,
+      });
+
+      return;
+    }
+
     try {
       await onImportJson(file);
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'No se pudo importar el archivo JSON.';
 
-      window.alert(message);
+      showFeedback({
+        tone: 'success',
+        message: 'Proyecto importado correctamente.',
+      });
+    } catch (error) {
+      showFeedback({
+        tone: 'error',
+        message: error instanceof Error ? error.message : 'No se pudo importar el archivo JSON.',
+      });
     }
   }
 

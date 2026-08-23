@@ -7,6 +7,7 @@ import { DocumentPreview } from './DocumentPreview';
 interface DocumentDetailProps {
   document: DiagramDocument;
   canDuplicate: boolean;
+
   onOpen: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
@@ -78,6 +79,7 @@ export function DocumentDetail({
           type="button"
           onClick={onDuplicate}
           disabled={!canDuplicate}
+          title={canDuplicate ? 'Duplicar documento' : 'Límite de documentos alcanzado'}
           className="flex items-center gap-2 rounded-lg border border-border px-3 py-2.5 text-sm font-medium text-text-muted transition-colors hover:bg-surface-hover hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Copy size={15} aria-hidden="true" />
@@ -93,6 +95,12 @@ export function DocumentDetail({
         >
           <Trash2 size={16} aria-hidden="true" />
         </button>
+
+        {!canDuplicate && (
+          <p className="basis-full pt-1 text-xs text-text-muted">
+            Límite de documentos locales alcanzado.
+          </p>
+        )}
       </div>
     </section>
   );

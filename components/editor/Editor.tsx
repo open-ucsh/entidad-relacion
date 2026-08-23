@@ -15,6 +15,7 @@ import { useDiagramFile } from './hooks/useDiagramFile';
 import { useEditorPanels } from './hooks/useEditorPanels';
 import { EditorRightPanel, type RightPanelTab } from './right-panel/EditorRightPanel';
 import { Toolbar } from './toolbar/Toolbar';
+import { EditorFeedbackProvider } from './feedback/EditorFeedbackProvider';
 
 export function Editor() {
   const diagram = useDiagramStore(selectActiveDiagram);
@@ -59,72 +60,74 @@ export function Editor() {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      <Header
-        diagramName={diagram.metadata.name}
-        canUndo={canUndo}
-        canRedo={canRedo}
-        onRenameDiagram={setDiagramName}
-        onUndo={undo}
-        onRedo={redo}
-        onOpenHistory={handleOpenHistory}
-        onOpenShortcuts={() => {
-          setIsShortcutsOpen(true);
-        }}
-        onExport={(format) => {
-          void exportDiagram(format);
-        }}
-        onExportJson={exportJson}
-        onImportJson={importJson}
-        onOpenDocuments={() => {
-          setIsDocumentGalleryOpen(true);
-        }}
-      />
+    <EditorFeedbackProvider>
+      <div className="flex h-full min-h-0 flex-col">
+        <Header
+          diagramName={diagram.metadata.name}
+          canUndo={canUndo}
+          canRedo={canRedo}
+          onRenameDiagram={setDiagramName}
+          onUndo={undo}
+          onRedo={redo}
+          onOpenHistory={handleOpenHistory}
+          onOpenShortcuts={() => {
+            setIsShortcutsOpen(true);
+          }}
+          onExport={(format) => {
+            void exportDiagram(format);
+          }}
+          onExportJson={exportJson}
+          onImportJson={importJson}
+          onOpenDocuments={() => {
+            setIsDocumentGalleryOpen(true);
+          }}
+        />
 
-      <main className="relative h-full min-h-0 w-full overflow-hidden">
-        <div
-          className="grid h-full min-h-0 min-w-0 overflow-hidden transition-all duration-200 ease-out"
-          style={{ gridTemplateColumns: workspaceColumns }}
-        >
+        <main className="relative h-full min-h-0 w-full overflow-hidden">
           <div
-            className={`h-full min-h-0 min-w-0 overflow-hidden transition-opacity duration-150 ${
-              isToolbarOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
-            }`}
+            className="grid h-full min-h-0 min-w-0 overflow-hidden transition-all duration-200 ease-out"
+            style={{ gridTemplateColumns: workspaceColumns }}
           >
-            <Toolbar />
+            <div
+              className={`h-full min-h-0 min-w-0 overflow-hidden transition-opacity duration-150 ${
+                isToolbarOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
+              }`}
+            >
+              <Toolbar />
+            </div>
+
+            <div className="relative h-full min-h-0 min-w-0 overflow-hidden">
+              <Canvas diagram={diagram} svgRef={svgRef} />
+            </div>
+
+            <div
+              className={`h-full min-h-0 min-w-0 overflow-hidden transition-opacity duration-150 ${
+                isInspectorOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
+              }`}
+            >
+              <EditorRightPanel activeTab={activeRightPanel} onChangeTab={setActiveRightPanel} />
+            </div>
           </div>
 
-          <div className="relative h-full min-h-0 min-w-0 overflow-hidden">
-            <Canvas diagram={diagram} svgRef={svgRef} />
-          </div>
+          <EditorSidePanelToggle side="left" isOpen={isToolbarOpen} onToggle={toggleToolbar} />
 
-          <div
-            className={`h-full min-h-0 min-w-0 overflow-hidden transition-opacity duration-150 ${
-              isInspectorOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
-            }`}
-          >
-            <EditorRightPanel activeTab={activeRightPanel} onChangeTab={setActiveRightPanel} />
-          </div>
-        </div>
+          <EditorSidePanelToggle side="right" isOpen={isInspectorOpen} onToggle={toggleInspector} />
+        </main>
 
-        <EditorSidePanelToggle side="left" isOpen={isToolbarOpen} onToggle={toggleToolbar} />
+        <DocumentGallery
+          isOpen={isDocumentGalleryOpen}
+          onClose={() => {
+            setIsDocumentGalleryOpen(false);
+          }}
+        />
 
-        <EditorSidePanelToggle side="right" isOpen={isInspectorOpen} onToggle={toggleInspector} />
-      </main>
-
-      <DocumentGallery
-        isOpen={isDocumentGalleryOpen}
-        onClose={() => {
-          setIsDocumentGalleryOpen(false);
-        }}
-      />
-
-      <KeyboardShortcutsDialog
-        isOpen={isShortcutsOpen}
-        onClose={() => {
-          setIsShortcutsOpen(false);
-        }}
-      />
-    </div>
+        <KeyboardShortcutsDialog
+          isOpen={isShortcutsOpen}
+          onClose={() => {
+            setIsShortcutsOpen(false);
+          }}
+        />
+      </div>
+    </EditorFeedbackProvider>
   );
 }
