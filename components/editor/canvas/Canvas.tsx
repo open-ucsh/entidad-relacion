@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, type PointerEvent, type RefObject } from 'react';
+import { type PointerEvent, type RefObject } from 'react';
 
 import { useCreateDiagramElement } from '@/components/editor/hooks/useCreateDiagramElement';
 import type { Diagram } from '@/domain/diagram/models';
@@ -19,19 +19,15 @@ import { ZoomControls } from './ZoomControls';
 import { useCanvasAlignmentGuides } from './hooks/useCanvasAlignmentGuides';
 import { useCanvasCamera } from './hooks/useCanvasCamera';
 import { useCanvasConnection } from './hooks/useCanvasConnection';
-import { useCanvasDrag } from './hooks/useCanvasDrag';
 import { useCanvasFocusRequest } from './hooks/useCanvasFocusRequest';
 import { useCanvasKeyboard } from './hooks/useCanvasKeyboard';
 import { useCanvasSelectionBox } from './hooks/useCanvasSelectionBox';
 import { useCanvasToolDrop } from './hooks/useCanvasToolDrop';
 import { useFitOnDocumentChange } from './hooks/useFitOnDocumentChange';
 import { useInlineElementNameEditing } from './hooks/useInlineElementNameEditing';
+import { useRelationshipConnectionInsertion } from './hooks/useRelationshipConnectionInsertion';
 import { useWorldCoordinates } from './hooks/useWorldCoordinates';
 import { isCreatableTool } from './lib/canvas-elements';
-import {
-  findConnectionInsertionTarget,
-  type ConnectionInsertionTarget,
-} from './lib/connection-insertion-target';
 
 interface CanvasProps {
   diagram: Diagram;
@@ -58,28 +54,11 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
   const clearSelection = useDiagramStore((state) => state.clearSelection);
 
   const updateElement = useDiagramStore((state) => state.updateElement);
-  const moveElements = useDiagramStore((state) => state.moveElements);
-
-  const insertRelationshipIntoConnection = useDiagramStore(
-    (state) => state.insertRelationshipIntoConnection,
-  );
-
-  const beginHistoryTransaction = useDiagramStore((state) => state.beginHistoryTransaction);
-  const completeHistoryTransaction = useDiagramStore((state) => state.completeHistoryTransaction);
-  const cancelHistoryTransaction = useDiagramStore((state) => state.cancelHistoryTransaction);
 
   const beginConnection = useDiagramStore((state) => state.beginConnection);
   const cancelConnection = useDiagramStore((state) => state.cancelConnection);
   const connectElements = useDiagramStore((state) => state.connectElements);
   const handleConnectClick = useDiagramStore((state) => state.handleConnectClick);
-
-  const relationshipInsertionTargetRef = useRef<ConnectionInsertionTarget | null>(null);
-
-  const draggedRelationshipIdRef = useRef<string | null>(null);
-
-  const [connectionInsertionTargetId, setConnectionInsertionTargetId] = useState<string | null>(
-    null,
-  );
 
   const { createDiagramElementAt } = useCreateDiagramElement();
   const { isSpacePressed, spacePressedRef } = useCanvasKeyboard();
@@ -134,94 +113,13 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
     connectElements,
   });
 
-  function clearRelationshipInsertionTarget() {
-    relationshipInsertionTargetRef.current = null;
-    draggedRelationshipIdRef.current = null;
-    setConnectionInsertionTargetId(null);
-  }
-
-  function updateRelationshipInsertionTarget(updates: Parameters<typeof moveElements>[0]) {
-    updateAlignmentGuides(updates);
-
-    if (updates.length !== 1) {
-      clearRelationshipInsertionTarget();
-      return;
-    }
-
-    const update = updates[0];
-
-    if (!update) {
-      clearRelationshipInsertionTarget();
-      return;
-    }
-
-    const element = findDiagramElement(diagram, update.id);
-
-    if (!element || element.type !== 'relationship') {
-      clearRelationshipInsertionTarget();
-      return;
-    }
-
-    const target = findConnectionInsertionTarget(diagram, element.id, update.position);
-
-    relationshipInsertionTargetRef.current = target;
-    draggedRelationshipIdRef.current = element.id;
-
-    setConnectionInsertionTargetId(target?.connectionId ?? null);
-  }
-
-  const { startDrag, drag, stopDrag } = useCanvasDrag({
-    diagram,
-    selectedElementIds,
-    getSvgPoint: getWorldPoint,
-    onDrag: updateRelationshipInsertionTarget,
-    moveElements,
-    onMoveStarted: beginHistoryTransaction,
-    onMoveCompleted: (movedElementCount) => {
-      const target = relationshipInsertionTargetRef.current;
-      const relationshipId = draggedRelationshipIdRef.current;
-
-      if (target && relationshipId) {
-        const relationship = findDiagramElement(diagram, relationshipId);
-
-        moveElements([
-          {
-            id: relationshipId,
-            position: target.position,
-          },
-        ]);
-
-        const inserted = insertRelationshipIntoConnection(relationshipId, target.connectionId);
-
-        clearRelationshipInsertionTarget();
-
-        if (inserted) {
-          completeHistoryTransaction(
-            'connection-created',
-            relationship?.type === 'relationship'
-              ? `Se insertó la relación "${relationship.name}" en una conexión.`
-              : 'Se insertó una relación en una conexión.',
-          );
-
-          return;
-        }
-      }
-
-      clearRelationshipInsertionTarget();
-
-      completeHistoryTransaction(
-        'elements-moved',
-        `Se movió ${movedElementCount} elemento${movedElementCount === 1 ? '' : 's'}.`,
-        {
-          recordActivity: false,
-        },
-      );
-    },
-    onMoveCancelled: () => {
-      clearRelationshipInsertionTarget();
-      cancelHistoryTransaction();
-    },
-  });
+  const { startDrag, drag, stopDrag, connectionInsertionTargetId } =
+    useRelationshipConnectionInsertion({
+      diagram,
+      selectedElementIds,
+      getWorldPoint,
+      onDrag: updateAlignmentGuides,
+    });
 
   const { selectionBox, startSelection, updateSelection, finishSelection, cancelSelection } =
     useCanvasSelectionBox({
@@ -273,7 +171,6 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
 
     event.preventDefault();
     event.stopPropagation();
-
     startPan(event);
   }
 
@@ -326,7 +223,6 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
 
   function handlePointerCancel() {
     clearAlignmentGuides();
-    clearRelationshipInsertionTarget();
     cancelCanvasConnection();
     stopPan();
     stopDrag();
