@@ -6,6 +6,7 @@ interface ConnectionShapeProps {
   from: Point;
   to: Point;
   selected: boolean;
+  insertionTarget?: boolean;
   cardinalityLabel: string | null;
   onClick: (event: MouseEvent<SVGGElement>) => void;
 }
@@ -34,6 +35,7 @@ export function ConnectionShape({
   from,
   to,
   selected,
+  insertionTarget = false,
   cardinalityLabel,
   onClick,
 }: ConnectionShapeProps) {
@@ -67,11 +69,13 @@ export function ConnectionShape({
         y1={from.y}
         x2={to.x}
         y2={to.y}
-        stroke={selected ? 'var(--color-brand-primary)' : 'var(--color-border)'}
-        strokeWidth={selected ? 2.5 : 1.5}
+        stroke={insertionTarget || selected ? 'var(--color-brand-primary)' : 'var(--color-border)'}
+        strokeWidth={insertionTarget ? 4 : selected ? 2.5 : 1.5}
+        strokeDasharray={insertionTarget ? '8 6' : undefined}
         strokeLinecap="round"
         className="transition-colors duration-150 group-hover:stroke-brand-primary"
         pointerEvents="none"
+        data-connection-insertion-target={insertionTarget ? 'true' : undefined}
         data-export-reset-connection
       />
 

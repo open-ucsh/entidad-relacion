@@ -9,8 +9,17 @@ import type {
   Isa,
   Relationship,
 } from '@/domain/diagram/models';
+import { createConnection } from '@/domain/diagram/factories/connection';
+import { findDiagramElement } from '@/domain/diagram/queries/elements';
+import { canInsertRelationshipIntoConnection } from '@/domain/diagram/validation/connections';
 
 import type { ElementPositionUpdate } from './diagram-store.types';
+
+export interface InsertRelationshipIntoConnectionResult {
+  diagram: Diagram;
+  retainedConnectionId: string;
+  createdConnectionId: string;
+}
 
 export interface DuplicateDiagramElementsResult {
   diagram: Diagram;
@@ -215,5 +224,55 @@ export function removeDiagramElements(diagram: Diagram, ids: string[]): Diagram 
       (item) =>
         !removedIds.has(item.id) && !removedIds.has(item.fromId) && !removedIds.has(item.toId),
     ),
+  };
+}
+
+export function insertRelationshipIntoDiagramConnection(
+  diagram: Diagram,
+  relationship: Relationship,
+  connectionId: string,
+): InsertRelationshipIntoConnectionResult | null {
+  const connection = diagram.connections.find((item) => item.id === connectionId);
+
+  if (!connection) {
+    return null;
+  }
+
+  const existingElement = findDiagramElement(diagram, relationship.id);
+
+  if (existingElement && existingElement.type !== 'relationship') {
+    return null;
+  }
+
+  const diagramWithRelationship = existingElement
+    ? diagram
+    : {
+        ...diagram,
+        relationships: [...diagram.relationships, relationship],
+      };
+
+  if (
+    !canInsertRelationshipIntoConnection(diagramWithRelationship, relationship.id, connectionId)
+  ) {
+    return null;
+  }
+
+  const retainedConnection: Connection = {
+    ...connection,
+    toId: relationship.id,
+    isaRole: 'none',
+  };
+
+  const createdConnection = createConnection(relationship.id, connection.toId);
+
+  return {
+    diagram: {
+      ...diagramWithRelationship,
+      connections: diagramWithRelationship.connections
+        .map((item) => (item.id === connection.id ? retainedConnection : item))
+        .concat(createdConnection),
+    },
+    retainedConnectionId: retainedConnection.id,
+    createdConnectionId: createdConnection.id,
   };
 }

@@ -1,6 +1,8 @@
 import { createConnection } from '@/domain/diagram/factories/connection';
-
 import { findDiagramElement } from '@/domain/diagram/queries/elements';
+import type { Relationship } from '@/domain/diagram/models';
+
+import { insertRelationshipIntoDiagramConnection } from '../diagram-mutations';
 
 import {
   canCreateConnection,
@@ -14,6 +16,14 @@ import { replaceActiveDiagram } from '../diagram-documents';
 import { updateDiagramConnection } from '../diagram-mutations';
 
 import type { ConnectionSlice, DiagramStoreSlice } from '../diagram-store.types';
+
+function getRelationshipInsertionResult(
+  diagram: Parameters<typeof insertRelationshipIntoDiagramConnection>[0],
+  relationship: Relationship,
+  connectionId: string,
+) {
+  return insertRelationshipIntoDiagramConnection(diagram, relationship, connectionId);
+}
 
 export const createConnectionSlice: DiagramStoreSlice<ConnectionSlice> = (set, get) => ({
   addConnection: (connection) => {
@@ -100,6 +110,68 @@ export const createConnectionSlice: DiagramStoreSlice<ConnectionSlice> = (set, g
     }
 
     addConnection(createConnection(fromId, toId, getIsaConnectionRole(source, target)));
+  },
+
+  insertRelationshipIntoConnection: (relationshipId, connectionId) => {
+    const relationship = get().diagram.relationships.find((item) => item.id === relationshipId);
+
+    if (!relationship) {
+      return false;
+    }
+
+    let inserted = false;
+
+    set((state) => {
+      const result = getRelationshipInsertionResult(state.diagram, relationship, connectionId);
+
+      if (!result) {
+        return state;
+      }
+
+      inserted = true;
+
+      return replaceActiveDiagram(state, result.diagram, {
+        recordHistory: false,
+      });
+    });
+
+    return inserted;
+  },
+
+  addRelationshipToConnection: (relationship, connectionId) => {
+    if (findDiagramElement(get().diagram, relationship.id)) {
+      return false;
+    }
+
+    let inserted = false;
+
+    set((state) => {
+      const result = getRelationshipInsertionResult(state.diagram, relationship, connectionId);
+
+      if (!result) {
+        return state;
+      }
+
+      inserted = true;
+
+      const diagram = appendDiagramActivity(
+        result.diagram,
+        'element-created',
+        `Se creó la relación “${relationship.name}” y se insertó en una conexión.`,
+        {
+          id: relationship.id,
+          kind: 'element',
+        },
+      );
+
+      return {
+        ...replaceActiveDiagram(state, diagram),
+        selectedElementId: relationship.id,
+        selectedElementIds: [relationship.id],
+      };
+    });
+
+    return inserted;
   },
 
   handleConnectClick: (id) => {

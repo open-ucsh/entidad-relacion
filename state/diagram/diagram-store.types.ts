@@ -94,6 +94,10 @@ export interface ConnectionSlice {
   connectElements: (fromId: string, toId: string) => void;
 
   handleConnectClick: (id: string) => void;
+
+  insertRelationshipIntoConnection: (relationshipId: string, connectionId: string) => boolean;
+
+  addRelationshipToConnection: (relationship: Relationship, connectionId: string) => boolean;
 }
 
 export interface HistorySlice {

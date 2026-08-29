@@ -3,6 +3,7 @@ import type {
   Diagram,
   DiagramElement,
   IsaConnectionRole,
+  Relationship,
 } from '@/domain/diagram/models';
 
 import { findDiagramElement } from '@/domain/diagram/queries/elements';
@@ -111,4 +112,70 @@ export function hasValidIsaConnectionRole(diagram: Diagram, connection: Connecti
   }
 
   return connection.isaRole === getIsaConnectionRole(source, target);
+}
+
+const RELATIONSHIP_PREVIEW_ID = '__relationship-insertion-preview__';
+
+function createRelationshipPreview(): Relationship {
+  return {
+    id: RELATIONSHIP_PREVIEW_ID,
+    type: 'relationship',
+    name: 'Relación',
+    position: {
+      x: 0,
+      y: 0,
+    },
+    kind: 'regular',
+  };
+}
+
+export function canInsertRelationshipIntoConnection(
+  diagram: Diagram,
+  relationshipId: string | null,
+  connectionId: string,
+): boolean {
+  const connection = diagram.connections.find((item) => item.id === connectionId);
+
+  if (!connection) {
+    return false;
+  }
+
+  const fromElement = findDiagramElement(diagram, connection.fromId);
+  const toElement = findDiagramElement(diagram, connection.toId);
+
+  if (!fromElement || !toElement) {
+    return false;
+  }
+
+  const existingElement = relationshipId ? findDiagramElement(diagram, relationshipId) : undefined;
+
+  if (existingElement && existingElement.type !== 'relationship') {
+    return false;
+  }
+
+  if (
+    relationshipId &&
+    (connection.fromId === relationshipId || connection.toId === relationshipId)
+  ) {
+    return false;
+  }
+
+  const relationship =
+    existingElement?.type === 'relationship' ? existingElement : createRelationshipPreview();
+
+  if (
+    !canConnectDiagramElements(fromElement, relationship) ||
+    !canConnectDiagramElements(relationship, toElement)
+  ) {
+    return false;
+  }
+
+  if (!relationshipId) {
+    return true;
+  }
+
+  return (
+    !hasDiagramConnection(diagram, fromElement.id, relationshipId) &&
+    !hasDiagramConnection(diagram, relationshipId, toElement.id)
+  );
 }

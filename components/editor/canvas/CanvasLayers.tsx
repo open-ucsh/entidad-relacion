@@ -21,6 +21,7 @@ interface CanvasLayersProps {
   elementColors: Record<string, ElementColor>;
   editingElementId: string | null;
   connectionDropTargetId: string | null;
+  connectionInsertionTargetId: string | null;
   selectedElementIds: string[];
   connectionSourceId: string | null;
   activeTool: Tool;
@@ -40,6 +41,7 @@ export function CanvasLayers({
   selectedElementIds,
   connectionSourceId,
   connectionDropTargetId,
+  connectionInsertionTargetId,
   activeTool,
   onSelectElement,
   onToggleElement,
@@ -108,6 +110,7 @@ export function CanvasLayers({
               from={endpoints.from}
               to={endpoints.to}
               selected={selectedElementIds.includes(connection.id)}
+              insertionTarget={connectionInsertionTargetId === connection.id}
               cardinalityLabel={formatConnectionCardinality(connection)}
               onClick={(event) => {
                 handleConnectionClick(event, connection.id);
