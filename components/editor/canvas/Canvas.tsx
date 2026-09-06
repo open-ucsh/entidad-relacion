@@ -36,31 +36,43 @@ interface CanvasProps {
 
 export function Canvas({ diagram, svgRef }: CanvasProps) {
   const activeTool = useDiagramStore((state) => state.activeTool);
+
   const activeDocumentId = useDiagramStore((state) => state.activeDocumentId);
+
   const appearance = useDiagramStore((state) => state.appearance);
 
   const selectedElementId = useDiagramStore((state) => state.selectedElementId);
+
   const selectedElementIds = useDiagramStore((state) => state.selectedElementIds);
 
   const connectionSourceId = useDiagramStore((state) => state.connectionSourceId);
+
   const canvasFocusRequest = useDiagramStore((state) => state.canvasFocusRequest);
 
   const setActiveTool = useDiagramStore((state) => state.setActiveTool);
+
   const removeElement = useDiagramStore((state) => state.removeElement);
 
   const setSelectedElement = useDiagramStore((state) => state.setSelectedElement);
+
   const setSelectedElements = useDiagramStore((state) => state.setSelectedElements);
+
   const toggleSelectedElement = useDiagramStore((state) => state.toggleSelectedElement);
+
   const clearSelection = useDiagramStore((state) => state.clearSelection);
 
   const updateElement = useDiagramStore((state) => state.updateElement);
 
   const beginConnection = useDiagramStore((state) => state.beginConnection);
+
   const cancelConnection = useDiagramStore((state) => state.cancelConnection);
+
   const connectElements = useDiagramStore((state) => state.connectElements);
+
   const handleConnectClick = useDiagramStore((state) => state.handleConnectClick);
 
   const { createDiagramElementAt } = useCreateDiagramElement();
+
   const { isSpacePressed, spacePressedRef } = useCanvasKeyboard();
 
   const {
@@ -171,6 +183,7 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
 
     event.preventDefault();
     event.stopPropagation();
+
     startPan(event);
   }
 
@@ -189,6 +202,7 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
       }
 
       setActiveTool('select');
+
       return;
     }
 
@@ -231,7 +245,7 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
 
   return (
     <main className="relative h-full min-h-0 w-full overflow-hidden">
-      <div className="relative h-full min-h-0 w-full">
+      <div className={`${styles.canvasViewport} relative h-full min-h-0 w-full`}>
         <svg
           ref={svgRef}
           tabIndex={0}
