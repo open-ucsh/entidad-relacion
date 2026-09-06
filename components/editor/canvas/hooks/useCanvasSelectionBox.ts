@@ -65,6 +65,7 @@ export function useCanvasSelectionBox({
   clearSelection,
 }: UseCanvasSelectionBoxProps) {
   const [selectionBox, setSelectionBox] = useState<SelectionBox | null>(null);
+
   const sessionRef = useRef<SelectionSession | null>(null);
 
   const getCanvasPoint = useCallback(
@@ -99,7 +100,7 @@ export function useCanvasSelectionBox({
 
   const startSelection = useCallback(
     (event: PointerEvent<SVGSVGElement>) => {
-      if (event.button !== 0) {
+      if (event.pointerType === 'touch' || event.button !== 0) {
         return false;
       }
 
@@ -174,7 +175,9 @@ export function useCanvasSelectionBox({
       }
 
       const worldStartPoint = toWorldPoint(session.startPoint);
+
       const worldEndPoint = toWorldPoint(endPoint);
+
       const worldSelectionBox = getSelectionBox(worldStartPoint, worldEndPoint);
 
       const selectedIds = getDiagramElements(diagram)

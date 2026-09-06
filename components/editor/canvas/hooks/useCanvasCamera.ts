@@ -52,7 +52,9 @@ export function useCanvasCamera(svgRef: RefObject<SVGSVGElement | null>) {
   });
 
   const [camera, setCamera] = useState(INITIAL_CAMERA);
+
   const [isPanning, setIsPanning] = useState(false);
+
   const panStartRef = useRef<ClientPoint | null>(null);
 
   useEffect(() => {
@@ -80,6 +82,7 @@ export function useCanvasCamera(svgRef: RefObject<SVGSVGElement | null>) {
     updateCanvasSize();
 
     const observer = new ResizeObserver(updateCanvasSize);
+
     observer.observe(svg);
 
     return () => {
@@ -164,6 +167,7 @@ export function useCanvasCamera(svgRef: RefObject<SVGSVGElement | null>) {
       }
 
       const availableWidth = Math.max(canvasSize.width - FIT_PADDING * 2, 1);
+
       const availableHeight = Math.max(canvasSize.height - FIT_PADDING * 2, 1);
 
       const zoom = clamp(
@@ -173,6 +177,7 @@ export function useCanvasCamera(svgRef: RefObject<SVGSVGElement | null>) {
       );
 
       const diagramCenterX = bounds.x + bounds.width / 2;
+
       const diagramCenterY = bounds.y + bounds.height / 2;
 
       setCamera({
@@ -196,7 +201,11 @@ export function useCanvasCamera(svgRef: RefObject<SVGSVGElement | null>) {
   );
 
   const startPan = useCallback((event: PointerEvent) => {
-    if (event.button !== 0 && event.button !== 1) {
+    const isTouch = event.pointerType === 'touch';
+
+    const isMousePan = event.button === 0 || event.button === 1;
+
+    if (!isTouch && !isMousePan) {
       return;
     }
 
@@ -206,6 +215,7 @@ export function useCanvasCamera(svgRef: RefObject<SVGSVGElement | null>) {
     };
 
     setIsPanning(true);
+
     event.currentTarget.setPointerCapture(event.pointerId);
   }, []);
 
@@ -224,6 +234,7 @@ export function useCanvasCamera(svgRef: RefObject<SVGSVGElement | null>) {
       }
 
       const dx = ((event.clientX - panStart.x) * canvasSize.width) / rect.width;
+
       const dy = ((event.clientY - panStart.y) * canvasSize.height) / rect.height;
 
       setCamera((current) => ({

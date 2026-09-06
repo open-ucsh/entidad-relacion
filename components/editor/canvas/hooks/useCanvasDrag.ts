@@ -47,6 +47,10 @@ export function useCanvasDrag({
   const dragSessionRef = useRef<DragSession | null>(null);
 
   function startDrag(event: PointerEvent, id: string) {
+    if (event.pointerType !== 'touch' && event.button !== 0) {
+      return;
+    }
+
     event.stopPropagation();
 
     const startPoint = getSvgPoint(event.nativeEvent);
@@ -60,7 +64,14 @@ export function useCanvasDrag({
     const items = idsToMove.flatMap((elementId) => {
       const position = getElementPosition(diagram, elementId);
 
-      return position ? [{ id: elementId, position }] : [];
+      return position
+        ? [
+            {
+              id: elementId,
+              position,
+            },
+          ]
+        : [];
     });
 
     if (items.length === 0) {
@@ -74,6 +85,7 @@ export function useCanvasDrag({
     };
 
     onMoveStarted();
+
     event.currentTarget.setPointerCapture(event.pointerId);
   }
 
@@ -91,6 +103,7 @@ export function useCanvasDrag({
     }
 
     const rawDx = point.x - session.startPoint.x;
+
     const rawDy = point.y - session.startPoint.y;
 
     if (rawDx === 0 && rawDy === 0) {
@@ -98,6 +111,7 @@ export function useCanvasDrag({
     }
 
     const dx = event.altKey ? rawDx : snapDelta(rawDx);
+
     const dy = event.altKey ? rawDy : snapDelta(rawDy);
 
     const updates = session.items.map((item) => ({
@@ -109,6 +123,7 @@ export function useCanvasDrag({
     }));
 
     session.hasMoved = true;
+
     moveElements(updates);
     onDrag(updates);
   }

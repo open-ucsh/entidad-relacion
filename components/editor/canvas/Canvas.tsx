@@ -206,6 +206,11 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
       return;
     }
 
+    if (event.pointerType === 'touch') {
+      startPan(event);
+      return;
+    }
+
     if (activeTool === 'select' && event.button === 0 && startSelection(event)) {
       return;
     }
