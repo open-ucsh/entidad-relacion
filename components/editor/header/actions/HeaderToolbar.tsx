@@ -1,10 +1,9 @@
 'use client';
 
 import { CircleHelp, FileUp, FolderOpen, History, Redo2, Undo2 } from 'lucide-react';
-
 import { useRef } from 'react';
 
-import { MAX_DOCUMENTS, getStoredDocuments } from '@/state/diagram/document-library';
+import { getStoredDocuments, MAX_DOCUMENTS } from '@/state/diagram/document-library';
 import { useDiagramStore } from '@/state/diagram/store';
 
 import { useEditorFeedback } from '../../feedback/EditorFeedbackProvider';
@@ -14,12 +13,9 @@ import { HeaderIconButton } from './HeaderIconButton';
 interface HeaderToolbarProps {
   canRedo: boolean;
   canUndo: boolean;
-
   onUndo: () => void;
   onRedo: () => void;
-
   onImportJson: (file: File) => Promise<void>;
-
   onOpenHistory: () => void;
   onOpenDocuments: () => void;
   onOpenShortcuts: () => void;
@@ -69,24 +65,33 @@ export function HeaderToolbar({
   }
 
   return (
-    <div className="flex items-center gap-1">
+    <div
+      className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto"
+      style={{ scrollbarWidth: 'none' }}
+    >
       <button
         type="button"
         onClick={onOpenDocuments}
         aria-haspopup="dialog"
-        className="flex h-8 items-center gap-2 rounded-md px-3 text-xs font-semibold text-white transition-colors hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+        aria-label="Documentos"
+        className="flex h-8 shrink-0 items-center justify-center gap-2 rounded-md px-2 text-xs font-semibold text-white transition-colors hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 sm:px-3"
       >
         <FolderOpen size={17} aria-hidden="true" />
-        Documentos
+
+        <span className="hidden sm:inline">Documentos</span>
       </button>
 
-      <HeaderDivider />
+      <div className="hidden sm:block">
+        <HeaderDivider />
+      </div>
 
       <HeaderIconButton icon={Undo2} label="Deshacer" onClick={onUndo} disabled={!canUndo} />
 
       <HeaderIconButton icon={Redo2} label="Rehacer" onClick={onRedo} disabled={!canRedo} />
 
-      <HeaderDivider />
+      <div className="hidden sm:block">
+        <HeaderDivider />
+      </div>
 
       <HeaderIconButton
         icon={FileUp}
@@ -112,7 +117,9 @@ export function HeaderToolbar({
         }}
       />
 
-      <HeaderDivider />
+      <div className="hidden sm:block">
+        <HeaderDivider />
+      </div>
 
       <HeaderIconButton icon={History} label="Historial del proyecto" onClick={onOpenHistory} />
 

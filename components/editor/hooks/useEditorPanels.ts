@@ -6,6 +6,7 @@ import { getEditorWorkspaceColumns } from '../editor-workspace-layout';
 
 export function useEditorPanels() {
   const [isToolbarOpen, setIsToolbarOpen] = useState(true);
+
   const [isInspectorOpen, setIsInspectorOpen] = useState(true);
 
   const workspaceColumns = useMemo(
