@@ -143,7 +143,7 @@ function hasValidConnections(
       return false;
     }
 
-    const connectionKey = [connection.fromId, connection.toId].sort().join(':');
+    const connectionKey = `${connection.fromId}:${connection.toId}`;
 
     if (connectionKeys.has(connectionKey)) {
       return false;

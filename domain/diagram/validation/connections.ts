@@ -73,9 +73,7 @@ export function canConnectElementsById(
 
 function hasDiagramConnection(diagram: Diagram, sourceId: string, targetId: string): boolean {
   return diagram.connections.some(
-    (connection) =>
-      (connection.fromId === sourceId && connection.toId === targetId) ||
-      (connection.fromId === targetId && connection.toId === sourceId),
+    (connection) => connection.fromId === sourceId && connection.toId === targetId,
   );
 }
 
