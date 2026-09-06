@@ -2,6 +2,7 @@ import type { ExportFormat } from '../canvas/hooks/useCanvasExport';
 
 import { ExportButton } from './actions/ExportButton';
 import { HeaderToolbar } from './actions/HeaderToolbar';
+import { MobileHeaderMenu } from './actions/MobileHeaderMenu';
 import { HeaderBrand } from './HeaderBrand';
 import { ProjectNameEditor } from './ProjectNameEditor';
 
@@ -12,6 +13,7 @@ interface HeaderProps {
   onUndo: () => void;
   onRedo: () => void;
   onOpenHistory: () => void;
+  onOpenMobileHistory: () => void;
   onRenameDiagram: (name: string) => void;
   onExport: (format: ExportFormat) => void;
   onExportJson: () => void;
@@ -27,6 +29,7 @@ export function Header({
   onUndo,
   onRedo,
   onOpenHistory,
+  onOpenMobileHistory,
   onRenameDiagram,
   onExport,
   onExportJson,
@@ -35,26 +38,37 @@ export function Header({
   onOpenShortcuts,
 }: HeaderProps) {
   return (
-    <header className="relative shrink-0 border-b border-white/15 bg-brand-primary shadow-sm">
-      <div className="flex h-14 min-w-0 items-center justify-between gap-2 px-3 sm:h-16 sm:gap-4 sm:px-4 lg:px-6">
-        <div className="flex min-w-0 flex-1 items-center gap-4">
-          <div className="hidden shrink-0 md:block">
-            <HeaderBrand />
-          </div>
-
-          <div className="hidden h-9 w-px shrink-0 bg-white/15 lg:block" aria-hidden="true" />
-
-          <div className="min-w-0 flex-1 md:flex-none">
-            <ProjectNameEditor name={diagramName} onCommit={onRenameDiagram} />
-          </div>
+    <header className="relative z-50 shrink-0 border-b border-white/15 bg-brand-primary shadow-sm">
+      <div className="flex h-14 min-w-0 items-center gap-3 px-3 sm:px-4 lg:h-16 lg:px-6">
+        <div className="hidden shrink-0 lg:block">
+          <HeaderBrand />
         </div>
 
-        <div className="shrink-0">
+        <div className="hidden h-9 w-px shrink-0 bg-white/15 lg:block" aria-hidden="true" />
+
+        <div className="min-w-0 flex-1">
+          <ProjectNameEditor name={diagramName} onCommit={onRenameDiagram} />
+        </div>
+
+        <div className="hidden shrink-0 lg:block">
           <ExportButton onExport={onExport} onExportJson={onExportJson} />
         </div>
+
+        <MobileHeaderMenu
+          canRedo={canRedo}
+          canUndo={canUndo}
+          onUndo={onUndo}
+          onRedo={onRedo}
+          onImportJson={onImportJson}
+          onExport={onExport}
+          onExportJson={onExportJson}
+          onOpenHistory={onOpenMobileHistory}
+          onOpenDocuments={onOpenDocuments}
+          onOpenShortcuts={onOpenShortcuts}
+        />
       </div>
 
-      <div className="flex h-11 min-w-0 items-center overflow-hidden border-t border-white/10 bg-white/5 px-2 sm:px-4 lg:px-6">
+      <div className="hidden h-11 items-center border-t border-white/10 bg-white/5 px-6 lg:flex">
         <HeaderToolbar
           canRedo={canRedo}
           canUndo={canUndo}

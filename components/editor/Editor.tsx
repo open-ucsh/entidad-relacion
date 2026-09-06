@@ -1,6 +1,5 @@
 'use client';
 
-import { History, PanelLeft, PanelRight, X } from 'lucide-react';
 import { useRef, useState, type CSSProperties } from 'react';
 
 import { selectActiveDiagram, selectCanRedo, selectCanUndo } from '@/state/diagram/selectors';
@@ -17,19 +16,26 @@ import { KeyboardShortcutsDialog } from './header/KeyboardShortcutsDialog';
 import { useDiagramFile } from './hooks/useDiagramFile';
 import { useEditorPanels } from './hooks/useEditorPanels';
 import { EditorRightPanel, type RightPanelTab } from './right-panel/EditorRightPanel';
+import { MobileToolbar } from './toolbar/MobileToolbar';
 import { Toolbar } from './toolbar/Toolbar';
 
-type MobilePanel = 'toolbar' | 'inspector' | null;
+type MobilePanel = 'inspector' | null;
 
 export function Editor() {
   const diagram = useDiagramStore(selectActiveDiagram);
+
   const setDiagramName = useDiagramStore((state) => state.setDiagramName);
+
   const importDiagram = useDiagramStore((state) => state.importDiagram);
+
   const undo = useDiagramStore((state) => state.undo);
+
   const redo = useDiagramStore((state) => state.redo);
+
   const appearance = useDiagramStore((state) => state.appearance);
 
   const canUndo = useDiagramStore(selectCanUndo);
+
   const canRedo = useDiagramStore(selectCanRedo);
 
   const [activeRightPanel, setActiveRightPanel] = useState<RightPanelTab>('inspector');
@@ -69,8 +75,9 @@ export function Editor() {
     setMobilePanel('inspector');
   }
 
-  function handleToggleMobilePanel(panel: Exclude<MobilePanel, null>) {
-    setMobilePanel((currentPanel) => (currentPanel === panel ? null : panel));
+  function handleOpenMobileInspector() {
+    setActiveRightPanel('inspector');
+    setMobilePanel('inspector');
   }
 
   function handleCloseMobilePanel() {
@@ -88,6 +95,7 @@ export function Editor() {
           onUndo={undo}
           onRedo={redo}
           onOpenHistory={handleOpenHistory}
+          onOpenMobileHistory={handleOpenMobileHistory}
           onOpenShortcuts={() => {
             setIsShortcutsOpen(true);
           }}
@@ -101,7 +109,7 @@ export function Editor() {
           }}
         />
 
-        <main className="relative h-full min-h-0 w-full overflow-hidden">
+        <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
           <div
             className={styles.workspace}
             style={
@@ -110,11 +118,7 @@ export function Editor() {
               } as CSSProperties
             }
           >
-            <div
-              className={styles.toolbarSlot}
-              data-desktop-open={isToolbarOpen}
-              data-mobile-open={mobilePanel === 'toolbar'}
-            >
+            <div className={styles.toolbarSlot} data-desktop-open={isToolbarOpen}>
               <Toolbar />
             </div>
 
@@ -149,50 +153,9 @@ export function Editor() {
               onToggle={toggleInspector}
             />
           </div>
-
-          <div className={styles.mobileControls}>
-            <button
-              type="button"
-              aria-label={mobilePanel === 'toolbar' ? 'Cerrar herramientas' : 'Abrir herramientas'}
-              aria-expanded={mobilePanel === 'toolbar'}
-              className={styles.mobileControlButton}
-              onClick={() => {
-                handleToggleMobilePanel('toolbar');
-              }}
-            >
-              {mobilePanel === 'toolbar' ? (
-                <X size={20} aria-hidden="true" />
-              ) : (
-                <PanelLeft size={20} aria-hidden="true" />
-              )}
-            </button>
-
-            <button
-              type="button"
-              aria-label="Abrir historial"
-              className={styles.mobileControlButton}
-              onClick={handleOpenMobileHistory}
-            >
-              <History size={20} aria-hidden="true" />
-            </button>
-
-            <button
-              type="button"
-              aria-label={mobilePanel === 'inspector' ? 'Cerrar propiedades' : 'Abrir propiedades'}
-              aria-expanded={mobilePanel === 'inspector'}
-              className={styles.mobileControlButton}
-              onClick={() => {
-                handleToggleMobilePanel('inspector');
-              }}
-            >
-              {mobilePanel === 'inspector' ? (
-                <X size={20} aria-hidden="true" />
-              ) : (
-                <PanelRight size={20} aria-hidden="true" />
-              )}
-            </button>
-          </div>
         </main>
+
+        <MobileToolbar onOpenInspector={handleOpenMobileInspector} />
 
         <DocumentGallery
           isOpen={isDocumentGalleryOpen}
