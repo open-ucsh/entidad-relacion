@@ -1,4 +1,9 @@
-import type { LogicalColumn, LogicalForeignKey, LogicalTable } from '@/domain/logical/models';
+import type {
+  LogicalColumn,
+  LogicalForeignKey,
+  LogicalRelationCardinality,
+  LogicalTable,
+} from '@/domain/logical/models';
 
 import { createForeignColumnId, createForeignKeyId, toLogicalName } from './naming';
 
@@ -10,6 +15,8 @@ interface AddForeignKeyOptions {
   nullable: boolean;
   primaryKey?: boolean;
   unique?: boolean;
+  sourceCardinality?: LogicalRelationCardinality;
+  referencedCardinality?: LogicalRelationCardinality;
 }
 
 export function addForeignKey({
@@ -20,6 +27,11 @@ export function addForeignKey({
   nullable,
   primaryKey = false,
   unique = false,
+  sourceCardinality = {
+    minimum: 0,
+    maximum: 'N',
+  },
+  referencedCardinality,
 }: AddForeignKeyOptions): boolean {
   const referencedColumns = referencedTable.columns.filter((column) => column.primaryKey);
 
@@ -50,6 +62,11 @@ export function addForeignKey({
     referencedTableId: referencedTable.id,
     referencedColumnIds: referencedColumns.map((column) => column.id),
     sourceRelationshipId,
+    sourceCardinality,
+    referencedCardinality: referencedCardinality ?? {
+      minimum: nullable ? 0 : 1,
+      maximum: 1,
+    },
   };
 
   if (!targetTable.foreignKeys.some((item) => item.id === foreignKey.id)) {

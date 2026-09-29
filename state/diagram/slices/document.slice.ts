@@ -1,15 +1,13 @@
 import { createId } from '@/domain/diagram/lib/id';
+import { createLogicalWorkspace } from '@/domain/logical/factories';
 
 import type { DiagramDocument } from '../diagram-document';
-
 import { appendDiagramActivity } from '../diagram-activity';
 import { createDiagramAppearance } from '../diagram-appearance';
 import { createDiagramDocument, replaceActiveDiagram } from '../diagram-documents';
 import { createEditorResetState } from '../editor-reset-state';
 import { createDocumentHistory } from '../document-history';
-
 import type { DiagramStoreSlice, DocumentSlice } from '../diagram-store.types';
-
 import { discardEmptyDocuments, hasDiagramContent, hasDocumentCapacity } from '../document-library';
 
 export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) => {
@@ -18,6 +16,7 @@ export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) 
   return {
     diagram: initialDocument.diagram,
     appearance: initialDocument.appearance,
+    logicalWorkspace: initialDocument.logicalWorkspace,
     documents: [initialDocument],
     activeDocumentId: initialDocument.id,
 
@@ -37,9 +36,13 @@ export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) 
         }
 
         const importedAt = new Date().toISOString();
+
         const importedAppearance = {
-          elementColors: { ...appearance.elementColors },
+          elementColors: {
+            ...appearance.elementColors,
+          },
         };
+
         const importedDiagram = {
           ...diagram,
           metadata: {
@@ -59,16 +62,19 @@ export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) 
             },
           ],
         };
+
         const importedDocument: DiagramDocument = {
           id: createId('document'),
           diagram: importedDiagram,
           appearance: importedAppearance,
+          logicalWorkspace: createLogicalWorkspace(),
           history: createDocumentHistory(),
         };
 
         return {
           diagram: importedDiagram,
           appearance: importedAppearance,
+          logicalWorkspace: importedDocument.logicalWorkspace,
           documents: [...documents, importedDocument],
           activeDocumentId: importedDocument.id,
           ...createEditorResetState(),
@@ -89,6 +95,7 @@ export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) 
         return {
           diagram: document.diagram,
           appearance: document.appearance,
+          logicalWorkspace: document.logicalWorkspace,
           documents: [...documents, document],
           activeDocumentId: document.id,
           ...createEditorResetState(),
@@ -106,6 +113,7 @@ export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) 
       set((state) => ({
         diagram: document.diagram,
         appearance: document.appearance,
+        logicalWorkspace: document.logicalWorkspace,
         documents: discardEmptyDocuments(state.documents, id),
         activeDocumentId: document.id,
         ...createEditorResetState(),
@@ -127,7 +135,9 @@ export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) 
         }
 
         const createdAt = new Date().toISOString();
+
         const duplicatedName = `${source.diagram.metadata.name} copia`;
+
         const duplicatedDiagram = appendDiagramActivity(
           {
             ...source.diagram,
@@ -148,14 +158,18 @@ export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) 
           id: createId('document'),
           diagram: duplicatedDiagram,
           appearance: {
-            elementColors: { ...source.appearance.elementColors },
+            elementColors: {
+              ...source.appearance.elementColors,
+            },
           },
+          logicalWorkspace: structuredClone(source.logicalWorkspace),
           history: createDocumentHistory(),
         };
 
         return {
           diagram: duplicatedDocument.diagram,
           appearance: duplicatedDocument.appearance,
+          logicalWorkspace: duplicatedDocument.logicalWorkspace,
           documents: [...documents, duplicatedDocument],
           activeDocumentId: duplicatedDocument.id,
           ...createEditorResetState(),
@@ -166,6 +180,7 @@ export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) 
     deleteDocument: (id) => {
       set((state) => {
         const documents = discardEmptyDocuments(state.documents, id);
+
         const remainingDocuments = documents.filter((document) => document.id !== id);
 
         if (remainingDocuments.length === 0) {
@@ -174,6 +189,7 @@ export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) 
           return {
             diagram: document.diagram,
             appearance: document.appearance,
+            logicalWorkspace: document.logicalWorkspace,
             documents: [document],
             activeDocumentId: document.id,
             ...createEditorResetState(),
@@ -197,6 +213,7 @@ export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) 
           activeDocumentId: nextDocument.id,
           diagram: nextDocument.diagram,
           appearance: nextDocument.appearance,
+          logicalWorkspace: nextDocument.logicalWorkspace,
           ...createEditorResetState(),
         };
       });

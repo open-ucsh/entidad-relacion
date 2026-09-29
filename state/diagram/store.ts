@@ -3,6 +3,8 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { createId } from '@/domain/diagram/lib/id';
 import type { Diagram } from '@/domain/diagram/models';
+import { createLogicalWorkspace } from '@/domain/logical/factories';
+import type { LogicalWorkspace } from '@/domain/logical/models';
 
 import {
   createDiagramAppearance,
@@ -17,6 +19,7 @@ import { createConnectionSlice } from './slices/connection.slice';
 import { createDocumentSlice } from './slices/document.slice';
 import { createElementSlice } from './slices/element.slice';
 import { createHistorySlice } from './slices/history.slice';
+import { createLogicalSlice } from './slices/logical.slice';
 import { createSelectionSlice } from './slices/selection.slice';
 
 const VALID_ELEMENT_COLORS = new Set<ElementColor>([
@@ -31,9 +34,14 @@ const VALID_ELEMENT_COLORS = new Set<ElementColor>([
 interface PersistedDocumentLibrary {
   diagram: Diagram;
   appearance: DiagramAppearance;
+  logicalWorkspace: LogicalWorkspace;
   documents: DiagramDocument[];
   activeDocumentId: string;
 }
+
+type LegacyDiagramDocument = Omit<DiagramDocument, 'logicalWorkspace'> & {
+  logicalWorkspace?: LogicalWorkspace;
+};
 
 function clearDocumentHistory(document: DiagramDocument): DiagramDocument {
   return {
@@ -48,7 +56,12 @@ function migrateLegacyDiagram(diagram: Diagram): {
 } {
   const elementColors: Record<string, ElementColor> = {};
 
-  const collectColors = (elements: Array<{ id: string; color?: unknown }>) => {
+  const collectColors = (
+    elements: Array<{
+      id: string;
+      color?: unknown;
+    }>,
+  ) => {
     elements.forEach((element) => {
       if (
         typeof element.color === 'string' &&
@@ -87,20 +100,24 @@ function migrateLegacyDiagram(diagram: Diagram): {
 
 function migratePersistedState(persistedState: unknown, version: number): PersistedDocumentLibrary {
   const previousState = persistedState as Partial<PersistedDocumentLibrary>;
+
   let migratedState: PersistedDocumentLibrary;
 
   if (version < 2 && previousState.diagram) {
     const migratedDiagram = migrateLegacyDiagram(previousState.diagram);
+
     const migratedDocument: DiagramDocument = {
       id: createId('document'),
       diagram: migratedDiagram.diagram,
       appearance: migratedDiagram.appearance,
+      logicalWorkspace: createLogicalWorkspace(),
       history: createDocumentHistory(),
     };
 
     migratedState = {
       diagram: migratedDocument.diagram,
       appearance: migratedDocument.appearance,
+      logicalWorkspace: migratedDocument.logicalWorkspace,
       documents: [migratedDocument],
       activeDocumentId: migratedDocument.id,
     };
@@ -155,6 +172,7 @@ function migratePersistedState(persistedState: unknown, version: number): Persis
 
   if (version < 6) {
     const documents = getStoredDocuments(migratedState.documents).map(clearDocumentHistory);
+
     const activeDocument =
       documents.find((document) => document.id === migratedState.activeDocumentId) ?? documents[0];
 
@@ -164,6 +182,26 @@ function migratePersistedState(persistedState: unknown, version: number): Persis
       appearance: activeDocument?.appearance ?? migratedState.appearance,
       documents,
       activeDocumentId: activeDocument?.id ?? '',
+    };
+  }
+
+  if (version < 7) {
+    const legacyDocuments = migratedState.documents as LegacyDiagramDocument[];
+
+    const documents: DiagramDocument[] = legacyDocuments.map((document) => ({
+      ...document,
+      logicalWorkspace: document.logicalWorkspace ?? createLogicalWorkspace(),
+      history: createDocumentHistory(),
+    }));
+
+    const activeDocument =
+      documents.find((document) => document.id === migratedState.activeDocumentId) ?? documents[0];
+
+    migratedState = {
+      ...migratedState,
+      documents,
+      logicalWorkspace: activeDocument?.logicalWorkspace ?? createLogicalWorkspace(),
+      activeDocumentId: activeDocument?.id ?? migratedState.activeDocumentId,
     };
   }
 
@@ -177,28 +215,37 @@ export const useDiagramStore = create<DiagramState>()(
       ...createSelectionSlice(...store),
       ...createElementSlice(...store),
       ...createConnectionSlice(...store),
+      ...createLogicalSlice(...store),
       ...createHistorySlice(...store),
     }),
     {
       name: 'er-designer-documents',
-      version: 6,
+      version: 7,
+
       storage: createJSONStorage(() => localStorage),
+
       partialize: (state) => {
         const documents = getStoredDocuments(state.documents).map(clearDocumentHistory);
+
         const activeDocument =
           documents.find((document) => document.id === state.activeDocumentId) ?? documents[0];
 
         return {
           diagram: activeDocument?.diagram ?? state.diagram,
           appearance: activeDocument?.appearance ?? state.appearance,
+          logicalWorkspace: activeDocument?.logicalWorkspace ?? state.logicalWorkspace,
           documents,
           activeDocumentId: activeDocument?.id ?? '',
         };
       },
+
       migrate: migratePersistedState,
+
       merge: (persistedState, currentState) => {
         const persisted = persistedState as Partial<PersistedDocumentLibrary>;
+
         const documents = persisted.documents ?? [];
+
         const activeDocument =
           documents.find((document) => document.id === persisted.activeDocumentId) ?? documents[0];
 
@@ -211,6 +258,7 @@ export const useDiagramStore = create<DiagramState>()(
           ...persisted,
           diagram: activeDocument.diagram,
           appearance: activeDocument.appearance,
+          logicalWorkspace: activeDocument.logicalWorkspace,
           documents,
           activeDocumentId: activeDocument.id,
         };

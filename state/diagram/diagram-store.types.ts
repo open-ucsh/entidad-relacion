@@ -13,6 +13,8 @@ import type {
   Tool,
 } from '@/domain/diagram/models';
 
+import type { LogicalColumn, LogicalTable, LogicalWorkspace } from '@/domain/logical/models';
+
 import type { DiagramAppearance, ElementColor } from './diagram-appearance';
 import type { DiagramDocument, DiagramDocumentSnapshot } from './diagram-document';
 
@@ -29,6 +31,7 @@ export interface CanvasFocusRequest {
 export interface DocumentSlice {
   diagram: Diagram;
   appearance: DiagramAppearance;
+  logicalWorkspace: LogicalWorkspace;
   documents: DiagramDocument[];
   activeDocumentId: string;
 
@@ -100,6 +103,21 @@ export interface ConnectionSlice {
   addRelationshipToConnection: (relationship: Relationship, connectionId: string) => boolean;
 }
 
+export interface LogicalSlice {
+  generateLogicalModel: () => void;
+  createManualLogicalModel: () => void;
+
+  addLogicalTable: (name?: string) => void;
+  removeLogicalTable: (tableId: string) => void;
+  renameLogicalTable: (tableId: string, name: string) => void;
+
+  addLogicalColumn: (tableId: string, name?: string) => void;
+  updateLogicalColumn: (tableId: string, columnId: string, updates: Partial<LogicalColumn>) => void;
+  removeLogicalColumn: (tableId: string, columnId: string) => void;
+
+  replaceLogicalTable: (tableId: string, table: LogicalTable) => void;
+}
+
 export interface HistorySlice {
   pendingHistorySnapshot: DiagramDocumentSnapshot | null;
 
@@ -121,6 +139,7 @@ export type DiagramState = DocumentSlice &
   SelectionSlice &
   ElementSlice &
   ConnectionSlice &
+  LogicalSlice &
   HistorySlice;
 
 export type DiagramStoreSlice<T> = StateCreator<DiagramState, [], [], T>;

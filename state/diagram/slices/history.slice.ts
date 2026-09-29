@@ -1,9 +1,6 @@
 import { appendDiagramActivity } from '../diagram-activity';
-
 import { getActiveDocument, replaceActiveDiagram } from '../diagram-documents';
-
 import { createDocumentSnapshot, pushUndoSnapshot } from '../document-history';
-
 import type { DiagramStoreSlice, HistorySlice } from '../diagram-store.types';
 
 export const createHistorySlice: DiagramStoreSlice<HistorySlice> = (set) => ({
@@ -16,7 +13,11 @@ export const createHistorySlice: DiagramStoreSlice<HistorySlice> = (set) => ({
       }
 
       return {
-        pendingHistorySnapshot: createDocumentSnapshot(state.diagram, state.appearance),
+        pendingHistorySnapshot: createDocumentSnapshot(
+          state.diagram,
+          state.appearance,
+          state.logicalWorkspace,
+        ),
       };
     });
   },
@@ -24,7 +25,6 @@ export const createHistorySlice: DiagramStoreSlice<HistorySlice> = (set) => ({
   completeHistoryTransaction: (type, details, options = {}) => {
     set((state) => {
       const snapshot = state.pendingHistorySnapshot;
-
       const activeDocument = getActiveDocument(state);
 
       if (!snapshot || !activeDocument) {
@@ -63,7 +63,6 @@ export const createHistorySlice: DiagramStoreSlice<HistorySlice> = (set) => ({
   undo: () => {
     set((state) => {
       const activeDocument = getActiveDocument(state);
-
       const previousSnapshot = activeDocument?.history.undoStack.at(-1);
 
       if (!activeDocument || !previousSnapshot) {
@@ -73,10 +72,11 @@ export const createHistorySlice: DiagramStoreSlice<HistorySlice> = (set) => ({
       return {
         ...replaceActiveDiagram(state, previousSnapshot.diagram, {
           appearance: previousSnapshot.appearance,
+          logicalWorkspace: previousSnapshot.logicalWorkspace,
           history: {
             undoStack: activeDocument.history.undoStack.slice(0, -1),
             redoStack: [
-              createDocumentSnapshot(state.diagram, state.appearance),
+              createDocumentSnapshot(state.diagram, state.appearance, state.logicalWorkspace),
               ...activeDocument.history.redoStack,
             ],
           },
@@ -92,7 +92,6 @@ export const createHistorySlice: DiagramStoreSlice<HistorySlice> = (set) => ({
   redo: () => {
     set((state) => {
       const activeDocument = getActiveDocument(state);
-
       const nextSnapshot = activeDocument?.history.redoStack.at(0);
 
       if (!activeDocument || !nextSnapshot) {
@@ -102,10 +101,11 @@ export const createHistorySlice: DiagramStoreSlice<HistorySlice> = (set) => ({
       return {
         ...replaceActiveDiagram(state, nextSnapshot.diagram, {
           appearance: nextSnapshot.appearance,
+          logicalWorkspace: nextSnapshot.logicalWorkspace,
           history: {
             undoStack: [
               ...activeDocument.history.undoStack,
-              createDocumentSnapshot(state.diagram, state.appearance),
+              createDocumentSnapshot(state.diagram, state.appearance, state.logicalWorkspace),
             ],
             redoStack: activeDocument.history.redoStack.slice(1),
           },
