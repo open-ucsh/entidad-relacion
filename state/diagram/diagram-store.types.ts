@@ -13,7 +13,12 @@ import type {
   Tool,
 } from '@/domain/diagram/models';
 
-import type { LogicalColumn, LogicalTable, LogicalWorkspace } from '@/domain/logical/models';
+import type {
+  LogicalColumn,
+  LogicalTable,
+  LogicalTablePosition,
+  LogicalWorkspace,
+} from '@/domain/logical/models';
 
 import type { DiagramAppearance, ElementColor } from './diagram-appearance';
 import type { DiagramDocument, DiagramDocumentSnapshot } from './diagram-document';
@@ -110,6 +115,7 @@ export interface LogicalSlice {
   addLogicalTable: (name?: string) => void;
   removeLogicalTable: (tableId: string) => void;
   renameLogicalTable: (tableId: string, name: string) => void;
+  moveLogicalTable: (tableId: string, position: LogicalTablePosition) => void;
 
   addLogicalColumn: (tableId: string, name?: string) => void;
   updateLogicalColumn: (tableId: string, columnId: string, updates: Partial<LogicalColumn>) => void;

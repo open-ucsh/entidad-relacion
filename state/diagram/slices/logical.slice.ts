@@ -1,10 +1,19 @@
-import { createId } from '@/domain/diagram/lib/id';
 import { createLogicalWorkspace } from '@/domain/logical/factories';
-import type { LogicalColumn, LogicalTable } from '@/domain/logical/models';
+
+import type {
+  LogicalColumn,
+  LogicalTable,
+  LogicalTablePosition,
+  LogicalWorkspace,
+} from '@/domain/logical/models';
 import { transformDiagramToLogicalModel } from '@/domain/logical/transform';
 
 import { replaceActiveDiagram } from '../diagram-documents';
 import type { DiagramStoreSlice, LogicalSlice } from '../diagram-store.types';
+import { createId } from '@/domain/diagram/lib/id';
+
+const NEW_TABLE_OFFSET = 32;
+const NEW_TABLE_WRAP = 5;
 
 function createLogicalTable(name: string): LogicalTable {
   const id = createId('logical-table');
@@ -30,6 +39,15 @@ function createLogicalColumn(name: string): LogicalColumn {
   };
 }
 
+function getNewTablePosition(workspace: LogicalWorkspace): LogicalTablePosition {
+  const index = workspace.model.tables.length;
+
+  return {
+    x: 40 + (index % NEW_TABLE_WRAP) * (288 + NEW_TABLE_OFFSET),
+    y: 40 + Math.floor(index / NEW_TABLE_WRAP) * (220 + NEW_TABLE_OFFSET),
+  };
+}
+
 export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
   generateLogicalModel: () => {
     set((state) => {
@@ -52,13 +70,18 @@ export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
   addLogicalTable: (name = 'nueva_tabla') => {
     set((state) => {
       const table = createLogicalTable(name);
+      const position = getNewTablePosition(state.logicalWorkspace);
 
-      const logicalWorkspace = {
-        origin: 'manual' as const,
+      const logicalWorkspace: LogicalWorkspace = {
+        origin: 'manual',
         model: {
           ...state.logicalWorkspace.model,
           diagnostics: [],
           tables: [...state.logicalWorkspace.model.tables, table],
+        },
+        positions: {
+          ...state.logicalWorkspace.positions,
+          [table.id]: position,
         },
       };
 
@@ -79,6 +102,10 @@ export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
           ),
         }));
 
+      const positions = Object.fromEntries(
+        Object.entries(state.logicalWorkspace.positions).filter(([id]) => id !== tableId),
+      );
+
       return replaceActiveDiagram(state, state.diagram, {
         logicalWorkspace: {
           origin: 'manual',
@@ -86,6 +113,7 @@ export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
             tables,
             diagnostics: [],
           },
+          positions,
         },
       });
     });
@@ -101,6 +129,7 @@ export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
     set((state) =>
       replaceActiveDiagram(state, state.diagram, {
         logicalWorkspace: {
+          ...state.logicalWorkspace,
           origin: 'manual',
           model: {
             ...state.logicalWorkspace.model,
@@ -119,12 +148,28 @@ export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
     );
   },
 
+  moveLogicalTable: (tableId, position) => {
+    set((state) =>
+      replaceActiveDiagram(state, state.diagram, {
+        logicalWorkspace: {
+          ...state.logicalWorkspace,
+          positions: {
+            ...state.logicalWorkspace.positions,
+            [tableId]: position,
+          },
+        },
+        recordHistory: false,
+      }),
+    );
+  },
+
   addLogicalColumn: (tableId, name = 'nueva_columna') => {
     set((state) => {
       const column = createLogicalColumn(name);
 
       return replaceActiveDiagram(state, state.diagram, {
         logicalWorkspace: {
+          ...state.logicalWorkspace,
           origin: 'manual',
           model: {
             ...state.logicalWorkspace.model,
@@ -147,6 +192,7 @@ export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
     set((state) =>
       replaceActiveDiagram(state, state.diagram, {
         logicalWorkspace: {
+          ...state.logicalWorkspace,
           origin: 'manual',
           model: {
             ...state.logicalWorkspace.model,
@@ -176,6 +222,7 @@ export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
     set((state) =>
       replaceActiveDiagram(state, state.diagram, {
         logicalWorkspace: {
+          ...state.logicalWorkspace,
           origin: 'manual',
           model: {
             ...state.logicalWorkspace.model,
@@ -203,6 +250,7 @@ export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
     set((state) =>
       replaceActiveDiagram(state, state.diagram, {
         logicalWorkspace: {
+          ...state.logicalWorkspace,
           origin: 'manual',
           model: {
             ...state.logicalWorkspace.model,

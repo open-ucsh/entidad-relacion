@@ -112,11 +112,13 @@ export function Editor() {
             }
           >
             <div className={styles.toolbarSlot} data-desktop-open={isToolbarOpen}>
-              <Toolbar />
+              <Toolbar modelView={modelView} />
             </div>
 
             <div className={styles.canvasSlot}>
-              <ModelViewSwitcher value={modelView} onChange={setModelView} />
+              <div className={styles.modelViewSwitcher}>
+                <ModelViewSwitcher value={modelView} onChange={setModelView} />
+              </div>
 
               {modelView === 'conceptual' ? (
                 <Canvas diagram={diagram} svgRef={svgRef} />

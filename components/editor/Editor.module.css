@@ -88,6 +88,19 @@
   }
 }
 
+.modelViewSwitcher {
+  position: absolute;
+  z-index: 60;
+  top: 0;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+}
+
+.modelViewSwitcher > * {
+  pointer-events: auto;
+}
+
 @media (min-width: 1024px) {
   .toolbarSlot[data-desktop-open='false'],
   .rightPanelSlot[data-desktop-open='false'] {
