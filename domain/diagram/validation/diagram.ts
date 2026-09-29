@@ -6,6 +6,7 @@ import type {
   DiagramActivityType,
   DiagramMetadata,
   Entity,
+  Isa,
   Point,
   Relationship,
 } from '@/domain/diagram/models';
@@ -75,6 +76,10 @@ function isAttribute(value: unknown): value is Attribute {
   );
 }
 
+function isIsa(value: unknown): value is Isa {
+  return hasBaseElementFields(value) && value.type === 'isa';
+}
+
 function isConnection(value: unknown): value is Connection {
   return (
     isRecord(value) &&
@@ -83,7 +88,8 @@ function isConnection(value: unknown): value is Connection {
     isString(value.fromId) &&
     isString(value.toId) &&
     (value.minimum === 'unspecified' || value.minimum === 0 || value.minimum === 1) &&
-    (value.maximum === 'unspecified' || value.maximum === 1 || value.maximum === 'N')
+    (value.maximum === 'unspecified' || value.maximum === 1 || value.maximum === 'N') &&
+    (value.isaRole === 'none' || value.isaRole === 'supertype' || value.isaRole === 'subtype')
   );
 }
 
@@ -128,18 +134,22 @@ function hasUniqueIds(items: Array<{ id: string }>): boolean {
 }
 
 function hasValidConnections(
-  elements: Array<Entity | Relationship | Attribute>,
+  elements: Array<Entity | Relationship | Attribute | Isa>,
   connections: Connection[],
 ): boolean {
-  const elementIds = new Set(elements.map((element) => element.id));
+  const elementById = new Map(elements.map((element) => [element.id, element]));
   const connectionKeys = new Set<string>();
+  const isaSupertypeIds = new Set<string>();
 
   for (const connection of connections) {
-    if (
-      connection.fromId === connection.toId ||
-      !elementIds.has(connection.fromId) ||
-      !elementIds.has(connection.toId)
-    ) {
+    if (connection.fromId === connection.toId) {
+      return false;
+    }
+
+    const source = elementById.get(connection.fromId);
+    const target = elementById.get(connection.toId);
+
+    if (!source || !target) {
       return false;
     }
 
@@ -150,6 +160,48 @@ function hasValidConnections(
     }
 
     connectionKeys.add(connectionKey);
+
+    const isEntityRelationship =
+      (source.type === 'entity' && target.type === 'relationship') ||
+      (source.type === 'relationship' && target.type === 'entity');
+
+    const isAttributeOwner =
+      (source.type === 'attribute' &&
+        (target.type === 'entity' || target.type === 'relationship')) ||
+      (target.type === 'attribute' && (source.type === 'entity' || source.type === 'relationship'));
+
+    const isSupertypeConnection = source.type === 'entity' && target.type === 'isa';
+    const isSubtypeConnection = source.type === 'isa' && target.type === 'entity';
+
+    if (
+      !isEntityRelationship &&
+      !isAttributeOwner &&
+      !isSupertypeConnection &&
+      !isSubtypeConnection
+    ) {
+      return false;
+    }
+
+    if (isSupertypeConnection) {
+      if (connection.isaRole !== 'supertype' || isaSupertypeIds.has(target.id)) {
+        return false;
+      }
+
+      isaSupertypeIds.add(target.id);
+      continue;
+    }
+
+    if (isSubtypeConnection) {
+      if (connection.isaRole !== 'subtype') {
+        return false;
+      }
+
+      continue;
+    }
+
+    if (connection.isaRole !== 'none') {
+      return false;
+    }
   }
 
   return true;
@@ -160,25 +212,27 @@ export function isValidDiagram(value: unknown): value is Diagram {
     return false;
   }
 
-  const { entities, relationships, attributes, connections, metadata, activity } = value;
+  const { entities, relationships, attributes, isas, connections, metadata, activity } = value;
 
   if (
     !isUnknownArray(entities) ||
     !isUnknownArray(relationships) ||
     !isUnknownArray(attributes) ||
+    !isUnknownArray(isas) ||
     !isUnknownArray(connections) ||
     !isUnknownArray(activity) ||
     !isDiagramMetadata(metadata) ||
     !entities.every(isEntity) ||
     !relationships.every(isRelationship) ||
     !attributes.every(isAttribute) ||
+    !isas.every(isIsa) ||
     !connections.every(isConnection) ||
     !activity.every(isDiagramActivity)
   ) {
     return false;
   }
 
-  const elements = [...entities, ...relationships, ...attributes];
+  const elements = [...entities, ...relationships, ...attributes, ...isas];
 
   return (
     hasUniqueIds(elements) &&

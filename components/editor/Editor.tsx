@@ -15,6 +15,8 @@ import { Header } from './header/Header';
 import { KeyboardShortcutsDialog } from './header/KeyboardShortcutsDialog';
 import { useDiagramFile } from './hooks/useDiagramFile';
 import { useEditorPanels } from './hooks/useEditorPanels';
+import { LogicalModelView } from './logical/LogicalModelView';
+import { ModelViewSwitcher, type ModelView } from './logical/ModelViewSwitcher';
 import { EditorRightPanel, type RightPanelTab } from './right-panel/EditorRightPanel';
 import { MobileToolbar } from './toolbar/MobileToolbar';
 import { Toolbar } from './toolbar/Toolbar';
@@ -23,27 +25,18 @@ type MobilePanel = 'inspector' | null;
 
 export function Editor() {
   const diagram = useDiagramStore(selectActiveDiagram);
-
   const setDiagramName = useDiagramStore((state) => state.setDiagramName);
-
   const importDiagram = useDiagramStore((state) => state.importDiagram);
-
   const undo = useDiagramStore((state) => state.undo);
-
   const redo = useDiagramStore((state) => state.redo);
-
   const appearance = useDiagramStore((state) => state.appearance);
-
   const canUndo = useDiagramStore(selectCanUndo);
-
   const canRedo = useDiagramStore(selectCanRedo);
 
   const [activeRightPanel, setActiveRightPanel] = useState<RightPanelTab>('inspector');
-
   const [mobilePanel, setMobilePanel] = useState<MobilePanel>(null);
-
+  const [modelView, setModelView] = useState<ModelView>('conceptual');
   const [isDocumentGalleryOpen, setIsDocumentGalleryOpen] = useState(false);
-
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
 
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -123,7 +116,13 @@ export function Editor() {
             </div>
 
             <div className={styles.canvasSlot}>
-              <Canvas diagram={diagram} svgRef={svgRef} />
+              <ModelViewSwitcher value={modelView} onChange={setModelView} />
+
+              {modelView === 'conceptual' ? (
+                <Canvas diagram={diagram} svgRef={svgRef} />
+              ) : (
+                <LogicalModelView diagram={diagram} />
+              )}
             </div>
 
             <div
