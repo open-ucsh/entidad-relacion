@@ -5,10 +5,14 @@ import type { DiagramDocument } from '../diagram-document';
 import { appendDiagramActivity } from '../diagram-activity';
 import { createDiagramAppearance } from '../diagram-appearance';
 import { createDiagramDocument, replaceActiveDiagram } from '../diagram-documents';
-import { createEditorResetState } from '../editor-reset-state';
 import { createDocumentHistory } from '../document-history';
 import type { DiagramStoreSlice, DocumentSlice } from '../diagram-store.types';
-import { discardEmptyDocuments, hasDiagramContent, hasDocumentCapacity } from '../document-library';
+import {
+  discardEmptyDocuments,
+  hasDocumentCapacity,
+  hasDocumentContent,
+} from '../document-library';
+import { createEditorResetState } from '../editor-reset-state';
 
 export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) => {
   const initialDocument = createDiagramDocument();
@@ -27,7 +31,11 @@ export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) 
       }));
     },
 
-    importDiagram: (diagram, appearance = createDiagramAppearance()) => {
+    importDiagram: (
+      diagram,
+      appearance = createDiagramAppearance(),
+      logicalWorkspace = createLogicalWorkspace(),
+    ) => {
       set((state) => {
         const documents = discardEmptyDocuments(state.documents);
 
@@ -63,11 +71,13 @@ export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) 
           ],
         };
 
+        const importedLogicalWorkspace = structuredClone(logicalWorkspace);
+
         const importedDocument: DiagramDocument = {
           id: createId('document'),
           diagram: importedDiagram,
           appearance: importedAppearance,
-          logicalWorkspace: createLogicalWorkspace(),
+          logicalWorkspace: importedLogicalWorkspace,
           history: createDocumentHistory(),
         };
 
@@ -123,7 +133,7 @@ export const createDocumentSlice: DiagramStoreSlice<DocumentSlice> = (set, get) 
     duplicateDocument: (id) => {
       const source = get().documents.find((document) => document.id === id);
 
-      if (!source || !hasDiagramContent(source.diagram)) {
+      if (!source || !hasDocumentContent(source)) {
         return;
       }
 

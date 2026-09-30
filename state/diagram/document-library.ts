@@ -9,8 +9,12 @@ export function hasDiagramContent(diagram: Diagram): boolean {
   return getDiagramElements(diagram).length > 0;
 }
 
+export function hasDocumentContent(document: DiagramDocument): boolean {
+  return hasDiagramContent(document.diagram) || document.logicalWorkspace.model.tables.length > 0;
+}
+
 export function getStoredDocuments(documents: DiagramDocument[]): DiagramDocument[] {
-  return documents.filter((document) => hasDiagramContent(document.diagram));
+  return documents.filter(hasDocumentContent);
 }
 
 export function discardEmptyDocuments(
@@ -18,7 +22,7 @@ export function discardEmptyDocuments(
   documentIdToKeep?: string,
 ): DiagramDocument[] {
   return documents.filter(
-    (document) => document.id === documentIdToKeep || hasDiagramContent(document.diagram),
+    (document) => document.id === documentIdToKeep || hasDocumentContent(document),
   );
 }
 

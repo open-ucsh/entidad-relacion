@@ -42,7 +42,11 @@ export interface DocumentSlice {
   activeDocumentId: string;
 
   setDiagram: (diagram: Diagram) => void;
-  importDiagram: (diagram: Diagram, appearance?: DiagramAppearance) => void;
+  importDiagram: (
+    diagram: Diagram,
+    appearance?: DiagramAppearance,
+    logicalWorkspace?: LogicalWorkspace,
+  ) => void;
 
   createDocument: (name?: string) => void;
   openDocument: (id: string) => void;

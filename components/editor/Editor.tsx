@@ -32,6 +32,7 @@ export function Editor() {
   const appearance = useDiagramStore((state) => state.appearance);
   const canUndo = useDiagramStore(selectCanUndo);
   const canRedo = useDiagramStore(selectCanRedo);
+  const logicalWorkspace = useDiagramStore((state) => state.logicalWorkspace);
 
   const [activeRightPanel, setActiveRightPanel] = useState<RightPanelTab>('inspector');
   const [mobilePanel, setMobilePanel] = useState<MobilePanel>(null);
@@ -46,6 +47,7 @@ export function Editor() {
   const { exportJson, importJson } = useDiagramFile({
     diagram,
     appearance,
+    logicalWorkspace,
     onImportDiagram: importDiagram,
   });
 
