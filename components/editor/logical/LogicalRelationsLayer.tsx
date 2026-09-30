@@ -2,10 +2,15 @@
 
 import { useCallback, useLayoutEffect, useState, type RefObject } from 'react';
 
-import type { LogicalRelationCardinality, LogicalTable } from '@/domain/logical/models';
+import type {
+  LogicalRelationCardinality,
+  LogicalTable,
+  LogicalTablePosition,
+} from '@/domain/logical/models';
 
 interface LogicalRelationsLayerProps {
   tables: LogicalTable[];
+  positions: Record<string, LogicalTablePosition>;
   containerRef: RefObject<HTMLDivElement | null>;
 }
 
@@ -29,10 +34,10 @@ interface TableElements {
   column: HTMLElement | null;
 }
 
-const MARK_GAP = 6;
+const MARK_GAP = 7;
 const MARK_SIZE = 6;
 const MARK_SPACING = 10;
-const CONNECTION_OFFSET = 24;
+const CONNECTION_OFFSET = 28;
 
 function escapeSelector(value: string): string {
   if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') {
@@ -149,7 +154,13 @@ function ManyMark({ point, direction }: { point: Point; direction: 1 | -1 }) {
   const endX = point.x + direction * (MARK_GAP + MARK_SPACING);
 
   return (
-    <g fill="none" stroke="var(--color-brand-primary)" strokeWidth={1.5} strokeLinecap="round">
+    <g
+      fill="none"
+      stroke="var(--color-brand-primary)"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <line x1={baseX} y1={point.y} x2={endX} y2={point.y - MARK_SIZE} />
 
       <line x1={baseX} y1={point.y} x2={endX} y2={point.y} />
@@ -190,7 +201,11 @@ function CardinalityMark({
   );
 }
 
-export function LogicalRelationsLayer({ tables, containerRef }: LogicalRelationsLayerProps) {
+export function LogicalRelationsLayer({
+  tables,
+  positions,
+  containerRef,
+}: LogicalRelationsLayerProps) {
   const [lines, setLines] = useState<RelationLine[]>([]);
 
   const calculateLines = useCallback(() => {
@@ -212,16 +227,16 @@ export function LogicalRelationsLayer({ tables, containerRef }: LogicalRelations
           continue;
         }
 
-        const sourceColumnId = foreignKey.columnIds[0];
-
-        const referencedColumnId = foreignKey.referencedColumnIds[0];
-
-        const sourceElements = findTableElements(container, sourceTable.id, sourceColumnId);
+        const sourceElements = findTableElements(
+          container,
+          sourceTable.id,
+          foreignKey.columnIds[0],
+        );
 
         const referencedElements = findTableElements(
           container,
           referencedTable.id,
-          referencedColumnId,
+          foreignKey.referencedColumnIds[0],
         );
 
         if (!sourceElements || !referencedElements) {
@@ -267,7 +282,7 @@ export function LogicalRelationsLayer({ tables, containerRef }: LogicalRelations
     }
 
     setLines(nextLines);
-  }, [containerRef, tables]);
+  }, [containerRef, tables, positions]);
 
   useLayoutEffect(() => {
     const container = containerRef.current;
@@ -278,7 +293,21 @@ export function LogicalRelationsLayer({ tables, containerRef }: LogicalRelations
 
     const frame = requestAnimationFrame(calculateLines);
 
-    const resizeObserver = new ResizeObserver(calculateLines);
+    return () => {
+      cancelAnimationFrame(frame);
+    };
+  }, [calculateLines, containerRef, positions]);
+
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+
+    if (!container) {
+      return;
+    }
+
+    const resizeObserver = new ResizeObserver(() => {
+      calculateLines();
+    });
 
     resizeObserver.observe(container);
 
@@ -291,12 +320,11 @@ export function LogicalRelationsLayer({ tables, containerRef }: LogicalRelations
     window.addEventListener('resize', calculateLines);
 
     return () => {
-      cancelAnimationFrame(frame);
       resizeObserver.disconnect();
 
       window.removeEventListener('resize', calculateLines);
     };
-  }, [calculateLines, containerRef]);
+  }, [calculateLines, containerRef, tables]);
 
   return (
     <svg
