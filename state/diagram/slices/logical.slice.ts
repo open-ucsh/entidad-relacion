@@ -59,6 +59,31 @@ function createForeignKeyColumn(
   };
 }
 
+function removeForeignKeysReferencingTable(
+  table: LogicalTable,
+  referencedTableId: string,
+): LogicalTable {
+  const removedForeignKeys = table.foreignKeys.filter(
+    (foreignKey) => foreignKey.referencedTableId === referencedTableId,
+  );
+
+  if (removedForeignKeys.length === 0) {
+    return table;
+  }
+
+  const removedColumnIds = new Set(
+    removedForeignKeys.flatMap((foreignKey) => foreignKey.columnIds),
+  );
+
+  return {
+    ...table,
+    columns: table.columns.filter((column) => !removedColumnIds.has(column.id)),
+    foreignKeys: table.foreignKeys.filter(
+      (foreignKey) => foreignKey.referencedTableId !== referencedTableId,
+    ),
+  };
+}
+
 function getNewTablePosition(workspace: LogicalWorkspace): LogicalTablePosition {
   const index = workspace.model.tables.length;
 
@@ -115,12 +140,7 @@ export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
     set((state) => {
       const tables = state.logicalWorkspace.model.tables
         .filter((table) => table.id !== tableId)
-        .map((table) => ({
-          ...table,
-          foreignKeys: table.foreignKeys.filter(
-            (foreignKey) => foreignKey.referencedTableId !== tableId,
-          ),
-        }));
+        .map((table) => removeForeignKeysReferencingTable(table, tableId));
 
       const positions = Object.fromEntries(
         Object.entries(state.logicalWorkspace.positions).filter(([id]) => id !== tableId),
@@ -128,6 +148,7 @@ export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
 
       return replaceActiveDiagram(state, state.diagram, {
         logicalWorkspace: {
+          ...state.logicalWorkspace,
           origin: 'manual',
           model: {
             tables,
@@ -209,61 +230,155 @@ export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
   },
 
   updateLogicalColumn: (tableId, columnId, updates) => {
-    set((state) =>
-      replaceActiveDiagram(state, state.diagram, {
+    set((state) => {
+      const currentTable = state.logicalWorkspace.model.tables.find(
+        (table) => table.id === tableId,
+      );
+
+      const currentColumn = currentTable?.columns.find((column) => column.id === columnId);
+
+      if (!currentTable || !currentColumn) {
+        return state;
+      }
+
+      const nextColumn = {
+        ...currentColumn,
+        ...updates,
+      };
+
+      const primaryKeyRemoved = currentColumn.primaryKey && !nextColumn.primaryKey;
+
+      let tables = state.logicalWorkspace.model.tables.map((table) =>
+        table.id === tableId
+          ? {
+              ...table,
+              columns: table.columns.map((column) =>
+                column.id === columnId ? nextColumn : column,
+              ),
+            }
+          : table,
+      );
+
+      if (primaryKeyRemoved) {
+        tables = tables.map((table) => {
+          const affectedForeignKeys = table.foreignKeys.filter(
+            (foreignKey) =>
+              foreignKey.referencedTableId === tableId &&
+              foreignKey.referencedColumnIds.includes(columnId),
+          );
+
+          if (affectedForeignKeys.length === 0) {
+            return table;
+          }
+
+          const foreignColumnIds = new Set(
+            affectedForeignKeys.flatMap((foreignKey) => foreignKey.columnIds),
+          );
+
+          const affectedForeignKeyIds = new Set(
+            affectedForeignKeys.map((foreignKey) => foreignKey.id),
+          );
+
+          return {
+            ...table,
+            columns: table.columns.filter((column) => !foreignColumnIds.has(column.id)),
+            foreignKeys: table.foreignKeys.filter(
+              (foreignKey) => !affectedForeignKeyIds.has(foreignKey.id),
+            ),
+          };
+        });
+      }
+
+      return replaceActiveDiagram(state, state.diagram, {
         logicalWorkspace: {
           ...state.logicalWorkspace,
           origin: 'manual',
           model: {
-            ...state.logicalWorkspace.model,
+            tables,
             diagnostics: [],
-            tables: state.logicalWorkspace.model.tables.map((table) =>
-              table.id === tableId
-                ? {
-                    ...table,
-                    columns: table.columns.map((column) =>
-                      column.id === columnId
-                        ? {
-                            ...column,
-                            ...updates,
-                          }
-                        : column,
-                    ),
-                  }
-                : table,
-            ),
           },
         },
-      }),
-    );
+      });
+    });
   },
 
   removeLogicalColumn: (tableId, columnId) => {
-    set((state) =>
-      replaceActiveDiagram(state, state.diagram, {
+    set((state) => {
+      const sourceTable = state.logicalWorkspace.model.tables.find((table) => table.id === tableId);
+
+      const removedColumn = sourceTable?.columns.find((column) => column.id === columnId);
+
+      if (!sourceTable || !removedColumn) {
+        return state;
+      }
+
+      let tables = state.logicalWorkspace.model.tables.map((table) => {
+        if (table.id !== tableId) {
+          return table;
+        }
+
+        const removedForeignKeys = table.foreignKeys.filter((foreignKey) =>
+          foreignKey.columnIds.includes(columnId),
+        );
+
+        const removedForeignKeyIds = new Set(removedForeignKeys.map((foreignKey) => foreignKey.id));
+
+        const foreignColumnIds = new Set(
+          removedForeignKeys.flatMap((foreignKey) => foreignKey.columnIds),
+        );
+
+        foreignColumnIds.add(columnId);
+
+        return {
+          ...table,
+          columns: table.columns.filter((column) => !foreignColumnIds.has(column.id)),
+          foreignKeys: table.foreignKeys.filter(
+            (foreignKey) => !removedForeignKeyIds.has(foreignKey.id),
+          ),
+        };
+      });
+
+      if (removedColumn.primaryKey) {
+        tables = tables.map((table) => {
+          const affectedForeignKeys = table.foreignKeys.filter(
+            (foreignKey) =>
+              foreignKey.referencedTableId === tableId &&
+              foreignKey.referencedColumnIds.includes(columnId),
+          );
+
+          if (affectedForeignKeys.length === 0) {
+            return table;
+          }
+
+          const affectedForeignKeyIds = new Set(
+            affectedForeignKeys.map((foreignKey) => foreignKey.id),
+          );
+
+          const foreignColumnIds = new Set(
+            affectedForeignKeys.flatMap((foreignKey) => foreignKey.columnIds),
+          );
+
+          return {
+            ...table,
+            columns: table.columns.filter((column) => !foreignColumnIds.has(column.id)),
+            foreignKeys: table.foreignKeys.filter(
+              (foreignKey) => !affectedForeignKeyIds.has(foreignKey.id),
+            ),
+          };
+        });
+      }
+
+      return replaceActiveDiagram(state, state.diagram, {
         logicalWorkspace: {
           ...state.logicalWorkspace,
           origin: 'manual',
           model: {
-            ...state.logicalWorkspace.model,
+            tables,
             diagnostics: [],
-            tables: state.logicalWorkspace.model.tables.map((table) => {
-              if (table.id !== tableId) {
-                return table;
-              }
-
-              return {
-                ...table,
-                columns: table.columns.filter((column) => column.id !== columnId),
-                foreignKeys: table.foreignKeys.filter(
-                  (foreignKey) => !foreignKey.columnIds.includes(columnId),
-                ),
-              };
-            }),
           },
         },
-      }),
-    );
+      });
+    });
   },
 
   addLogicalForeignKey: (sourceTableId, referencedTableId) => {
@@ -287,14 +402,6 @@ export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
       const referencedColumns = referencedTable.columns.filter((column) => column.primaryKey);
 
       if (referencedColumns.length === 0) {
-        return state;
-      }
-
-      const alreadyExists = sourceTable.foreignKeys.some(
-        (foreignKey) => foreignKey.referencedTableId === referencedTableId,
-      );
-
-      if (alreadyExists) {
         return state;
       }
 

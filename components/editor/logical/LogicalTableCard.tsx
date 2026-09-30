@@ -121,15 +121,9 @@ export function LogicalTableCard({ table, position }: LogicalTableCardProps) {
     table.foreignKeys.flatMap((foreignKey) => foreignKey.columnIds),
   );
 
-  const relatedTableIds = new Set(
-    table.foreignKeys.map((foreignKey) => foreignKey.referencedTableId),
-  );
-
   const availableReferencedTables = tables.filter(
     (candidate) =>
-      candidate.id !== table.id &&
-      candidate.columns.some((column) => column.primaryKey) &&
-      !relatedTableIds.has(candidate.id),
+      candidate.id !== table.id && candidate.columns.some((column) => column.primaryKey),
   );
 
   function commitTableName() {
