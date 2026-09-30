@@ -19,6 +19,13 @@ interface AddForeignKeyOptions {
   referencedCardinality?: LogicalRelationCardinality;
 }
 
+function createForeignColumnName(
+  referencedTable: LogicalTable,
+  referencedColumn: LogicalColumn,
+): string {
+  return `${toLogicalName(referencedTable.name)}_${toLogicalName(referencedColumn.name)}`;
+}
+
 export function addForeignKey({
   sourceId,
   sourceRelationshipId,
@@ -31,7 +38,10 @@ export function addForeignKey({
     minimum: 0,
     maximum: 'N',
   },
-  referencedCardinality,
+  referencedCardinality = {
+    minimum: nullable ? 0 : 1,
+    maximum: 1,
+  },
 }: AddForeignKeyOptions): boolean {
   const referencedColumns = referencedTable.columns.filter((column) => column.primaryKey);
 
@@ -41,7 +51,7 @@ export function addForeignKey({
 
   const foreignColumns: LogicalColumn[] = referencedColumns.map((column) => ({
     id: createForeignColumnId(sourceId, column.id),
-    name: `${toLogicalName(referencedTable.name)}_${toLogicalName(column.name)}`,
+    name: createForeignColumnName(referencedTable, column),
     primaryKey,
     nullable: primaryKey ? false : nullable,
     unique,
@@ -63,10 +73,7 @@ export function addForeignKey({
     referencedColumnIds: referencedColumns.map((column) => column.id),
     sourceRelationshipId,
     sourceCardinality,
-    referencedCardinality: referencedCardinality ?? {
-      minimum: nullable ? 0 : 1,
-      maximum: 1,
-    },
+    referencedCardinality,
   };
 
   if (!targetTable.foreignKeys.some((item) => item.id === foreignKey.id)) {

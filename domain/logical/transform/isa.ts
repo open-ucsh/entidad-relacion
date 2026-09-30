@@ -57,6 +57,16 @@ export function transformIsaHierarchies(
         targetTable: subtypeTable,
         nullable: false,
         primaryKey: true,
+
+        sourceCardinality: {
+          minimum: 1,
+          maximum: 1,
+        },
+
+        referencedCardinality: {
+          minimum: 1,
+          maximum: 1,
+        },
       });
 
       if (!inheritedKeyAdded) {

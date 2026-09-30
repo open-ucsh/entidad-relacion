@@ -52,6 +52,16 @@ export function transformMultivaluedAttributes(
         targetTable: table,
         nullable: false,
         primaryKey: true,
+
+        sourceCardinality: {
+          minimum: 0,
+          maximum: 'N',
+        },
+
+        referencedCardinality: {
+          minimum: 1,
+          maximum: 1,
+        },
       });
 
       if (!added) {

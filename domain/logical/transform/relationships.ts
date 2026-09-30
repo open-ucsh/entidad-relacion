@@ -1,5 +1,9 @@
 import type { Diagram, Relationship } from '@/domain/diagram/models';
-import type { LogicalDiagnostic, LogicalTable } from '@/domain/logical/models';
+import type {
+  LogicalDiagnostic,
+  LogicalRelationCardinality,
+  LogicalTable,
+} from '@/domain/logical/models';
 import {
   getRelationshipAttributes,
   getRelationshipParticipants,
@@ -24,6 +28,15 @@ function isBinaryRelationship(
 
 function findEntityTable(tables: LogicalTable[], entityId: string): LogicalTable | undefined {
   return tables.find((table) => table.id === createEntityTableId(entityId));
+}
+
+function getParticipantCardinality(
+  participant: RelationshipParticipant,
+): LogicalRelationCardinality {
+  return {
+    minimum: participant.connection.minimum === 1 ? 1 : 0,
+    maximum: participant.connection.maximum === 'N' ? 'N' : 1,
+  };
 }
 
 function addRelationshipAttributes(
@@ -92,6 +105,19 @@ function transformManyToMany(
       targetTable: relationshipTable,
       nullable: false,
       primaryKey: true,
+
+      /*
+       * Cada fila de la tabla intermedia pertenece
+       * exactamente a una fila de la entidad.
+       *
+       * Una fila de la entidad puede aparecer en
+       * varias filas de la tabla intermedia.
+       */
+      sourceCardinality: getParticipantCardinality(participant),
+      referencedCardinality: {
+        minimum: 1,
+        maximum: 1,
+      },
     });
 
     if (!added) {
@@ -113,6 +139,7 @@ function transformOneToMany(
   diagnostics: LogicalDiagnostic[],
 ): void {
   const oneTable = findEntityTable(tables, one.entity.id);
+
   const manyTable = findEntityTable(tables, many.entity.id);
 
   if (!oneTable || !manyTable) {
@@ -128,6 +155,10 @@ function transformOneToMany(
     targetTable: manyTable,
     nullable: identifying ? false : many.connection.minimum === 0,
     primaryKey: identifying,
+
+    sourceCardinality: getParticipantCardinality(many),
+
+    referencedCardinality: getParticipantCardinality(one),
   });
 
   if (!added) {
@@ -207,6 +238,10 @@ function transformOneToOne(
     targetTable,
     nullable: target.connection.minimum === 0,
     unique: true,
+
+    sourceCardinality: getParticipantCardinality(target),
+
+    referencedCardinality: getParticipantCardinality(referenced),
   });
 
   if (!added) {
