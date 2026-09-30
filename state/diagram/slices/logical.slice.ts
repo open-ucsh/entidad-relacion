@@ -386,6 +386,45 @@ export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
     });
   },
 
+  updateLogicalForeignKeyCardinality: (sourceTableId, foreignKeyId, side, cardinality) => {
+    set((state) =>
+      replaceActiveDiagram(state, state.diagram, {
+        logicalWorkspace: {
+          ...state.logicalWorkspace,
+          origin: 'manual',
+          model: {
+            ...state.logicalWorkspace.model,
+            diagnostics: [],
+            tables: state.logicalWorkspace.model.tables.map((table) => {
+              if (table.id !== sourceTableId) {
+                return table;
+              }
+
+              return {
+                ...table,
+                foreignKeys: table.foreignKeys.map((foreignKey) => {
+                  if (foreignKey.id !== foreignKeyId) {
+                    return foreignKey;
+                  }
+
+                  return side === 'source'
+                    ? {
+                        ...foreignKey,
+                        sourceCardinality: cardinality,
+                      }
+                    : {
+                        ...foreignKey,
+                        referencedCardinality: cardinality,
+                      };
+                }),
+              };
+            }),
+          },
+        },
+      }),
+    );
+  },
+
   replaceLogicalTable: (tableId, nextTable) => {
     set((state) =>
       replaceActiveDiagram(state, state.diagram, {

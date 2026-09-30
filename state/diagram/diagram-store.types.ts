@@ -15,6 +15,7 @@ import type {
 
 import type {
   LogicalColumn,
+  LogicalRelationCardinality,
   LogicalTable,
   LogicalTablePosition,
   LogicalWorkspace,
@@ -123,6 +124,13 @@ export interface LogicalSlice {
 
   addLogicalForeignKey: (sourceTableId: string, referencedTableId: string) => void;
   removeLogicalForeignKey: (sourceTableId: string, foreignKeyId: string) => void;
+
+  updateLogicalForeignKeyCardinality: (
+    sourceTableId: string,
+    foreignKeyId: string,
+    side: 'source' | 'referenced',
+    cardinality: LogicalRelationCardinality,
+  ) => void;
 
   replaceLogicalTable: (tableId: string, table: LogicalTable) => void;
 }

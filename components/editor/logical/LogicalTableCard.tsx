@@ -12,7 +12,11 @@ import {
 } from 'lucide-react';
 import { useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 
-import type { LogicalTable, LogicalTablePosition } from '@/domain/logical/models';
+import type {
+  LogicalRelationCardinality,
+  LogicalTable,
+  LogicalTablePosition,
+} from '@/domain/logical/models';
 import { useDiagramStore } from '@/state/diagram/store';
 
 interface LogicalTableCardProps {
@@ -28,6 +32,72 @@ interface DragState {
   startTableY: number;
 }
 
+type CardinalityValue = '0..1' | '1..1' | '0..N' | '1..N';
+
+const CARDINALITY_OPTIONS: {
+  value: CardinalityValue;
+  label: string;
+  cardinality: LogicalRelationCardinality;
+}[] = [
+  {
+    value: '0..1',
+    label: '0..1',
+    cardinality: {
+      minimum: 0,
+      maximum: 1,
+    },
+  },
+  {
+    value: '1..1',
+    label: '1..1',
+    cardinality: {
+      minimum: 1,
+      maximum: 1,
+    },
+  },
+  {
+    value: '0..N',
+    label: '0..N',
+    cardinality: {
+      minimum: 0,
+      maximum: 'N',
+    },
+  },
+  {
+    value: '1..N',
+    label: '1..N',
+    cardinality: {
+      minimum: 1,
+      maximum: 'N',
+    },
+  },
+];
+
+function getCardinalityValue(cardinality: LogicalRelationCardinality): CardinalityValue {
+  if (cardinality.minimum === 0 && cardinality.maximum === 1) {
+    return '0..1';
+  }
+
+  if (cardinality.minimum === 1 && cardinality.maximum === 1) {
+    return '1..1';
+  }
+
+  if (cardinality.minimum === 1 && cardinality.maximum === 'N') {
+    return '1..N';
+  }
+
+  return '0..N';
+}
+
+function getCardinality(value: CardinalityValue): LogicalRelationCardinality {
+  return (
+    CARDINALITY_OPTIONS.find((option) => option.value === value)?.cardinality ?? {
+      minimum: 0,
+      maximum: 'N',
+    }
+  );
+}
+
 export function LogicalTableCard({ table, position }: LogicalTableCardProps) {
   const renameLogicalTable = useDiagramStore((state) => state.renameLogicalTable);
   const removeLogicalTable = useDiagramStore((state) => state.removeLogicalTable);
@@ -37,6 +107,9 @@ export function LogicalTableCard({ table, position }: LogicalTableCardProps) {
   const moveLogicalTable = useDiagramStore((state) => state.moveLogicalTable);
   const addLogicalForeignKey = useDiagramStore((state) => state.addLogicalForeignKey);
   const removeLogicalForeignKey = useDiagramStore((state) => state.removeLogicalForeignKey);
+  const updateLogicalForeignKeyCardinality = useDiagramStore(
+    (state) => state.updateLogicalForeignKeyCardinality,
+  );
   const tables = useDiagramStore((state) => state.logicalWorkspace.model.tables);
 
   const [tableName, setTableName] = useState(table.name);
@@ -319,14 +392,14 @@ export function LogicalTableCard({ table, position }: LogicalTableCardProps) {
         </div>
 
         {showRelations && (
-          <div className="mt-2 space-y-2 border-t border-border pt-2">
+          <div className="mt-2 space-y-3 border-t border-border pt-2">
             {table.foreignKeys.length > 0 && (
               <div>
-                <p className="mb-1 px-1 text-[10px] font-medium uppercase tracking-wide text-text-muted">
+                <p className="mb-1.5 px-1 text-[10px] font-medium uppercase tracking-wide text-text-muted">
                   Relaciones actuales
                 </p>
 
-                <div className="flex flex-col gap-0.5">
+                <div className="space-y-1">
                   {table.foreignKeys.map((foreignKey) => {
                     const referencedTable = tables.find(
                       (candidate) => candidate.id === foreignKey.referencedTableId,
@@ -335,29 +408,77 @@ export function LogicalTableCard({ table, position }: LogicalTableCardProps) {
                     return (
                       <div
                         key={foreignKey.id}
-                        className="group flex min-w-0 items-center gap-2 rounded-md px-2 py-1.5"
+                        className="rounded-md border border-border bg-surface/40 p-2"
                       >
-                        <Link
-                          size={11}
-                          className="shrink-0 text-brand-primary"
-                          aria-hidden="true"
-                        />
+                        <div className="flex min-w-0 items-center gap-2">
+                          <Link
+                            size={11}
+                            className="shrink-0 text-brand-primary"
+                            aria-hidden="true"
+                          />
 
-                        <span className="min-w-0 flex-1 truncate text-xs text-text">
-                          {referencedTable?.name ?? 'Tabla eliminada'}
-                        </span>
+                          <span className="min-w-0 flex-1 truncate text-xs font-medium text-text">
+                            {referencedTable?.name ?? 'Tabla eliminada'}
+                          </span>
 
-                        <button
-                          type="button"
-                          aria-label={`Eliminar relación con ${referencedTable?.name ?? 'tabla'}`}
-                          title="Eliminar relación"
-                          className="flex size-6 shrink-0 items-center justify-center rounded-md text-text-muted transition-colors hover:bg-red-500/10 hover:text-red-600"
-                          onClick={() => {
-                            removeLogicalForeignKey(table.id, foreignKey.id);
-                          }}
-                        >
-                          <Unlink size={11} aria-hidden="true" />
-                        </button>
+                          <button
+                            type="button"
+                            aria-label={`Eliminar relación con ${referencedTable?.name ?? 'tabla'}`}
+                            title="Eliminar relación"
+                            className="flex size-6 shrink-0 items-center justify-center rounded-md text-text-muted transition-colors hover:bg-red-500/10 hover:text-red-600"
+                            onClick={() => {
+                              removeLogicalForeignKey(table.id, foreignKey.id);
+                            }}
+                          >
+                            <Unlink size={11} aria-hidden="true" />
+                          </button>
+                        </div>
+
+                        <div className="mt-2 flex items-center gap-1.5">
+                          <select
+                            aria-label={`Cardinalidad de ${table.name}`}
+                            value={getCardinalityValue(foreignKey.sourceCardinality)}
+                            className="min-w-0 flex-1 rounded-md border border-border bg-background px-1.5 py-1 text-[10px] text-text outline-none focus:border-brand-primary"
+                            onChange={(event) => {
+                              updateLogicalForeignKeyCardinality(
+                                table.id,
+                                foreignKey.id,
+                                'source',
+                                getCardinality(event.target.value as CardinalityValue),
+                              );
+                            }}
+                          >
+                            {CARDINALITY_OPTIONS.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+
+                          <span className="shrink-0 text-[10px] text-text-muted">→</span>
+
+                          <select
+                            aria-label={`Cardinalidad de ${
+                              referencedTable?.name ?? 'tabla referenciada'
+                            }`}
+                            value={getCardinalityValue(foreignKey.referencedCardinality)}
+                            className="min-w-0 flex-1 rounded-md border border-border bg-background px-1.5 py-1 text-[10px] text-text outline-none focus:border-brand-primary"
+                            onChange={(event) => {
+                              updateLogicalForeignKeyCardinality(
+                                table.id,
+                                foreignKey.id,
+                                'referenced',
+                                getCardinality(event.target.value as CardinalityValue),
+                              );
+                            }}
+                          >
+                            {CARDINALITY_OPTIONS.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                       </div>
                     );
                   })}
@@ -365,7 +486,7 @@ export function LogicalTableCard({ table, position }: LogicalTableCardProps) {
               </div>
             )}
 
-            {availableReferencedTables.length > 0 ? (
+            {availableReferencedTables.length > 0 && (
               <div>
                 <p className="mb-1 px-1 text-[10px] font-medium uppercase tracking-wide text-text-muted">
                   Nueva relación
@@ -379,7 +500,6 @@ export function LogicalTableCard({ table, position }: LogicalTableCardProps) {
                       className="flex items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-surface-hover"
                       onClick={() => {
                         addLogicalForeignKey(table.id, candidate.id);
-                        setShowRelations(false);
                       }}
                     >
                       <Plus size={11} className="shrink-0 text-text-muted" aria-hidden="true" />
@@ -391,12 +511,12 @@ export function LogicalTableCard({ table, position }: LogicalTableCardProps) {
                   ))}
                 </div>
               </div>
-            ) : (
-              table.foreignKeys.length === 0 && (
-                <p className="px-2 py-1 text-xs leading-relaxed text-text-muted">
-                  No hay tablas con clave primaria disponibles.
-                </p>
-              )
+            )}
+
+            {table.foreignKeys.length === 0 && availableReferencedTables.length === 0 && (
+              <p className="px-2 py-1 text-xs leading-relaxed text-text-muted">
+                No hay tablas con clave primaria disponibles.
+              </p>
             )}
           </div>
         )}
