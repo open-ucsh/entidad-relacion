@@ -1,7 +1,8 @@
+import { createId } from '@/domain/diagram/lib/id';
 import { createLogicalWorkspace } from '@/domain/logical/factories';
-
 import type {
   LogicalColumn,
+  LogicalForeignKey,
   LogicalTable,
   LogicalTablePosition,
   LogicalWorkspace,
@@ -10,7 +11,6 @@ import { transformDiagramToLogicalModel } from '@/domain/logical/transform';
 
 import { replaceActiveDiagram } from '../diagram-documents';
 import type { DiagramStoreSlice, LogicalSlice } from '../diagram-store.types';
-import { createId } from '@/domain/diagram/lib/id';
 
 const NEW_TABLE_OFFSET = 32;
 const NEW_TABLE_WRAP = 5;
@@ -32,6 +32,26 @@ function createLogicalColumn(name: string): LogicalColumn {
   return {
     id: createId('logical-column'),
     name,
+    primaryKey: false,
+    nullable: false,
+    unique: false,
+    sourceAttributeId: null,
+  };
+}
+
+function normalizeLogicalName(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, '_');
+}
+
+function createForeignKeyColumn(
+  referencedTable: LogicalTable,
+  referencedColumn: LogicalColumn,
+): LogicalColumn {
+  return {
+    id: createId('logical-column'),
+    name: `${normalizeLogicalName(referencedTable.name)}_${normalizeLogicalName(
+      referencedColumn.name,
+    )}`,
     primaryKey: false,
     nullable: false,
     unique: false,
@@ -244,6 +264,126 @@ export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
         },
       }),
     );
+  },
+
+  addLogicalForeignKey: (sourceTableId, referencedTableId) => {
+    if (sourceTableId === referencedTableId) {
+      return;
+    }
+
+    set((state) => {
+      const sourceTable = state.logicalWorkspace.model.tables.find(
+        (table) => table.id === sourceTableId,
+      );
+
+      const referencedTable = state.logicalWorkspace.model.tables.find(
+        (table) => table.id === referencedTableId,
+      );
+
+      if (!sourceTable || !referencedTable) {
+        return state;
+      }
+
+      const referencedColumns = referencedTable.columns.filter((column) => column.primaryKey);
+
+      if (referencedColumns.length === 0) {
+        return state;
+      }
+
+      const alreadyExists = sourceTable.foreignKeys.some(
+        (foreignKey) => foreignKey.referencedTableId === referencedTableId,
+      );
+
+      if (alreadyExists) {
+        return state;
+      }
+
+      const foreignColumns = referencedColumns.map((column) =>
+        createForeignKeyColumn(referencedTable, column),
+      );
+
+      const foreignKey: LogicalForeignKey = {
+        id: createId('logical-foreign-key'),
+        columnIds: foreignColumns.map((column) => column.id),
+        referencedTableId,
+        referencedColumnIds: referencedColumns.map((column) => column.id),
+        sourceRelationshipId: null,
+        sourceCardinality: {
+          minimum: 0,
+          maximum: 'N',
+        },
+        referencedCardinality: {
+          minimum: 1,
+          maximum: 1,
+        },
+      };
+
+      const tables = state.logicalWorkspace.model.tables.map((table) => {
+        if (table.id !== sourceTableId) {
+          return table;
+        }
+
+        return {
+          ...table,
+          columns: [...table.columns, ...foreignColumns],
+          foreignKeys: [...table.foreignKeys, foreignKey],
+        };
+      });
+
+      return replaceActiveDiagram(state, state.diagram, {
+        logicalWorkspace: {
+          ...state.logicalWorkspace,
+          origin: 'manual',
+          model: {
+            tables,
+            diagnostics: [],
+          },
+        },
+      });
+    });
+  },
+
+  removeLogicalForeignKey: (sourceTableId, foreignKeyId) => {
+    set((state) => {
+      const sourceTable = state.logicalWorkspace.model.tables.find(
+        (table) => table.id === sourceTableId,
+      );
+
+      if (!sourceTable) {
+        return state;
+      }
+
+      const foreignKey = sourceTable.foreignKeys.find((item) => item.id === foreignKeyId);
+
+      if (!foreignKey) {
+        return state;
+      }
+
+      const foreignColumnIds = new Set(foreignKey.columnIds);
+
+      const tables = state.logicalWorkspace.model.tables.map((table) => {
+        if (table.id !== sourceTableId) {
+          return table;
+        }
+
+        return {
+          ...table,
+          columns: table.columns.filter((column) => !foreignColumnIds.has(column.id)),
+          foreignKeys: table.foreignKeys.filter((item) => item.id !== foreignKeyId),
+        };
+      });
+
+      return replaceActiveDiagram(state, state.diagram, {
+        logicalWorkspace: {
+          ...state.logicalWorkspace,
+          origin: 'manual',
+          model: {
+            tables,
+            diagnostics: [],
+          },
+        },
+      });
+    });
   },
 
   replaceLogicalTable: (tableId, nextTable) => {

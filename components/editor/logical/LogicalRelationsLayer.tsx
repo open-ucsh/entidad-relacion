@@ -2,7 +2,7 @@
 
 import { useCallback, useLayoutEffect, useState, type RefObject } from 'react';
 
-import type { LogicalTable } from '@/domain/logical/models';
+import type { LogicalRelationCardinality, LogicalTable } from '@/domain/logical/models';
 
 interface LogicalRelationsLayerProps {
   tables: LogicalTable[];
@@ -20,7 +20,8 @@ interface RelationLine {
   end: Point;
   startDirection: 1 | -1;
   endDirection: 1 | -1;
-  sourceOptional: boolean;
+  sourceCardinality: LogicalRelationCardinality;
+  referencedCardinality: LogicalRelationCardinality;
 }
 
 interface TableElements {
@@ -28,9 +29,10 @@ interface TableElements {
   column: HTMLElement | null;
 }
 
-const MARK_GAP = 7;
-const MARK_SIZE = 8;
-const CONNECTION_OFFSET = 30;
+const MARK_GAP = 6;
+const MARK_SIZE = 6;
+const MARK_SPACING = 10;
+const CONNECTION_OFFSET = 24;
 
 function escapeSelector(value: string): string {
   if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') {
@@ -90,13 +92,6 @@ function createPath(
 
   const endOuterX = end.x + endDirection * CONNECTION_OFFSET;
 
-  /*
-   * Cuando ambas tablas permiten un corredor entre ellas,
-   * usamos el punto medio.
-   *
-   * Cuando no, igualmente sacamos primero la línea fuera
-   * de cada tarjeta antes de cambiar de dirección.
-   */
   const middleX = (startOuterX + endOuterX) / 2;
 
   return [
@@ -109,8 +104,16 @@ function createPath(
   ].join(' ');
 }
 
-function OneMark({ point, direction }: { point: Point; direction: 1 | -1 }) {
-  const x = point.x + direction * MARK_GAP;
+function OneMark({
+  point,
+  direction,
+  offset = MARK_GAP,
+}: {
+  point: Point;
+  direction: 1 | -1;
+  offset?: number;
+}) {
+  const x = point.x + direction * offset;
 
   return (
     <line
@@ -119,38 +122,70 @@ function OneMark({ point, direction }: { point: Point; direction: 1 | -1 }) {
       x2={x}
       y2={point.y + MARK_SIZE}
       stroke="var(--color-brand-primary)"
-      strokeWidth={1.75}
+      strokeWidth={1.5}
+      strokeLinecap="round"
     />
   );
 }
 
 function ZeroMark({ point, direction }: { point: Point; direction: 1 | -1 }) {
-  const x = point.x + direction * (MARK_GAP + MARK_SIZE * 1.8);
+  const x = point.x + direction * (MARK_GAP + MARK_SPACING);
 
   return (
     <circle
       cx={x}
       cy={point.y}
-      r={4}
+      r={3.25}
       fill="var(--color-background)"
       stroke="var(--color-brand-primary)"
-      strokeWidth={1.75}
+      strokeWidth={1.5}
     />
   );
 }
 
 function ManyMark({ point, direction }: { point: Point; direction: 1 | -1 }) {
-  const baseX = point.x + direction * (MARK_GAP + MARK_SIZE);
+  const baseX = point.x + direction * MARK_GAP;
 
-  const endX = point.x + direction * (MARK_GAP + MARK_SIZE * 2.3);
+  const endX = point.x + direction * (MARK_GAP + MARK_SPACING);
 
   return (
-    <g fill="none" stroke="var(--color-brand-primary)" strokeWidth={1.75} strokeLinecap="round">
+    <g fill="none" stroke="var(--color-brand-primary)" strokeWidth={1.5} strokeLinecap="round">
       <line x1={baseX} y1={point.y} x2={endX} y2={point.y - MARK_SIZE} />
 
       <line x1={baseX} y1={point.y} x2={endX} y2={point.y} />
 
       <line x1={baseX} y1={point.y} x2={endX} y2={point.y + MARK_SIZE} />
+    </g>
+  );
+}
+
+function CardinalityMark({
+  point,
+  direction,
+  cardinality,
+}: {
+  point: Point;
+  direction: 1 | -1;
+  cardinality: LogicalRelationCardinality;
+}) {
+  const minimumMark =
+    cardinality.minimum === 0 ? (
+      <ZeroMark point={point} direction={direction} />
+    ) : (
+      <OneMark point={point} direction={direction} offset={MARK_GAP + MARK_SPACING} />
+    );
+
+  const maximumMark =
+    cardinality.maximum === 'N' ? (
+      <ManyMark point={point} direction={direction} />
+    ) : (
+      <OneMark point={point} direction={direction} />
+    );
+
+  return (
+    <g>
+      {maximumMark}
+      {minimumMark}
     </g>
   );
 }
@@ -177,14 +212,6 @@ export function LogicalRelationsLayer({ tables, containerRef }: LogicalRelations
           continue;
         }
 
-        /*
-         * Una FK puede ser compuesta.
-         *
-         * No queremos dibujar 2 o 3 líneas para una misma
-         * relación compuesta. Dibujamos una conexión entre
-         * las tablas usando la primera columna de la FK como
-         * punto de anclaje.
-         */
         const sourceColumnId = foreignKey.columnIds[0];
 
         const referencedColumnId = foreignKey.referencedColumnIds[0];
@@ -217,7 +244,6 @@ export function LogicalRelationsLayer({ tables, containerRef }: LogicalRelations
 
         const start: Point = {
           x: (sourceIsLeft ? sourceTableRect.right : sourceTableRect.left) - containerRect.left,
-
           y: getCenterY(sourceElements.table, sourceElements.column, containerRect),
         };
 
@@ -225,19 +251,8 @@ export function LogicalRelationsLayer({ tables, containerRef }: LogicalRelations
           x:
             (sourceIsLeft ? referencedTableRect.left : referencedTableRect.right) -
             containerRect.left,
-
           y: getCenterY(referencedElements.table, referencedElements.column, containerRect),
         };
-
-        /*
-         * nullable en la FK determina si la participación
-         * del lado hijo es opcional.
-         */
-        const sourceOptional =
-          sourceColumnId !== undefined
-            ? (sourceTable.columns.find((column) => column.id === sourceColumnId)?.nullable ??
-              false)
-            : false;
 
         nextLines.push({
           id: foreignKey.id,
@@ -245,7 +260,8 @@ export function LogicalRelationsLayer({ tables, containerRef }: LogicalRelations
           end,
           startDirection: sourceDirection,
           endDirection: referencedDirection,
-          sourceOptional,
+          sourceCardinality: foreignKey.sourceCardinality,
+          referencedCardinality: foreignKey.referencedCardinality,
         });
       }
     }
@@ -260,10 +276,6 @@ export function LogicalRelationsLayer({ tables, containerRef }: LogicalRelations
       return;
     }
 
-    /*
-     * Esperamos un frame porque primero React debe montar
-     * las tarjetas para poder medirlas.
-     */
     const frame = requestAnimationFrame(calculateLines);
 
     const resizeObserver = new ResizeObserver(calculateLines);
@@ -297,42 +309,22 @@ export function LogicalRelationsLayer({ tables, containerRef }: LogicalRelations
             d={createPath(line.start, line.end, line.startDirection, line.endDirection)}
             fill="none"
             stroke="var(--color-brand-primary)"
-            strokeWidth={2}
+            strokeWidth={1.5}
             strokeLinecap="round"
             strokeLinejoin="round"
           />
 
-          {/*
-           * Tabla referenciada = exactamente 1.
-           *
-           *          ||
-           */}
-          <OneMark point={line.end} direction={line.endDirection} />
-
-          <OneMark
-            point={{
-              x: line.end.x + line.endDirection * (MARK_SIZE + 3),
-              y: line.end.y,
-            }}
-            direction={line.endDirection}
+          <CardinalityMark
+            point={line.start}
+            direction={line.startDirection}
+            cardinality={line.sourceCardinality}
           />
 
-          {/*
-           * Tabla que contiene la FK = lado N.
-           *
-           * nullable:
-           *   o{  = 0..N
-           *
-           * NOT NULL:
-           *   |{  = 1..N
-           */}
-          {line.sourceOptional ? (
-            <ZeroMark point={line.start} direction={line.startDirection} />
-          ) : (
-            <OneMark point={line.start} direction={line.startDirection} />
-          )}
-
-          <ManyMark point={line.start} direction={line.startDirection} />
+          <CardinalityMark
+            point={line.end}
+            direction={line.endDirection}
+            cardinality={line.referencedCardinality}
+          />
         </g>
       ))}
     </svg>

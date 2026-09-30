@@ -1,6 +1,15 @@
 'use client';
 
-import { GripHorizontal, KeyRound, Link, Plus, Trash2 } from 'lucide-react';
+import {
+  ChevronDown,
+  GripHorizontal,
+  KeyRound,
+  Link,
+  Link2,
+  Plus,
+  Trash2,
+  Unlink,
+} from 'lucide-react';
 import { useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 
 import type { LogicalTable, LogicalTablePosition } from '@/domain/logical/models';
@@ -26,13 +35,28 @@ export function LogicalTableCard({ table, position }: LogicalTableCardProps) {
   const updateLogicalColumn = useDiagramStore((state) => state.updateLogicalColumn);
   const removeLogicalColumn = useDiagramStore((state) => state.removeLogicalColumn);
   const moveLogicalTable = useDiagramStore((state) => state.moveLogicalTable);
+  const addLogicalForeignKey = useDiagramStore((state) => state.addLogicalForeignKey);
+  const removeLogicalForeignKey = useDiagramStore((state) => state.removeLogicalForeignKey);
+  const tables = useDiagramStore((state) => state.logicalWorkspace.model.tables);
 
   const [tableName, setTableName] = useState(table.name);
+  const [showRelations, setShowRelations] = useState(false);
 
   const dragRef = useRef<DragState | null>(null);
 
   const foreignKeyColumnIds = new Set(
     table.foreignKeys.flatMap((foreignKey) => foreignKey.columnIds),
+  );
+
+  const relatedTableIds = new Set(
+    table.foreignKeys.map((foreignKey) => foreignKey.referencedTableId),
+  );
+
+  const availableReferencedTables = tables.filter(
+    (candidate) =>
+      candidate.id !== table.id &&
+      candidate.columns.some((column) => column.primaryKey) &&
+      !relatedTableIds.has(candidate.id),
   );
 
   function commitTableName() {
@@ -264,16 +288,118 @@ export function LogicalTableCard({ table, position }: LogicalTableCardProps) {
       )}
 
       <footer className="border-t border-border p-2">
-        <button
-          type="button"
-          className="flex w-full items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium text-text-muted transition-colors hover:bg-surface-hover hover:text-text"
-          onClick={() => {
-            addLogicalColumn(table.id);
-          }}
-        >
-          <Plus size={13} aria-hidden="true" />
-          Añadir columna
-        </button>
+        <div className="grid grid-cols-2 gap-1">
+          <button
+            type="button"
+            className="flex items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium text-text-muted transition-colors hover:bg-surface-hover hover:text-text"
+            onClick={() => {
+              addLogicalColumn(table.id);
+            }}
+          >
+            <Plus size={13} aria-hidden="true" />
+            Columna
+          </button>
+
+          <button
+            type="button"
+            aria-expanded={showRelations}
+            className="flex items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium text-text-muted transition-colors hover:bg-surface-hover hover:text-text"
+            onClick={() => {
+              setShowRelations((current) => !current);
+            }}
+          >
+            <Link2 size={13} aria-hidden="true" />
+            Relación
+            <ChevronDown
+              size={12}
+              aria-hidden="true"
+              className={showRelations ? 'rotate-180 transition-transform' : 'transition-transform'}
+            />
+          </button>
+        </div>
+
+        {showRelations && (
+          <div className="mt-2 space-y-2 border-t border-border pt-2">
+            {table.foreignKeys.length > 0 && (
+              <div>
+                <p className="mb-1 px-1 text-[10px] font-medium uppercase tracking-wide text-text-muted">
+                  Relaciones actuales
+                </p>
+
+                <div className="flex flex-col gap-0.5">
+                  {table.foreignKeys.map((foreignKey) => {
+                    const referencedTable = tables.find(
+                      (candidate) => candidate.id === foreignKey.referencedTableId,
+                    );
+
+                    return (
+                      <div
+                        key={foreignKey.id}
+                        className="group flex min-w-0 items-center gap-2 rounded-md px-2 py-1.5"
+                      >
+                        <Link
+                          size={11}
+                          className="shrink-0 text-brand-primary"
+                          aria-hidden="true"
+                        />
+
+                        <span className="min-w-0 flex-1 truncate text-xs text-text">
+                          {referencedTable?.name ?? 'Tabla eliminada'}
+                        </span>
+
+                        <button
+                          type="button"
+                          aria-label={`Eliminar relación con ${referencedTable?.name ?? 'tabla'}`}
+                          title="Eliminar relación"
+                          className="flex size-6 shrink-0 items-center justify-center rounded-md text-text-muted transition-colors hover:bg-red-500/10 hover:text-red-600"
+                          onClick={() => {
+                            removeLogicalForeignKey(table.id, foreignKey.id);
+                          }}
+                        >
+                          <Unlink size={11} aria-hidden="true" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {availableReferencedTables.length > 0 ? (
+              <div>
+                <p className="mb-1 px-1 text-[10px] font-medium uppercase tracking-wide text-text-muted">
+                  Nueva relación
+                </p>
+
+                <div className="flex max-h-32 flex-col gap-0.5 overflow-y-auto">
+                  {availableReferencedTables.map((candidate) => (
+                    <button
+                      key={candidate.id}
+                      type="button"
+                      className="flex items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-surface-hover"
+                      onClick={() => {
+                        addLogicalForeignKey(table.id, candidate.id);
+                        setShowRelations(false);
+                      }}
+                    >
+                      <Plus size={11} className="shrink-0 text-text-muted" aria-hidden="true" />
+
+                      <span className="min-w-0 flex-1 truncate text-xs text-text">
+                        {candidate.name}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              table.foreignKeys.length === 0 && (
+                <p className="px-2 py-1 text-xs leading-relaxed text-text-muted">
+                  No hay tablas con clave primaria disponibles.
+                </p>
+              )
+            )}
+          </div>
+        )}
       </footer>
     </article>
   );

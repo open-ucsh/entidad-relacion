@@ -121,6 +121,9 @@ export interface LogicalSlice {
   updateLogicalColumn: (tableId: string, columnId: string, updates: Partial<LogicalColumn>) => void;
   removeLogicalColumn: (tableId: string, columnId: string) => void;
 
+  addLogicalForeignKey: (sourceTableId: string, referencedTableId: string) => void;
+  removeLogicalForeignKey: (sourceTableId: string, foreignKeyId: string) => void;
+
   replaceLogicalTable: (tableId: string, table: LogicalTable) => void;
 }
 
