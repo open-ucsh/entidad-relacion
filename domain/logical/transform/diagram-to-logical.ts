@@ -12,9 +12,12 @@ export function transformDiagramToLogicalModel(diagram: Diagram): LogicalModel {
 
   const tables = createEntityTables(diagram, diagnostics);
 
-  transformRelationships(diagram, tables, diagnostics);
-  transformMultivaluedAttributes(diagram, tables, diagnostics);
   transformIsaHierarchies(diagram, tables, diagnostics);
+
+  transformRelationships(diagram, tables, diagnostics);
+
+  transformMultivaluedAttributes(diagram, tables, diagnostics);
+
   validateWeakEntities(diagram, diagnostics);
 
   return {

@@ -46,12 +46,25 @@ function normalizeLogicalName(value: string): string {
 function createForeignKeyColumn(
   referencedTable: LogicalTable,
   referencedColumn: LogicalColumn,
+  usedNames: Set<string>,
 ): LogicalColumn {
+  const baseName = `${normalizeLogicalName(referencedTable.name)}_${normalizeLogicalName(
+    referencedColumn.name,
+  )}`;
+
+  let name = baseName;
+  let index = 2;
+
+  while (usedNames.has(name.toLowerCase())) {
+    name = `${baseName}_${index}`;
+    index += 1;
+  }
+
+  usedNames.add(name.toLowerCase());
+
   return {
     id: createId('logical-column'),
-    name: `${normalizeLogicalName(referencedTable.name)}_${normalizeLogicalName(
-      referencedColumn.name,
-    )}`,
+    name,
     primaryKey: false,
     nullable: false,
     unique: false,
@@ -241,9 +254,13 @@ export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
         return state;
       }
 
-      const nextColumn = {
+      const nextPrimaryKey = updates.primaryKey ?? currentColumn.primaryKey;
+
+      const nextColumn: LogicalColumn = {
         ...currentColumn,
         ...updates,
+        primaryKey: nextPrimaryKey,
+        nullable: nextPrimaryKey ? false : (updates.nullable ?? currentColumn.nullable),
       };
 
       const primaryKeyRemoved = currentColumn.primaryKey && !nextColumn.primaryKey;
@@ -405,8 +422,12 @@ export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
         return state;
       }
 
+      const usedNames = new Set(
+        sourceTable.columns.map((column) => column.name.trim().toLowerCase()),
+      );
+
       const foreignColumns = referencedColumns.map((column) =>
-        createForeignKeyColumn(referencedTable, column),
+        createForeignKeyColumn(referencedTable, column, usedNames),
       );
 
       const foreignKey: LogicalForeignKey = {

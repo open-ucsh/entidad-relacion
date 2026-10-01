@@ -19,11 +19,25 @@ interface AddForeignKeyOptions {
   referencedCardinality?: LogicalRelationCardinality;
 }
 
-function createForeignColumnName(
+function createForeignColumnBaseName(
   referencedTable: LogicalTable,
   referencedColumn: LogicalColumn,
 ): string {
   return `${toLogicalName(referencedTable.name)}_${toLogicalName(referencedColumn.name)}`;
+}
+
+function createUniqueColumnName(baseName: string, usedNames: Set<string>): string {
+  let name = baseName;
+  let index = 2;
+
+  while (usedNames.has(name.toLowerCase())) {
+    name = `${baseName}_${index}`;
+    index += 1;
+  }
+
+  usedNames.add(name.toLowerCase());
+
+  return name;
 }
 
 export function addForeignKey({
@@ -49,14 +63,20 @@ export function addForeignKey({
     return false;
   }
 
-  const foreignColumns: LogicalColumn[] = referencedColumns.map((column) => ({
-    id: createForeignColumnId(sourceId, column.id),
-    name: createForeignColumnName(referencedTable, column),
-    primaryKey,
-    nullable: primaryKey ? false : nullable,
-    unique,
-    sourceAttributeId: null,
-  }));
+  const usedNames = new Set(targetTable.columns.map((column) => column.name.trim().toLowerCase()));
+
+  const foreignColumns: LogicalColumn[] = referencedColumns.map((column) => {
+    const baseName = createForeignColumnBaseName(referencedTable, column);
+
+    return {
+      id: createForeignColumnId(sourceId, column.id),
+      name: createUniqueColumnName(baseName, usedNames),
+      primaryKey,
+      nullable: primaryKey ? false : nullable,
+      unique,
+      sourceAttributeId: null,
+    };
+  });
 
   const existingColumnIds = new Set(targetTable.columns.map((column) => column.id));
 

@@ -31,15 +31,17 @@ function createStoredColumns(
       });
     }
 
+    const primaryKey =
+      attribute.keyType === 'primary' ||
+      (entity.kind === 'weak' && attribute.keyType === 'partial');
+
     return [
       {
         id: createAttributeColumnId(attribute.id),
         name: toLogicalName(attribute.name),
-        primaryKey:
-          attribute.keyType === 'primary' ||
-          (entity.kind === 'weak' && attribute.keyType === 'partial'),
-        nullable: attribute.optional,
-        unique: attribute.unique || attribute.keyType === 'primary',
+        primaryKey,
+        nullable: primaryKey ? false : attribute.optional,
+        unique: attribute.unique || primaryKey,
         sourceAttributeId: attribute.id,
       },
     ];
