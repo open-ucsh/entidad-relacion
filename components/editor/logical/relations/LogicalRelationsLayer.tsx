@@ -2,7 +2,7 @@
 
 import { useCallback, useLayoutEffect, useState, type RefObject } from 'react';
 
-import type { LogicalTable } from '@/domain/logical/models';
+import type { LogicalTable, LogicalTablePosition } from '@/domain/logical/models';
 
 import { CardinalityMark } from './CardinalityMark';
 import { createConnectionPath } from './lib/connection-geometry';
@@ -10,11 +10,17 @@ import { calculateRelationLines, type RelationLine } from './lib/relation-lines'
 
 interface LogicalRelationsLayerProps {
   tables: LogicalTable[];
+  positions: Record<string, LogicalTablePosition>;
   containerRef: RefObject<HTMLDivElement | null>;
   zoom: number;
 }
 
-export function LogicalRelationsLayer({ tables, containerRef, zoom }: LogicalRelationsLayerProps) {
+export function LogicalRelationsLayer({
+  tables,
+  positions,
+  containerRef,
+  zoom,
+}: LogicalRelationsLayerProps) {
   const [lines, setLines] = useState<RelationLine[]>([]);
 
   const calculateLines = useCallback(() => {
@@ -31,7 +37,7 @@ export function LogicalRelationsLayer({ tables, containerRef, zoom }: LogicalRel
         zoom,
       }),
     );
-  }, [containerRef, tables, zoom]);
+  }, [containerRef, tables, positions, zoom]);
 
   useLayoutEffect(() => {
     const frame = requestAnimationFrame(calculateLines);
