@@ -10,6 +10,8 @@ import {
 
 export interface RelationLine {
   id: string;
+  sourceTableId: string;
+  referencedTableId: string;
   start: Point;
   end: Point;
   startSide: Side;
@@ -61,6 +63,8 @@ export function calculateRelationLines({
 
       lines.push({
         id: foreignKey.id,
+        sourceTableId: sourceTable.id,
+        referencedTableId: referencedTable.id,
         start: getConnectionPoint(sourceElements, sourceSide, containerRect, zoom),
         end: getConnectionPoint(referencedElements, targetSide, containerRect, zoom),
         startSide: sourceSide,

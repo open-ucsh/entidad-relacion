@@ -1,9 +1,10 @@
 'use client';
 
-import { useCallback, useLayoutEffect, useState, type RefObject } from 'react';
+import { type RefObject, useCallback, useLayoutEffect, useState } from 'react';
 
 import type { LogicalTable, LogicalTablePosition } from '@/domain/logical/models';
 
+import type { LogicalSelection } from '../logical-selection';
 import { calculateRelationLines, type RelationLine } from './lib/relation-lines';
 import { LogicalRelationPath } from './LogicalRelationPath';
 
@@ -12,6 +13,8 @@ interface LogicalRelationsLayerProps {
   positions: Record<string, LogicalTablePosition>;
   containerRef: RefObject<HTMLDivElement | null>;
   zoom: number;
+  selection: LogicalSelection;
+  onSelectRelation: (sourceTableId: string, foreignKeyId: string) => void;
 }
 
 export function LogicalRelationsLayer({
@@ -19,6 +22,8 @@ export function LogicalRelationsLayer({
   positions,
   containerRef,
   zoom,
+  selection,
+  onSelectRelation,
 }: LogicalRelationsLayerProps) {
   const [lines, setLines] = useState<RelationLine[]>([]);
 
@@ -75,10 +80,17 @@ export function LogicalRelationsLayer({
   return (
     <svg
       className="pointer-events-none absolute inset-0 z-10 h-full w-full overflow-visible"
-      aria-hidden="true"
+      aria-label="Relaciones entre tablas"
     >
       {lines.map((line) => (
-        <LogicalRelationPath key={line.id} line={line} />
+        <LogicalRelationPath
+          key={line.id}
+          line={line}
+          selected={selection?.type === 'relation' && selection.foreignKeyId === line.id}
+          onSelect={() => {
+            onSelectRelation(line.sourceTableId, line.id);
+          }}
+        />
       ))}
     </svg>
   );

@@ -8,14 +8,15 @@ import type {
   LogicalTablePosition,
 } from '@/domain/logical/models';
 
+import type { LogicalSelection } from '../logical-selection';
 import { LogicalRelationsLayer } from '../relations/LogicalRelationsLayer';
 import { LogicalTableCard } from '../table/LogicalTableCard';
-import { LogicalCanvasEmptyState } from './LogicalCanvasEmptyState';
-import { LogicalDiagnostics } from './LogicalDiagnostics';
 import { useLogicalCamera } from './hooks/useLogicalCamera';
 import { useLogicalCanvasPan } from './hooks/useLogicalCanvasPan';
 import { useLogicalCanvasSize } from './hooks/useLogicalCanvasSize';
 import { getLogicalBounds, type PositionedLogicalTable } from './lib/logical-bounds';
+import { LogicalCanvasEmptyState } from './LogicalCanvasEmptyState';
+import { LogicalDiagnostics } from './LogicalDiagnostics';
 import { LogicalZoomControls } from './LogicalZoomControls';
 
 interface LogicalCanvasProps {
@@ -23,6 +24,8 @@ interface LogicalCanvasProps {
   positions: Record<string, LogicalTablePosition>;
   diagnostics: LogicalDiagnostic[];
   canGenerateFromEr: boolean;
+  selection: LogicalSelection;
+  onSelectionChange: (selection: LogicalSelection) => void;
   onCreateTable: () => void;
   onGenerateFromEr: () => void;
 }
@@ -37,6 +40,8 @@ export function LogicalCanvas({
   positions,
   diagnostics,
   canGenerateFromEr,
+  selection,
+  onSelectionChange,
   onCreateTable,
   onGenerateFromEr,
 }: LogicalCanvasProps) {
@@ -71,6 +76,7 @@ export function LogicalCanvas({
 
   function generateFromEr() {
     resetInitialFit();
+    onSelectionChange(null);
     onGenerateFromEr();
   }
 
@@ -81,7 +87,13 @@ export function LogicalCanvas({
         isPanning ? 'cursor-grabbing' : 'cursor-grab'
       }`}
       onWheel={handleWheel}
-      onPointerDown={startPan}
+      onPointerDown={(event) => {
+        if (event.target === event.currentTarget) {
+          onSelectionChange(null);
+        }
+
+        startPan(event);
+      }}
       onPointerMove={pan}
       onPointerUp={stopPan}
       onPointerCancel={stopPan}
@@ -94,6 +106,9 @@ export function LogicalCanvas({
           backgroundSize: `${24 * camera.zoom}px ${24 * camera.zoom}px`,
         }}
         aria-hidden="true"
+        onPointerDown={() => {
+          onSelectionChange(null);
+        }}
       />
 
       {tables.length === 0 ? (
@@ -117,6 +132,14 @@ export function LogicalCanvas({
             positions={positions}
             containerRef={canvasRef}
             zoom={camera.zoom}
+            selection={selection}
+            onSelectRelation={(sourceTableId, foreignKeyId) => {
+              onSelectionChange({
+                type: 'relation',
+                sourceTableId,
+                foreignKeyId,
+              });
+            }}
           />
 
           {positionedTables.map(({ table, position }) => (
@@ -125,6 +148,13 @@ export function LogicalCanvas({
               table={table}
               position={position}
               zoom={camera.zoom}
+              selected={selection?.type === 'table' && selection.tableId === table.id}
+              onSelect={() => {
+                onSelectionChange({
+                  type: 'table',
+                  tableId: table.id,
+                });
+              }}
             />
           ))}
         </div>

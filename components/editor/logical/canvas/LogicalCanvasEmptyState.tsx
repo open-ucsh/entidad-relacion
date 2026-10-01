@@ -1,6 +1,6 @@
 'use client';
 
-import { Database, Plus, RefreshCw } from 'lucide-react';
+import { ArrowRight, Network, Plus, Table2 } from 'lucide-react';
 
 interface LogicalCanvasEmptyStateProps {
   canGenerateFromEr: boolean;
@@ -14,38 +14,80 @@ export function LogicalCanvasEmptyState({
   onGenerateFromEr,
 }: LogicalCanvasEmptyStateProps) {
   return (
-    <div className="absolute inset-0 flex items-center justify-center px-8">
-      <div className="flex max-w-md flex-col items-center text-center">
-        <span className="mb-5 flex size-14 items-center justify-center rounded-2xl border border-border bg-background shadow-sm">
-          <Database size={23} className="text-brand-primary" aria-hidden="true" />
-        </span>
+    <div className="absolute inset-0 z-20 flex items-center justify-center p-6">
+      <div className="w-full max-w-md rounded-2xl border border-border bg-background p-6 shadow-lg">
+        <div className="mx-auto flex size-11 items-center justify-center rounded-xl bg-brand-primary/10 text-brand-primary">
+          <Table2 size={20} aria-hidden="true" />
+        </div>
 
-        <h2 className="text-base font-semibold text-text">Construye tu modelo lógico</h2>
+        <div className="mt-4 text-center">
+          <h2 className="text-base font-semibold text-text">Modelo lógico</h2>
 
-        <p className="mt-2 text-sm leading-6 text-text-muted">
-          Crea las tablas manualmente o transforma tu modelo entidad-relación.
-        </p>
+          <p className="mx-auto mt-1.5 max-w-sm text-xs leading-relaxed text-text-muted">
+            Convierte tu modelo entidad-relación en tablas o comienza un modelo lógico desde cero.
+          </p>
+        </div>
 
-        <div className="mt-5 flex items-center gap-2">
+        <div className="mt-5 space-y-2">
+          {canGenerateFromEr && (
+            <button
+              type="button"
+              className="group flex w-full items-center gap-3 rounded-xl border border-brand-primary/25 bg-brand-primary/5 p-3 text-left transition-colors hover:bg-brand-primary/10"
+              onClick={onGenerateFromEr}
+            >
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand-primary text-white">
+                <Network size={16} aria-hidden="true" />
+              </span>
+
+              <span className="min-w-0 flex-1">
+                <span className="block text-xs font-semibold text-text">
+                  Generar desde modelo ER
+                </span>
+
+                <span className="mt-0.5 block text-[11px] leading-relaxed text-text-muted">
+                  Transforma las entidades, atributos y relaciones actuales.
+                </span>
+              </span>
+
+              <ArrowRight
+                size={14}
+                className="shrink-0 text-text-muted transition-transform group-hover:translate-x-0.5"
+                aria-hidden="true"
+              />
+            </button>
+          )}
+
           <button
             type="button"
+            className="group flex w-full items-center gap-3 rounded-xl border border-border bg-background p-3 text-left transition-colors hover:bg-surface-hover"
             onClick={onCreateTable}
-            className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-text shadow-sm transition-colors hover:bg-surface-hover"
           >
-            <Plus size={15} aria-hidden="true" />
-            Crear tabla
-          </button>
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface text-text">
+              <Plus size={16} aria-hidden="true" />
+            </span>
 
-          <button
-            type="button"
-            disabled={!canGenerateFromEr}
-            onClick={onGenerateFromEr}
-            className="flex items-center gap-2 rounded-lg bg-brand-primary px-3 py-2 text-sm font-medium text-white shadow-sm transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            <RefreshCw size={15} aria-hidden="true" />
-            Generar desde ER
+            <span className="min-w-0 flex-1">
+              <span className="block text-xs font-semibold text-text">Crear modelo vacío</span>
+
+              <span className="mt-0.5 block text-[11px] leading-relaxed text-text-muted">
+                Empieza manualmente creando tu primera tabla.
+              </span>
+            </span>
+
+            <ArrowRight
+              size={14}
+              className="shrink-0 text-text-muted transition-transform group-hover:translate-x-0.5"
+              aria-hidden="true"
+            />
           </button>
         </div>
+
+        {!canGenerateFromEr && (
+          <p className="mt-4 text-center text-[10px] leading-relaxed text-text-muted">
+            Cuando tu modelo ER tenga entidades o relaciones también podrás generarlo
+            automáticamente.
+          </p>
+        )}
       </div>
     </div>
   );

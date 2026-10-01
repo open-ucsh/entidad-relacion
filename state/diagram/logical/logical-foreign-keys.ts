@@ -13,9 +13,26 @@ export interface CreatedLogicalForeignKey {
   foreignColumns: LogicalTable['columns'];
 }
 
+export interface LogicalForeignKeyCardinalities {
+  source: LogicalRelationCardinality;
+  referenced: LogicalRelationCardinality;
+}
+
+const DEFAULT_CARDINALITIES: LogicalForeignKeyCardinalities = {
+  source: {
+    minimum: 0,
+    maximum: 'N',
+  },
+  referenced: {
+    minimum: 1,
+    maximum: 1,
+  },
+};
+
 export function createLogicalForeignKey(
   sourceTable: LogicalTable,
   referencedTable: LogicalTable,
+  cardinalities: LogicalForeignKeyCardinalities = DEFAULT_CARDINALITIES,
 ): CreatedLogicalForeignKey | null {
   const referencedColumns = referencedTable.columns.filter((column) => column.primaryKey);
 
@@ -31,24 +48,12 @@ export function createLogicalForeignKey(
 
   const foreignKey: LogicalForeignKey = {
     id: createId('logical-foreign-key'),
-
     columnIds: foreignColumns.map((column) => column.id),
-
     referencedTableId: referencedTable.id,
-
     referencedColumnIds: referencedColumns.map((column) => column.id),
-
     sourceRelationshipId: null,
-
-    sourceCardinality: {
-      minimum: 0,
-      maximum: 'N',
-    },
-
-    referencedCardinality: {
-      minimum: 1,
-      maximum: 1,
-    },
+    sourceCardinality: cardinalities.source,
+    referencedCardinality: cardinalities.referenced,
   };
 
   return {
@@ -75,9 +80,7 @@ export function removeForeignKeysReferencingTable(
 
   return {
     ...table,
-
     columns: table.columns.filter((column) => !removedColumnIds.has(column.id)),
-
     foreignKeys: table.foreignKeys.filter(
       (foreignKey) => foreignKey.referencedTableId !== referencedTableId,
     ),

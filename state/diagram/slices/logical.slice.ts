@@ -120,11 +120,11 @@ export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
     );
   },
 
-  addLogicalForeignKey: (sourceTableId, referencedTableId) => {
+  addLogicalForeignKey: (sourceTableId, referencedTableId, cardinalities) => {
     set((state) =>
       applyLogicalOperation(
         state,
-        addForeignKey(state.logicalWorkspace, sourceTableId, referencedTableId),
+        addForeignKey(state.logicalWorkspace, sourceTableId, referencedTableId, cardinalities),
       ),
     );
   },

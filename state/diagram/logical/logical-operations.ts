@@ -16,6 +16,7 @@ import {
   createLogicalForeignKey,
   formatLogicalCardinality,
   removeForeignKeysReferencingTable,
+  type LogicalForeignKeyCardinalities,
 } from './logical-foreign-keys';
 import { createLogicalTable, getNewLogicalTablePosition } from './logical-tables';
 import type { LogicalOperationResult } from './logical-operation';
@@ -296,6 +297,7 @@ export function addForeignKey(
   workspace: LogicalWorkspace,
   sourceTableId: string,
   referencedTableId: string,
+  cardinalities?: LogicalForeignKeyCardinalities,
 ): LogicalOperationResult | null {
   if (sourceTableId === referencedTableId) {
     return null;
@@ -309,7 +311,7 @@ export function addForeignKey(
     return null;
   }
 
-  const created = createLogicalForeignKey(sourceTable, referencedTable);
+  const created = createLogicalForeignKey(sourceTable, referencedTable, cardinalities);
 
   if (!created) {
     return null;

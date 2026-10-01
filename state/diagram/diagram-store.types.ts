@@ -133,7 +133,14 @@ export interface LogicalSlice {
   updateLogicalColumn: (tableId: string, columnId: string, updates: Partial<LogicalColumn>) => void;
   removeLogicalColumn: (tableId: string, columnId: string) => void;
 
-  addLogicalForeignKey: (sourceTableId: string, referencedTableId: string) => void;
+  addLogicalForeignKey: (
+    sourceTableId: string,
+    referencedTableId: string,
+    cardinalities?: {
+      source: LogicalRelationCardinality;
+      referenced: LogicalRelationCardinality;
+    },
+  ) => void;
   removeLogicalForeignKey: (sourceTableId: string, foreignKeyId: string) => void;
 
   updateLogicalForeignKeyCardinality: (
