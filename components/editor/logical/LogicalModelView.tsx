@@ -13,8 +13,8 @@ import { useLogicalCanvasPan } from './canvas/hooks/useLogicalCanvasPan';
 import { useLogicalCanvasSize } from './canvas/hooks/useLogicalCanvasSize';
 import { getLogicalBounds, type PositionedLogicalTable } from './canvas/lib/logical-bounds';
 import { LogicalZoomControls } from './canvas/LogicalZoomControls';
-import { LogicalRelationsLayer } from './LogicalRelationsLayer';
-import { LogicalTableCard } from './LogicalTableCard';
+import { LogicalRelationsLayer } from './relations/LogicalRelationsLayer';
+import { LogicalTableCard } from './table/LogicalTableCard';
 
 interface LogicalModelViewProps {
   diagram: Diagram;

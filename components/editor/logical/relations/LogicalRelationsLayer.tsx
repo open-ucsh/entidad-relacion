@@ -4,9 +4,9 @@ import { useCallback, useLayoutEffect, useState, type RefObject } from 'react';
 
 import type { LogicalTable } from '@/domain/logical/models';
 
-import { CardinalityMark } from './relations/CardinalityMark';
-import { createConnectionPath } from './relations/lib/connection-geometry';
-import { calculateRelationLines, type RelationLine } from './relations/lib/relation-lines';
+import { CardinalityMark } from './CardinalityMark';
+import { createConnectionPath } from './lib/connection-geometry';
+import { calculateRelationLines, type RelationLine } from './lib/relation-lines';
 
 interface LogicalRelationsLayerProps {
   tables: LogicalTable[];

@@ -6,9 +6,9 @@ import { useState } from 'react';
 import type { LogicalTable, LogicalTablePosition } from '@/domain/logical/models';
 import { useDiagramStore } from '@/state/diagram/store';
 
-import { useLogicalTableDrag } from './table/hooks/useLogicalTableDrag';
-import { LogicalColumnRow } from './table/LogicalColumnRow';
-import { LogicalRelationPanel } from './table/relations/LogicalRelationPanel';
+import { useLogicalTableDrag } from './hooks/useLogicalTableDrag';
+import { LogicalColumnRow } from './LogicalColumnRow';
+import { LogicalRelationPanel } from './relations/LogicalRelationPanel';
 
 interface LogicalTableCardProps {
   table: LogicalTable;
