@@ -4,9 +4,8 @@ import { useCallback, useLayoutEffect, useState, type RefObject } from 'react';
 
 import type { LogicalTable, LogicalTablePosition } from '@/domain/logical/models';
 
-import { CardinalityMark } from './CardinalityMark';
-import { createConnectionPath } from './lib/connection-geometry';
 import { calculateRelationLines, type RelationLine } from './lib/relation-lines';
+import { LogicalRelationPath } from './LogicalRelationPath';
 
 interface LogicalRelationsLayerProps {
   tables: LogicalTable[];
@@ -54,9 +53,7 @@ export function LogicalRelationsLayer({
       return;
     }
 
-    const resizeObserver = new ResizeObserver(() => {
-      calculateLines();
-    });
+    const resizeObserver = new ResizeObserver(calculateLines);
 
     resizeObserver.observe(container);
 
@@ -81,28 +78,7 @@ export function LogicalRelationsLayer({
       aria-hidden="true"
     >
       {lines.map((line) => (
-        <g key={line.id}>
-          <path
-            d={createConnectionPath(line.start, line.end, line.startSide, line.endSide)}
-            fill="none"
-            stroke="var(--color-brand-primary)"
-            strokeWidth={1.5}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-
-          <CardinalityMark
-            point={line.start}
-            side={line.startSide}
-            cardinality={line.sourceCardinality}
-          />
-
-          <CardinalityMark
-            point={line.end}
-            side={line.endSide}
-            cardinality={line.referencedCardinality}
-          />
-        </g>
+        <LogicalRelationPath key={line.id} line={line} />
       ))}
     </svg>
   );
