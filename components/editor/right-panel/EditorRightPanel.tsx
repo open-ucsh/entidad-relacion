@@ -1,14 +1,17 @@
 'use client';
 
-import { History, SlidersHorizontal } from 'lucide-react';
+import { History, SlidersHorizontal, Table2 } from 'lucide-react';
 
+import type { ModelView } from '../logical/ModelViewSwitcher';
 import { HistoryPanel } from '../history/HistoryPanel';
 import { Inspector } from '../inspector/Inspector';
+import { LogicalInspector } from '../logical/LogicalInspector';
 
 export type RightPanelTab = 'inspector' | 'history';
 
 interface EditorRightPanelProps {
   activeTab: RightPanelTab;
+  modelView: ModelView;
   onChangeTab: (tab: RightPanelTab) => void;
 }
 
@@ -37,7 +40,9 @@ function TabButton({ active, icon: Icon, label, onClick }: TabButtonProps) {
   );
 }
 
-export function EditorRightPanel({ activeTab, onChangeTab }: EditorRightPanelProps) {
+export function EditorRightPanel({ activeTab, modelView, onChangeTab }: EditorRightPanelProps) {
+  const isLogicalView = modelView === 'logical';
+
   return (
     <aside className="flex h-full min-h-0 min-w-0 flex-col border-l border-border bg-surface">
       <nav
@@ -46,8 +51,8 @@ export function EditorRightPanel({ activeTab, onChangeTab }: EditorRightPanelPro
       >
         <TabButton
           active={activeTab === 'inspector'}
-          icon={SlidersHorizontal}
-          label="Propiedades"
+          icon={isLogicalView ? Table2 : SlidersHorizontal}
+          label={isLogicalView ? 'Modelo lógico' : 'Propiedades'}
           onClick={() => {
             onChangeTab('inspector');
           }}
@@ -65,7 +70,11 @@ export function EditorRightPanel({ activeTab, onChangeTab }: EditorRightPanelPro
 
       <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
         {activeTab === 'inspector' ? (
-          <Inspector showPanelHeader={false} />
+          isLogicalView ? (
+            <LogicalInspector />
+          ) : (
+            <Inspector showPanelHeader={false} />
+          )
         ) : (
           <HistoryPanel
             onSelectTarget={() => {

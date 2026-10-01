@@ -14,6 +14,7 @@ import { EditorFeedbackProvider } from './feedback/EditorFeedbackProvider';
 import { Header } from './header/Header';
 import { KeyboardShortcutsDialog } from './header/KeyboardShortcutsDialog';
 import { useDiagramFile } from './hooks/useDiagramFile';
+import { useEditorHistoryKeyboard } from './hooks/useEditorHistoryKeyboard';
 import { useEditorPanels } from './hooks/useEditorPanels';
 import { LogicalModelView } from './logical/LogicalModelView';
 import { ModelViewSwitcher, type ModelView } from './logical/ModelViewSwitcher';
@@ -24,6 +25,8 @@ import { Toolbar } from './toolbar/Toolbar';
 type MobilePanel = 'inspector' | null;
 
 export function Editor() {
+  useEditorHistoryKeyboard();
+
   const diagram = useDiagramStore(selectActiveDiagram);
   const setDiagramName = useDiagramStore((state) => state.setDiagramName);
   const importDiagram = useDiagramStore((state) => state.importDiagram);
@@ -105,6 +108,10 @@ export function Editor() {
         />
 
         <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className={styles.modelViewBar}>
+            <ModelViewSwitcher value={modelView} onChange={setModelView} />
+          </div>
+
           <div
             className={styles.workspace}
             style={
@@ -118,10 +125,6 @@ export function Editor() {
             </div>
 
             <div className={styles.canvasSlot}>
-              <div className={styles.modelViewSwitcher}>
-                <ModelViewSwitcher value={modelView} onChange={setModelView} />
-              </div>
-
               {modelView === 'conceptual' ? (
                 <Canvas diagram={diagram} svgRef={svgRef} />
               ) : (
@@ -134,7 +137,11 @@ export function Editor() {
               data-desktop-open={isInspectorOpen}
               data-mobile-open={mobilePanel === 'inspector'}
             >
-              <EditorRightPanel activeTab={activeRightPanel} onChangeTab={setActiveRightPanel} />
+              <EditorRightPanel
+                activeTab={activeRightPanel}
+                modelView={modelView}
+                onChangeTab={setActiveRightPanel}
+              />
             </div>
           </div>
 

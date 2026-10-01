@@ -120,7 +120,14 @@ export interface LogicalSlice {
   addLogicalTable: (name?: string) => void;
   removeLogicalTable: (tableId: string) => void;
   renameLogicalTable: (tableId: string, name: string) => void;
-  moveLogicalTable: (tableId: string, position: LogicalTablePosition) => void;
+  moveLogicalTable: (
+    tableId: string,
+    position: LogicalTablePosition,
+    options?: {
+      recordHistory?: boolean;
+      historyPosition?: LogicalTablePosition;
+    },
+  ) => void;
 
   addLogicalColumn: (tableId: string, name?: string) => void;
   updateLogicalColumn: (tableId: string, columnId: string, updates: Partial<LogicalColumn>) => void;

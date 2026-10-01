@@ -2,16 +2,12 @@
 
 import { useCallback, useLayoutEffect, useState, type RefObject } from 'react';
 
-import type {
-  LogicalRelationCardinality,
-  LogicalTable,
-  LogicalTablePosition,
-} from '@/domain/logical/models';
+import type { LogicalRelationCardinality, LogicalTable } from '@/domain/logical/models';
 
 interface LogicalRelationsLayerProps {
   tables: LogicalTable[];
-  positions: Record<string, LogicalTablePosition>;
   containerRef: RefObject<HTMLDivElement | null>;
+  zoom: number;
 }
 
 interface Point {
@@ -19,12 +15,14 @@ interface Point {
   y: number;
 }
 
+type Side = 'left' | 'right' | 'top' | 'bottom';
+
 interface RelationLine {
   id: string;
   start: Point;
   end: Point;
-  startDirection: 1 | -1;
-  endDirection: 1 | -1;
+  startSide: Side;
+  endSide: Side;
   sourceCardinality: LogicalRelationCardinality;
   referencedCardinality: LogicalRelationCardinality;
 }
@@ -77,120 +75,262 @@ function findTableElements(
   };
 }
 
-function getCenterY(
+function getElementCenterY(
   table: HTMLElement,
   column: HTMLElement | null,
   containerRect: DOMRect,
+  zoom: number,
 ): number {
   const rect = (column ?? table).getBoundingClientRect();
 
-  return rect.top - containerRect.top + rect.height / 2;
+  return (rect.top - containerRect.top + rect.height / 2) / zoom;
 }
 
-function createPath(
-  start: Point,
-  end: Point,
-  startDirection: 1 | -1,
-  endDirection: 1 | -1,
-): string {
-  const startOuterX = start.x + startDirection * CONNECTION_OFFSET;
+function getSideDirection(side: Side): Point {
+  switch (side) {
+    case 'left':
+      return { x: -1, y: 0 };
 
-  const endOuterX = end.x + endDirection * CONNECTION_OFFSET;
+    case 'right':
+      return { x: 1, y: 0 };
 
-  const middleX = (startOuterX + endOuterX) / 2;
+    case 'top':
+      return { x: 0, y: -1 };
+
+    case 'bottom':
+      return { x: 0, y: 1 };
+  }
+}
+
+function getConnectionSides(
+  sourceRect: DOMRect,
+  targetRect: DOMRect,
+): {
+  sourceSide: Side;
+  targetSide: Side;
+} {
+  const sourceCenterX = sourceRect.left + sourceRect.width / 2;
+
+  const sourceCenterY = sourceRect.top + sourceRect.height / 2;
+
+  const targetCenterX = targetRect.left + targetRect.width / 2;
+
+  const targetCenterY = targetRect.top + targetRect.height / 2;
+
+  const deltaX = targetCenterX - sourceCenterX;
+
+  const deltaY = targetCenterY - sourceCenterY;
+
+  const horizontalGap = Math.abs(deltaX) - (sourceRect.width + targetRect.width) / 2;
+
+  const verticalGap = Math.abs(deltaY) - (sourceRect.height + targetRect.height) / 2;
+
+  if (horizontalGap >= verticalGap) {
+    if (deltaX >= 0) {
+      return {
+        sourceSide: 'right',
+        targetSide: 'left',
+      };
+    }
+
+    return {
+      sourceSide: 'left',
+      targetSide: 'right',
+    };
+  }
+
+  if (deltaY >= 0) {
+    return {
+      sourceSide: 'bottom',
+      targetSide: 'top',
+    };
+  }
+
+  return {
+    sourceSide: 'top',
+    targetSide: 'bottom',
+  };
+}
+
+function getConnectionPoint(
+  elements: TableElements,
+  side: Side,
+  containerRect: DOMRect,
+  zoom: number,
+): Point {
+  const tableRect = elements.table.getBoundingClientRect();
+
+  if (side === 'left' || side === 'right') {
+    return {
+      x: ((side === 'left' ? tableRect.left : tableRect.right) - containerRect.left) / zoom,
+      y: getElementCenterY(elements.table, elements.column, containerRect, zoom),
+    };
+  }
+
+  const columnRect = (elements.column ?? elements.table).getBoundingClientRect();
+
+  const columnCenterX = columnRect.left + columnRect.width / 2;
+
+  const minX = tableRect.left + 28 * zoom;
+
+  const maxX = tableRect.right - 28 * zoom;
+
+  return {
+    x: (Math.min(Math.max(columnCenterX, minX), maxX) - containerRect.left) / zoom,
+    y: ((side === 'top' ? tableRect.top : tableRect.bottom) - containerRect.top) / zoom,
+  };
+}
+
+function offsetPoint(point: Point, side: Side, distance: number): Point {
+  const direction = getSideDirection(side);
+
+  return {
+    x: point.x + direction.x * distance,
+    y: point.y + direction.y * distance,
+  };
+}
+
+function createPath(start: Point, end: Point, startSide: Side, endSide: Side): string {
+  const startOuter = offsetPoint(start, startSide, CONNECTION_OFFSET);
+
+  const endOuter = offsetPoint(end, endSide, CONNECTION_OFFSET);
+
+  const startHorizontal = startSide === 'left' || startSide === 'right';
+
+  const endHorizontal = endSide === 'left' || endSide === 'right';
+
+  if (startHorizontal && endHorizontal) {
+    const middleX = (startOuter.x + endOuter.x) / 2;
+
+    return [
+      `M ${start.x} ${start.y}`,
+      `L ${startOuter.x} ${startOuter.y}`,
+      `L ${middleX} ${startOuter.y}`,
+      `L ${middleX} ${endOuter.y}`,
+      `L ${endOuter.x} ${endOuter.y}`,
+      `L ${end.x} ${end.y}`,
+    ].join(' ');
+  }
+
+  if (!startHorizontal && !endHorizontal) {
+    const middleY = (startOuter.y + endOuter.y) / 2;
+
+    return [
+      `M ${start.x} ${start.y}`,
+      `L ${startOuter.x} ${startOuter.y}`,
+      `L ${startOuter.x} ${middleY}`,
+      `L ${endOuter.x} ${middleY}`,
+      `L ${endOuter.x} ${endOuter.y}`,
+      `L ${end.x} ${end.y}`,
+    ].join(' ');
+  }
+
+  if (startHorizontal) {
+    return [
+      `M ${start.x} ${start.y}`,
+      `L ${startOuter.x} ${startOuter.y}`,
+      `L ${endOuter.x} ${startOuter.y}`,
+      `L ${endOuter.x} ${endOuter.y}`,
+      `L ${end.x} ${end.y}`,
+    ].join(' ');
+  }
 
   return [
     `M ${start.x} ${start.y}`,
-    `L ${startOuterX} ${start.y}`,
-    `L ${middleX} ${start.y}`,
-    `L ${middleX} ${end.y}`,
-    `L ${endOuterX} ${end.y}`,
+    `L ${startOuter.x} ${startOuter.y}`,
+    `L ${startOuter.x} ${endOuter.y}`,
+    `L ${endOuter.x} ${endOuter.y}`,
     `L ${end.x} ${end.y}`,
   ].join(' ');
 }
 
-function OneMark({
-  point,
-  direction,
-  offset = MARK_GAP,
-}: {
-  point: Point;
-  direction: 1 | -1;
-  offset?: number;
-}) {
-  const x = point.x + direction * offset;
-
-  return (
-    <line
-      x1={x}
-      y1={point.y - MARK_SIZE}
-      x2={x}
-      y2={point.y + MARK_SIZE}
-      stroke="var(--color-brand-primary)"
-      strokeWidth={1.5}
-      strokeLinecap="round"
-    />
-  );
-}
-
-function ZeroMark({ point, direction }: { point: Point; direction: 1 | -1 }) {
-  const x = point.x + direction * (MARK_GAP + MARK_SPACING);
-
-  return (
-    <circle
-      cx={x}
-      cy={point.y}
-      r={3.25}
-      fill="var(--color-background)"
-      stroke="var(--color-brand-primary)"
-      strokeWidth={1.5}
-    />
-  );
-}
-
-function ManyMark({ point, direction }: { point: Point; direction: 1 | -1 }) {
-  const baseX = point.x + direction * MARK_GAP;
-
-  const endX = point.x + direction * (MARK_GAP + MARK_SPACING);
-
-  return (
-    <g
-      fill="none"
-      stroke="var(--color-brand-primary)"
-      strokeWidth={1.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <line x1={baseX} y1={point.y} x2={endX} y2={point.y - MARK_SIZE} />
-
-      <line x1={baseX} y1={point.y} x2={endX} y2={point.y} />
-
-      <line x1={baseX} y1={point.y} x2={endX} y2={point.y + MARK_SIZE} />
-    </g>
-  );
-}
-
 function CardinalityMark({
   point,
-  direction,
+  side,
   cardinality,
 }: {
   point: Point;
-  direction: 1 | -1;
+  side: Side;
   cardinality: LogicalRelationCardinality;
 }) {
-  const minimumMark =
-    cardinality.minimum === 0 ? (
-      <ZeroMark point={point} direction={direction} />
-    ) : (
-      <OneMark point={point} direction={direction} offset={MARK_GAP + MARK_SPACING} />
+  const direction = getSideDirection(side);
+
+  const perpendicular = {
+    x: -direction.y,
+    y: direction.x,
+  };
+
+  const getPoint = (distance: number): Point => ({
+    x: point.x + direction.x * distance,
+    y: point.y + direction.y * distance,
+  });
+
+  const renderOne = (distance: number, key: string) => {
+    const center = getPoint(distance);
+
+    return (
+      <line
+        key={key}
+        x1={center.x - perpendicular.x * MARK_SIZE}
+        y1={center.y - perpendicular.y * MARK_SIZE}
+        x2={center.x + perpendicular.x * MARK_SIZE}
+        y2={center.y + perpendicular.y * MARK_SIZE}
+        stroke="var(--color-brand-primary)"
+        strokeWidth={1.5}
+        strokeLinecap="round"
+      />
     );
+  };
 
   const maximumMark =
-    cardinality.maximum === 'N' ? (
-      <ManyMark point={point} direction={direction} />
+    cardinality.maximum === 'N'
+      ? (() => {
+          const base = getPoint(MARK_GAP);
+
+          const end = getPoint(MARK_GAP + MARK_SPACING);
+
+          return (
+            <g
+              fill="none"
+              stroke="var(--color-brand-primary)"
+              strokeWidth={1.5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line
+                x1={base.x}
+                y1={base.y}
+                x2={end.x + perpendicular.x * MARK_SIZE}
+                y2={end.y + perpendicular.y * MARK_SIZE}
+              />
+
+              <line x1={base.x} y1={base.y} x2={end.x} y2={end.y} />
+
+              <line
+                x1={base.x}
+                y1={base.y}
+                x2={end.x - perpendicular.x * MARK_SIZE}
+                y2={end.y - perpendicular.y * MARK_SIZE}
+              />
+            </g>
+          );
+        })()
+      : renderOne(MARK_GAP, 'maximum-one');
+
+  const minimumDistance = MARK_GAP + MARK_SPACING;
+
+  const minimumMark =
+    cardinality.minimum === 0 ? (
+      <circle
+        cx={getPoint(minimumDistance).x}
+        cy={getPoint(minimumDistance).y}
+        r={3.25}
+        fill="var(--color-background)"
+        stroke="var(--color-brand-primary)"
+        strokeWidth={1.5}
+      />
     ) : (
-      <OneMark point={point} direction={direction} />
+      renderOne(minimumDistance, 'minimum-one')
     );
 
   return (
@@ -201,11 +341,7 @@ function CardinalityMark({
   );
 }
 
-export function LogicalRelationsLayer({
-  tables,
-  positions,
-  containerRef,
-}: LogicalRelationsLayerProps) {
+export function LogicalRelationsLayer({ tables, containerRef, zoom }: LogicalRelationsLayerProps) {
   const [lines, setLines] = useState<RelationLine[]>([]);
 
   const calculateLines = useCallback(() => {
@@ -243,38 +379,18 @@ export function LogicalRelationsLayer({
           continue;
         }
 
-        const sourceTableRect = sourceElements.table.getBoundingClientRect();
+        const sourceRect = sourceElements.table.getBoundingClientRect();
 
-        const referencedTableRect = referencedElements.table.getBoundingClientRect();
+        const targetRect = referencedElements.table.getBoundingClientRect();
 
-        const sourceCenterX = sourceTableRect.left + sourceTableRect.width / 2;
-
-        const referencedCenterX = referencedTableRect.left + referencedTableRect.width / 2;
-
-        const sourceIsLeft = sourceCenterX < referencedCenterX;
-
-        const sourceDirection: 1 | -1 = sourceIsLeft ? 1 : -1;
-
-        const referencedDirection: 1 | -1 = sourceIsLeft ? -1 : 1;
-
-        const start: Point = {
-          x: (sourceIsLeft ? sourceTableRect.right : sourceTableRect.left) - containerRect.left,
-          y: getCenterY(sourceElements.table, sourceElements.column, containerRect),
-        };
-
-        const end: Point = {
-          x:
-            (sourceIsLeft ? referencedTableRect.left : referencedTableRect.right) -
-            containerRect.left,
-          y: getCenterY(referencedElements.table, referencedElements.column, containerRect),
-        };
+        const { sourceSide, targetSide } = getConnectionSides(sourceRect, targetRect);
 
         nextLines.push({
           id: foreignKey.id,
-          start,
-          end,
-          startDirection: sourceDirection,
-          endDirection: referencedDirection,
+          start: getConnectionPoint(sourceElements, sourceSide, containerRect, zoom),
+          end: getConnectionPoint(referencedElements, targetSide, containerRect, zoom),
+          startSide: sourceSide,
+          endSide: targetSide,
           sourceCardinality: foreignKey.sourceCardinality,
           referencedCardinality: foreignKey.referencedCardinality,
         });
@@ -282,21 +398,15 @@ export function LogicalRelationsLayer({
     }
 
     setLines(nextLines);
-  }, [containerRef, tables, positions]);
+  }, [containerRef, tables, zoom]);
 
   useLayoutEffect(() => {
-    const container = containerRef.current;
-
-    if (!container) {
-      return;
-    }
-
     const frame = requestAnimationFrame(calculateLines);
 
     return () => {
       cancelAnimationFrame(frame);
     };
-  }, [calculateLines, containerRef, positions]);
+  }, [calculateLines]);
 
   useLayoutEffect(() => {
     const container = containerRef.current;
@@ -334,7 +444,7 @@ export function LogicalRelationsLayer({
       {lines.map((line) => (
         <g key={line.id}>
           <path
-            d={createPath(line.start, line.end, line.startDirection, line.endDirection)}
+            d={createPath(line.start, line.end, line.startSide, line.endSide)}
             fill="none"
             stroke="var(--color-brand-primary)"
             strokeWidth={1.5}
@@ -344,13 +454,13 @@ export function LogicalRelationsLayer({
 
           <CardinalityMark
             point={line.start}
-            direction={line.startDirection}
+            side={line.startSide}
             cardinality={line.sourceCardinality}
           />
 
           <CardinalityMark
             point={line.end}
-            direction={line.endDirection}
+            side={line.endSide}
             cardinality={line.referencedCardinality}
           />
         </g>

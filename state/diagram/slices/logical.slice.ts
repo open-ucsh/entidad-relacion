@@ -3,12 +3,14 @@ import { createLogicalWorkspace } from '@/domain/logical/factories';
 import type {
   LogicalColumn,
   LogicalForeignKey,
+  LogicalRelationCardinality,
   LogicalTable,
   LogicalTablePosition,
   LogicalWorkspace,
 } from '@/domain/logical/models';
 import { transformDiagramToLogicalModel } from '@/domain/logical/transform';
 
+import { appendDiagramActivity } from '../diagram-activity';
 import { replaceActiveDiagram } from '../diagram-documents';
 import type { DiagramStoreSlice, LogicalSlice } from '../diagram-store.types';
 
@@ -48,9 +50,9 @@ function createForeignKeyColumn(
   referencedColumn: LogicalColumn,
   usedNames: Set<string>,
 ): LogicalColumn {
-  const baseName = `${normalizeLogicalName(referencedTable.name)}_${normalizeLogicalName(
-    referencedColumn.name,
-  )}`;
+  const baseName = `${normalizeLogicalName(
+    referencedTable.name,
+  )}_${normalizeLogicalName(referencedColumn.name)}`;
 
   let name = baseName;
   let index = 2;
@@ -106,6 +108,10 @@ function getNewTablePosition(workspace: LogicalWorkspace): LogicalTablePosition 
   };
 }
 
+function formatCardinality(cardinality: LogicalRelationCardinality): string {
+  return `${cardinality.minimum}..${cardinality.maximum}`;
+}
+
 export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
   generateLogicalModel: () => {
     set((state) => {
@@ -143,7 +149,13 @@ export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
         },
       };
 
-      return replaceActiveDiagram(state, state.diagram, {
+      const diagram = appendDiagramActivity(
+        state.diagram,
+        'element-created',
+        `Creó la tabla ${table.name}`,
+      );
+
+      return replaceActiveDiagram(state, diagram, {
         logicalWorkspace,
       });
     });
@@ -151,6 +163,14 @@ export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
 
   removeLogicalTable: (tableId) => {
     set((state) => {
+      const removedTable = state.logicalWorkspace.model.tables.find(
+        (table) => table.id === tableId,
+      );
+
+      if (!removedTable) {
+        return state;
+      }
+
       const tables = state.logicalWorkspace.model.tables
         .filter((table) => table.id !== tableId)
         .map((table) => removeForeignKeysReferencingTable(table, tableId));
@@ -159,7 +179,13 @@ export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
         Object.entries(state.logicalWorkspace.positions).filter(([id]) => id !== tableId),
       );
 
-      return replaceActiveDiagram(state, state.diagram, {
+      const diagram = appendDiagramActivity(
+        state.diagram,
+        'elements-removed',
+        `Eliminó la tabla ${removedTable.name}`,
+      );
+
+      return replaceActiveDiagram(state, diagram, {
         logicalWorkspace: {
           ...state.logicalWorkspace,
           origin: 'manual',
@@ -180,8 +206,22 @@ export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
       return;
     }
 
-    set((state) =>
-      replaceActiveDiagram(state, state.diagram, {
+    set((state) => {
+      const currentTable = state.logicalWorkspace.model.tables.find(
+        (table) => table.id === tableId,
+      );
+
+      if (!currentTable || currentTable.name === trimmedName) {
+        return state;
+      }
+
+      const diagram = appendDiagramActivity(
+        state.diagram,
+        'element-renamed',
+        `Renombró la tabla ${currentTable.name} a ${trimmedName}`,
+      );
+
+      return replaceActiveDiagram(state, diagram, {
         logicalWorkspace: {
           ...state.logicalWorkspace,
           origin: 'manual',
@@ -198,43 +238,116 @@ export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
             ),
           },
         },
-      }),
-    );
+      });
+    });
   },
 
-  moveLogicalTable: (tableId, position) => {
-    set((state) =>
-      replaceActiveDiagram(state, state.diagram, {
-        logicalWorkspace: {
-          ...state.logicalWorkspace,
-          positions: {
-            ...state.logicalWorkspace.positions,
-            [tableId]: position,
+  moveLogicalTable: (tableId, position, options = {}) => {
+    set((state) => {
+      const recordHistory = options.recordHistory ?? false;
+
+      if (!recordHistory) {
+        return replaceActiveDiagram(state, state.diagram, {
+          logicalWorkspace: {
+            ...state.logicalWorkspace,
+            positions: {
+              ...state.logicalWorkspace.positions,
+              [tableId]: position,
+            },
+          },
+          recordHistory: false,
+        });
+      }
+
+      const historyPosition = options.historyPosition;
+
+      const table = state.logicalWorkspace.model.tables.find(
+        (candidate) => candidate.id === tableId,
+      );
+
+      if (!table) {
+        return state;
+      }
+
+      const diagram = appendDiagramActivity(
+        state.diagram,
+        'elements-moved',
+        `Movió la tabla ${table.name}`,
+      );
+
+      if (!historyPosition) {
+        return replaceActiveDiagram(state, diagram, {
+          logicalWorkspace: {
+            ...state.logicalWorkspace,
+            positions: {
+              ...state.logicalWorkspace.positions,
+              [tableId]: position,
+            },
+          },
+        });
+      }
+
+      const logicalWorkspaceBeforeMove: LogicalWorkspace = {
+        ...state.logicalWorkspace,
+        positions: {
+          ...state.logicalWorkspace.positions,
+          [tableId]: historyPosition,
+        },
+      };
+
+      const currentWorkspace = state.logicalWorkspace;
+
+      return replaceActiveDiagram(
+        {
+          ...state,
+          logicalWorkspace: logicalWorkspaceBeforeMove,
+        },
+        diagram,
+        {
+          logicalWorkspace: {
+            ...currentWorkspace,
+            positions: {
+              ...currentWorkspace.positions,
+              [tableId]: position,
+            },
           },
         },
-        recordHistory: false,
-      }),
-    );
+      );
+    });
   },
 
   addLogicalColumn: (tableId, name = 'nueva_columna') => {
     set((state) => {
+      const table = state.logicalWorkspace.model.tables.find(
+        (candidate) => candidate.id === tableId,
+      );
+
+      if (!table) {
+        return state;
+      }
+
       const column = createLogicalColumn(name);
 
-      return replaceActiveDiagram(state, state.diagram, {
+      const diagram = appendDiagramActivity(
+        state.diagram,
+        'element-created',
+        `Creó la columna ${column.name} en ${table.name}`,
+      );
+
+      return replaceActiveDiagram(state, diagram, {
         logicalWorkspace: {
           ...state.logicalWorkspace,
           origin: 'manual',
           model: {
             ...state.logicalWorkspace.model,
             diagnostics: [],
-            tables: state.logicalWorkspace.model.tables.map((table) =>
-              table.id === tableId
+            tables: state.logicalWorkspace.model.tables.map((candidate) =>
+              candidate.id === tableId
                 ? {
-                    ...table,
-                    columns: [...table.columns, column],
+                    ...candidate,
+                    columns: [...candidate.columns, column],
                   }
-                : table,
+                : candidate,
             ),
           },
         },
@@ -262,6 +375,37 @@ export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
         primaryKey: nextPrimaryKey,
         nullable: nextPrimaryKey ? false : (updates.nullable ?? currentColumn.nullable),
       };
+
+      const hasChanged =
+        nextColumn.name !== currentColumn.name ||
+        nextColumn.primaryKey !== currentColumn.primaryKey ||
+        nextColumn.nullable !== currentColumn.nullable ||
+        nextColumn.unique !== currentColumn.unique;
+
+      if (!hasChanged) {
+        return state;
+      }
+
+      let activityDetails: string | null = null;
+
+      if (updates.name !== undefined && updates.name !== currentColumn.name) {
+        activityDetails = `Renombró la columna ${currentColumn.name} a ${updates.name} en ${currentTable.name}`;
+      } else if (
+        updates.primaryKey !== undefined &&
+        updates.primaryKey !== currentColumn.primaryKey
+      ) {
+        activityDetails = updates.primaryKey
+          ? `Marcó ${currentColumn.name} como clave primaria en ${currentTable.name}`
+          : `Quitó la clave primaria de ${currentColumn.name} en ${currentTable.name}`;
+      } else if (updates.unique !== undefined && updates.unique !== currentColumn.unique) {
+        activityDetails = updates.unique
+          ? `Marcó ${currentColumn.name} como UNIQUE en ${currentTable.name}`
+          : `Quitó UNIQUE de ${currentColumn.name} en ${currentTable.name}`;
+      } else if (updates.nullable !== undefined && updates.nullable !== currentColumn.nullable) {
+        activityDetails = updates.nullable
+          ? `Permitió NULL en ${currentColumn.name} de ${currentTable.name}`
+          : `Deshabilitó NULL en ${currentColumn.name} de ${currentTable.name}`;
+      }
 
       const primaryKeyRemoved = currentColumn.primaryKey && !nextColumn.primaryKey;
 
@@ -306,7 +450,11 @@ export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
         });
       }
 
-      return replaceActiveDiagram(state, state.diagram, {
+      const diagram = activityDetails
+        ? appendDiagramActivity(state.diagram, 'element-updated', activityDetails)
+        : state.diagram;
+
+      return replaceActiveDiagram(state, diagram, {
         logicalWorkspace: {
           ...state.logicalWorkspace,
           origin: 'manual',
@@ -385,7 +533,13 @@ export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
         });
       }
 
-      return replaceActiveDiagram(state, state.diagram, {
+      const diagram = appendDiagramActivity(
+        state.diagram,
+        'elements-removed',
+        `Eliminó la columna ${removedColumn.name} de ${sourceTable.name}`,
+      );
+
+      return replaceActiveDiagram(state, diagram, {
         logicalWorkspace: {
           ...state.logicalWorkspace,
           origin: 'manual',
@@ -458,7 +612,13 @@ export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
         };
       });
 
-      return replaceActiveDiagram(state, state.diagram, {
+      const diagram = appendDiagramActivity(
+        state.diagram,
+        'connection-created',
+        `Creó una relación de ${sourceTable.name} con ${referencedTable.name}`,
+      );
+
+      return replaceActiveDiagram(state, diagram, {
         logicalWorkspace: {
           ...state.logicalWorkspace,
           origin: 'manual',
@@ -487,6 +647,10 @@ export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
         return state;
       }
 
+      const referencedTable = state.logicalWorkspace.model.tables.find(
+        (table) => table.id === foreignKey.referencedTableId,
+      );
+
       const foreignColumnIds = new Set(foreignKey.columnIds);
 
       const tables = state.logicalWorkspace.model.tables.map((table) => {
@@ -501,7 +665,13 @@ export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
         };
       });
 
-      return replaceActiveDiagram(state, state.diagram, {
+      const diagram = appendDiagramActivity(
+        state.diagram,
+        'connection-updated',
+        `Eliminó la relación de ${sourceTable.name} con ${referencedTable?.name ?? 'tabla'}`,
+      );
+
+      return replaceActiveDiagram(state, diagram, {
         logicalWorkspace: {
           ...state.logicalWorkspace,
           origin: 'manual',
@@ -515,8 +685,42 @@ export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
   },
 
   updateLogicalForeignKeyCardinality: (sourceTableId, foreignKeyId, side, cardinality) => {
-    set((state) =>
-      replaceActiveDiagram(state, state.diagram, {
+    set((state) => {
+      const sourceTable = state.logicalWorkspace.model.tables.find(
+        (table) => table.id === sourceTableId,
+      );
+
+      const foreignKey = sourceTable?.foreignKeys.find(
+        (candidate) => candidate.id === foreignKeyId,
+      );
+
+      if (!sourceTable || !foreignKey) {
+        return state;
+      }
+
+      const currentCardinality =
+        side === 'source' ? foreignKey.sourceCardinality : foreignKey.referencedCardinality;
+
+      if (
+        currentCardinality.minimum === cardinality.minimum &&
+        currentCardinality.maximum === cardinality.maximum
+      ) {
+        return state;
+      }
+
+      const referencedTable = state.logicalWorkspace.model.tables.find(
+        (table) => table.id === foreignKey.referencedTableId,
+      );
+
+      const diagram = appendDiagramActivity(
+        state.diagram,
+        'connection-updated',
+        `Cambió la cardinalidad ${
+          side === 'source' ? sourceTable.name : (referencedTable?.name ?? 'referenciada')
+        } de ${formatCardinality(currentCardinality)} a ${formatCardinality(cardinality)}`,
+      );
+
+      return replaceActiveDiagram(state, diagram, {
         logicalWorkspace: {
           ...state.logicalWorkspace,
           origin: 'manual',
@@ -530,18 +734,18 @@ export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
 
               return {
                 ...table,
-                foreignKeys: table.foreignKeys.map((foreignKey) => {
-                  if (foreignKey.id !== foreignKeyId) {
-                    return foreignKey;
+                foreignKeys: table.foreignKeys.map((candidate) => {
+                  if (candidate.id !== foreignKeyId) {
+                    return candidate;
                   }
 
                   return side === 'source'
                     ? {
-                        ...foreignKey,
+                        ...candidate,
                         sourceCardinality: cardinality,
                       }
                     : {
-                        ...foreignKey,
+                        ...candidate,
                         referencedCardinality: cardinality,
                       };
                 }),
@@ -549,8 +753,8 @@ export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
             }),
           },
         },
-      }),
-    );
+      });
+    });
   },
 
   replaceLogicalTable: (tableId, nextTable) => {

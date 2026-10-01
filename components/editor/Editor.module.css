@@ -7,6 +7,7 @@
   flex: 1;
   grid-template-columns: var(--editor-workspace-columns);
   overflow: hidden;
+  border-top: 1px solid var(--color-border);
 }
 
 .toolbarSlot,
@@ -88,16 +89,17 @@
   }
 }
 
-.modelViewSwitcher {
+.modelViewBar {
   position: absolute;
   z-index: 60;
   top: 0;
-  left: 0;
-  right: 0;
+  left: 50%;
+  display: flex;
+  transform: translate(-50%, -50%);
   pointer-events: none;
 }
 
-.modelViewSwitcher > * {
+.modelViewBar > * {
   pointer-events: auto;
 }
 

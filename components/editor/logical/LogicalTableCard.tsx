@@ -13,6 +13,7 @@ import {
 import { useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 
 import type {
+  LogicalColumn,
   LogicalRelationCardinality,
   LogicalTable,
   LogicalTablePosition,
@@ -22,6 +23,7 @@ import { useDiagramStore } from '@/state/diagram/store';
 interface LogicalTableCardProps {
   table: LogicalTable;
   position: LogicalTablePosition;
+  zoom: number;
 }
 
 interface DragState {
@@ -30,6 +32,15 @@ interface DragState {
   startPointerY: number;
   startTableX: number;
   startTableY: number;
+  moved: boolean;
+}
+
+interface LogicalColumnRowProps {
+  column: LogicalColumn;
+  table: LogicalTable;
+  isForeignKey: boolean;
+  onUpdate: (tableId: string, columnId: string, updates: Partial<LogicalColumn>) => void;
+  onRemove: (tableId: string, columnId: string) => void;
 }
 
 type CardinalityValue = '0..1' | '1..1' | '0..N' | '1..N';
@@ -98,7 +109,142 @@ function getCardinality(value: CardinalityValue): LogicalRelationCardinality {
   );
 }
 
-export function LogicalTableCard({ table, position }: LogicalTableCardProps) {
+function LogicalColumnRow({
+  column,
+  table,
+  isForeignKey,
+  onUpdate,
+  onRemove,
+}: LogicalColumnRowProps) {
+  const [name, setName] = useState(column.name);
+
+  function commitName() {
+    const nextName = name.trim();
+
+    if (!nextName) {
+      setName(column.name);
+      return;
+    }
+
+    if (nextName === column.name) {
+      return;
+    }
+
+    onUpdate(table.id, column.id, {
+      name: nextName,
+    });
+  }
+
+  return (
+    <div
+      data-logical-column-id={column.id}
+      className="group flex min-h-10 items-center gap-2 px-3 py-2"
+    >
+      <span className="flex w-8 shrink-0 items-center gap-1">
+        {column.primaryKey && (
+          <KeyRound size={12} className="text-amber-600" aria-label="Clave primaria" />
+        )}
+
+        {isForeignKey && (
+          <Link size={12} className="text-brand-primary" aria-label="Clave foránea" />
+        )}
+      </span>
+
+      <input
+        value={name}
+        aria-label={`Nombre de la columna ${column.name}`}
+        className="min-w-0 flex-1 bg-transparent text-sm font-medium text-text outline-none"
+        onChange={(event) => {
+          setName(event.target.value);
+        }}
+        onBlur={commitName}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') {
+            event.currentTarget.blur();
+          }
+
+          if (event.key === 'Escape') {
+            setName(column.name);
+            event.currentTarget.blur();
+          }
+        }}
+      />
+
+      <label
+        className="cursor-pointer text-[10px] font-semibold text-text-muted"
+        title="Clave primaria"
+      >
+        <input
+          type="checkbox"
+          className="sr-only"
+          checked={column.primaryKey}
+          onChange={(event) => {
+            onUpdate(table.id, column.id, {
+              primaryKey: event.target.checked,
+              nullable: event.target.checked ? false : column.nullable,
+            });
+          }}
+        />
+
+        <span className={column.primaryKey ? 'text-amber-600' : 'opacity-40 hover:opacity-100'}>
+          PK
+        </span>
+      </label>
+
+      <label
+        className="cursor-pointer text-[10px] font-semibold text-text-muted"
+        title="Valor único"
+      >
+        <input
+          type="checkbox"
+          className="sr-only"
+          checked={column.unique}
+          onChange={(event) => {
+            onUpdate(table.id, column.id, {
+              unique: event.target.checked,
+            });
+          }}
+        />
+
+        <span className={column.unique ? 'text-brand-primary' : 'opacity-40 hover:opacity-100'}>
+          UQ
+        </span>
+      </label>
+
+      <label
+        className="cursor-pointer text-[10px] font-semibold text-text-muted"
+        title="Permitir NULL"
+      >
+        <input
+          type="checkbox"
+          className="sr-only"
+          checked={column.nullable}
+          disabled={column.primaryKey}
+          onChange={(event) => {
+            onUpdate(table.id, column.id, {
+              nullable: event.target.checked,
+            });
+          }}
+        />
+
+        <span className={column.nullable ? 'text-text' : 'opacity-40 hover:opacity-100'}>NULL</span>
+      </label>
+
+      <button
+        type="button"
+        aria-label={`Eliminar columna ${column.name}`}
+        className="flex size-6 shrink-0 items-center justify-center rounded text-text-muted opacity-0 transition-all hover:bg-red-500/10 hover:text-red-600 group-hover:opacity-100 focus:opacity-100"
+        onClick={() => {
+          onRemove(table.id, column.id);
+        }}
+      >
+        <Trash2 size={12} aria-hidden="true" />
+      </button>
+    </div>
+  );
+}
+
+export function LogicalTableCard({ table, position, zoom }: LogicalTableCardProps) {
   const renameLogicalTable = useDiagramStore((state) => state.renameLogicalTable);
   const removeLogicalTable = useDiagramStore((state) => state.removeLogicalTable);
   const addLogicalColumn = useDiagramStore((state) => state.addLogicalColumn);
@@ -110,6 +256,7 @@ export function LogicalTableCard({ table, position }: LogicalTableCardProps) {
   const updateLogicalForeignKeyCardinality = useDiagramStore(
     (state) => state.updateLogicalForeignKeyCardinality,
   );
+
   const tables = useDiagramStore((state) => state.logicalWorkspace.model.tables);
 
   const [tableName, setTableName] = useState(table.name);
@@ -144,6 +291,8 @@ export function LogicalTableCard({ table, position }: LogicalTableCardProps) {
       return;
     }
 
+    event.stopPropagation();
+
     event.currentTarget.setPointerCapture(event.pointerId);
 
     dragRef.current = {
@@ -152,6 +301,7 @@ export function LogicalTableCard({ table, position }: LogicalTableCardProps) {
       startPointerY: event.clientY,
       startTableX: position.x,
       startTableY: position.y,
+      moved: false,
     };
   }
 
@@ -162,22 +312,57 @@ export function LogicalTableCard({ table, position }: LogicalTableCardProps) {
       return;
     }
 
-    moveLogicalTable(table.id, {
-      x: Math.max(0, drag.startTableX + event.clientX - drag.startPointerX),
-      y: Math.max(0, drag.startTableY + event.clientY - drag.startPointerY),
-    });
+    const deltaX = (event.clientX - drag.startPointerX) / zoom;
+    const deltaY = (event.clientY - drag.startPointerY) / zoom;
+
+    if (Math.abs(deltaX) > 0.5 || Math.abs(deltaY) > 0.5) {
+      drag.moved = true;
+    }
+
+    moveLogicalTable(
+      table.id,
+      {
+        x: Math.max(0, drag.startTableX + deltaX),
+        y: Math.max(0, drag.startTableY + deltaY),
+      },
+      {
+        recordHistory: false,
+      },
+    );
   }
 
   function handlePointerEnd(event: ReactPointerEvent<HTMLButtonElement>) {
-    if (dragRef.current?.pointerId !== event.pointerId) {
+    const drag = dragRef.current;
+
+    if (!drag || drag.pointerId !== event.pointerId) {
       return;
     }
+
+    dragRef.current = null;
 
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
 
-    dragRef.current = null;
+    if (!drag.moved) {
+      return;
+    }
+
+    const deltaX = (event.clientX - drag.startPointerX) / zoom;
+    const deltaY = (event.clientY - drag.startPointerY) / zoom;
+
+    const finalPosition = {
+      x: Math.max(0, drag.startTableX + deltaX),
+      y: Math.max(0, drag.startTableY + deltaY),
+    };
+
+    moveLogicalTable(table.id, finalPosition, {
+      recordHistory: true,
+      historyPosition: {
+        x: drag.startTableX,
+        y: drag.startTableY,
+      },
+    });
   }
 
   return (
@@ -236,119 +421,16 @@ export function LogicalTableCard({ table, position }: LogicalTableCardProps) {
 
       {table.columns.length > 0 ? (
         <div className="divide-y divide-border">
-          {table.columns.map((column) => {
-            const isForeignKey = foreignKeyColumnIds.has(column.id);
-
-            return (
-              <div
-                key={column.id}
-                data-logical-column-id={column.id}
-                className="group flex min-h-10 items-center gap-2 px-3 py-2"
-              >
-                <span className="flex w-8 shrink-0 items-center gap-1">
-                  {column.primaryKey && (
-                    <KeyRound size={12} className="text-amber-600" aria-label="Clave primaria" />
-                  )}
-
-                  {isForeignKey && (
-                    <Link size={12} className="text-brand-primary" aria-label="Clave foránea" />
-                  )}
-                </span>
-
-                <input
-                  value={column.name}
-                  aria-label="Nombre de la columna"
-                  className="min-w-0 flex-1 bg-transparent text-sm font-medium text-text outline-none"
-                  onChange={(event) => {
-                    updateLogicalColumn(table.id, column.id, {
-                      name: event.target.value,
-                    });
-                  }}
-                />
-
-                <label
-                  className="cursor-pointer text-[10px] font-semibold text-text-muted"
-                  title="Clave primaria"
-                >
-                  <input
-                    type="checkbox"
-                    className="sr-only"
-                    checked={column.primaryKey}
-                    onChange={(event) => {
-                      updateLogicalColumn(table.id, column.id, {
-                        primaryKey: event.target.checked,
-                        nullable: event.target.checked ? false : column.nullable,
-                      });
-                    }}
-                  />
-
-                  <span
-                    className={
-                      column.primaryKey ? 'text-amber-600' : 'opacity-40 hover:opacity-100'
-                    }
-                  >
-                    PK
-                  </span>
-                </label>
-
-                <label
-                  className="cursor-pointer text-[10px] font-semibold text-text-muted"
-                  title="Valor único"
-                >
-                  <input
-                    type="checkbox"
-                    className="sr-only"
-                    checked={column.unique}
-                    onChange={(event) => {
-                      updateLogicalColumn(table.id, column.id, {
-                        unique: event.target.checked,
-                      });
-                    }}
-                  />
-
-                  <span
-                    className={
-                      column.unique ? 'text-brand-primary' : 'opacity-40 hover:opacity-100'
-                    }
-                  >
-                    UQ
-                  </span>
-                </label>
-
-                <label
-                  className="cursor-pointer text-[10px] font-semibold text-text-muted"
-                  title="Permitir NULL"
-                >
-                  <input
-                    type="checkbox"
-                    className="sr-only"
-                    checked={column.nullable}
-                    disabled={column.primaryKey}
-                    onChange={(event) => {
-                      updateLogicalColumn(table.id, column.id, {
-                        nullable: event.target.checked,
-                      });
-                    }}
-                  />
-
-                  <span className={column.nullable ? 'text-text' : 'opacity-40 hover:opacity-100'}>
-                    NULL
-                  </span>
-                </label>
-
-                <button
-                  type="button"
-                  aria-label={`Eliminar columna ${column.name}`}
-                  className="flex size-6 shrink-0 items-center justify-center rounded text-text-muted opacity-0 transition-all hover:bg-red-500/10 hover:text-red-600 group-hover:opacity-100 focus:opacity-100"
-                  onClick={() => {
-                    removeLogicalColumn(table.id, column.id);
-                  }}
-                >
-                  <Trash2 size={12} aria-hidden="true" />
-                </button>
-              </div>
-            );
-          })}
+          {table.columns.map((column) => (
+            <LogicalColumnRow
+              key={`${column.id}:${column.name}`}
+              column={column}
+              table={table}
+              isForeignKey={foreignKeyColumnIds.has(column.id)}
+              onUpdate={updateLogicalColumn}
+              onRemove={removeLogicalColumn}
+            />
+          ))}
         </div>
       ) : (
         <p className="px-4 py-4 text-xs text-text-muted">Sin columnas almacenadas</p>

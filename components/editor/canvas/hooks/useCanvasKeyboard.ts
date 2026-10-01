@@ -24,8 +24,6 @@ export function useCanvasKeyboard() {
   const duplicateSelectedElements = useDiagramStore((state) => state.duplicateSelectedElements);
   const selectAllElements = useDiagramStore((state) => state.selectAllElements);
   const setActiveTool = useDiagramStore((state) => state.setActiveTool);
-  const undo = useDiagramStore((state) => state.undo);
-  const redo = useDiagramStore((state) => state.redo);
 
   const { activateTool } = useDiagramTool();
 
@@ -51,24 +49,6 @@ export function useCanvasKeyboard() {
 
       const hasModifier = event.ctrlKey || event.metaKey;
       const key = event.key.toLowerCase();
-
-      if (hasModifier && key === 'z') {
-        event.preventDefault();
-
-        if (event.shiftKey) {
-          redo();
-        } else {
-          undo();
-        }
-
-        return;
-      }
-
-      if (hasModifier && key === 'y') {
-        event.preventDefault();
-        redo();
-        return;
-      }
 
       if (hasModifier && key === 'a') {
         event.preventDefault();
@@ -128,12 +108,10 @@ export function useCanvasKeyboard() {
   }, [
     activateTool,
     duplicateSelectedElements,
-    redo,
     removeElements,
     selectAllElements,
     selectedElementIds,
     setActiveTool,
-    undo,
   ]);
 
   return {
