@@ -105,14 +105,6 @@ function transformManyToMany(
       targetTable: relationshipTable,
       nullable: false,
       primaryKey: true,
-
-      /*
-       * Cada fila de la tabla intermedia pertenece
-       * exactamente a una fila de la entidad.
-       *
-       * Una fila de la entidad puede aparecer en
-       * varias filas de la tabla intermedia.
-       */
       sourceCardinality: getParticipantCardinality(participant),
       referencedCardinality: {
         minimum: 1,
@@ -133,41 +125,45 @@ function transformManyToMany(
 function transformOneToMany(
   diagram: Diagram,
   relationship: Relationship,
-  one: RelationshipParticipant,
-  many: RelationshipParticipant,
+  singleSide: RelationshipParticipant,
+  multipleSide: RelationshipParticipant,
   tables: LogicalTable[],
   diagnostics: LogicalDiagnostic[],
 ): void {
-  const oneTable = findEntityTable(tables, one.entity.id);
+  const targetTable = findEntityTable(tables, singleSide.entity.id);
 
-  const manyTable = findEntityTable(tables, many.entity.id);
+  const referencedTable = findEntityTable(tables, multipleSide.entity.id);
 
-  if (!oneTable || !manyTable) {
+  if (!targetTable || !referencedTable) {
     return;
   }
 
-  const identifying = relationship.kind === 'identifying' && many.entity.kind === 'weak';
+  const identifying = relationship.kind === 'identifying' && singleSide.entity.kind === 'weak';
 
   const added = addForeignKey({
-    sourceId: `${relationship.id}:${many.entity.id}`,
+    sourceId: `${relationship.id}:${singleSide.entity.id}`,
     sourceRelationshipId: relationship.id,
-    referencedTable: oneTable,
-    targetTable: manyTable,
-    nullable: identifying ? false : many.connection.minimum === 0,
+    referencedTable,
+    targetTable,
+    nullable: identifying ? false : singleSide.connection.minimum === 0,
     primaryKey: identifying,
-
-    sourceCardinality: getParticipantCardinality(many),
-
-    referencedCardinality: getParticipantCardinality(one),
+    sourceCardinality: {
+      minimum: multipleSide.connection.minimum === 1 ? 1 : 0,
+      maximum: 'N',
+    },
+    referencedCardinality: {
+      minimum: singleSide.connection.minimum === 1 ? 1 : 0,
+      maximum: 1,
+    },
   });
 
   if (!added) {
-    addMissingReferencedKeyDiagnostic(diagnostics, relationship, oneTable);
+    addMissingReferencedKeyDiagnostic(diagnostics, relationship, referencedTable);
 
     return;
   }
 
-  addRelationshipAttributes(diagram, relationship, manyTable);
+  addRelationshipAttributes(diagram, relationship, targetTable);
 }
 
 function selectOneToOneTarget(
@@ -238,10 +234,8 @@ function transformOneToOne(
     targetTable,
     nullable: target.connection.minimum === 0,
     unique: true,
-
-    sourceCardinality: getParticipantCardinality(target),
-
-    referencedCardinality: getParticipantCardinality(referenced),
+    sourceCardinality: getParticipantCardinality(referenced),
+    referencedCardinality: getParticipantCardinality(target),
   });
 
   if (!added) {

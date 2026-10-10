@@ -45,9 +45,10 @@ export function CardinalityMark({ point, side, cardinality }: CardinalityMarkPro
   const maximumMark =
     cardinality.maximum === 'N'
       ? (() => {
-          const base = getPoint(MARK_GAP);
+          const vertex = getPoint(MARK_GAP + MARK_SPACING);
 
-          const end = getPoint(MARK_GAP + MARK_SPACING);
+          const upper = getPoint(MARK_GAP);
+          const lower = getPoint(MARK_GAP);
 
           return (
             <g
@@ -58,19 +59,19 @@ export function CardinalityMark({ point, side, cardinality }: CardinalityMarkPro
               strokeLinejoin="round"
             >
               <line
-                x1={base.x}
-                y1={base.y}
-                x2={end.x + perpendicular.x * MARK_SIZE}
-                y2={end.y + perpendicular.y * MARK_SIZE}
+                x1={vertex.x}
+                y1={vertex.y}
+                x2={upper.x + perpendicular.x * MARK_SIZE}
+                y2={upper.y + perpendicular.y * MARK_SIZE}
               />
 
-              <line x1={base.x} y1={base.y} x2={end.x} y2={end.y} />
+              <line x1={vertex.x} y1={vertex.y} x2={upper.x} y2={upper.y} />
 
               <line
-                x1={base.x}
-                y1={base.y}
-                x2={end.x - perpendicular.x * MARK_SIZE}
-                y2={end.y - perpendicular.y * MARK_SIZE}
+                x1={vertex.x}
+                y1={vertex.y}
+                x2={lower.x - perpendicular.x * MARK_SIZE}
+                y2={lower.y - perpendicular.y * MARK_SIZE}
               />
             </g>
           );

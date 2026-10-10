@@ -26,6 +26,62 @@ interface LogicalRelationInspectorProps {
   onRemove: () => void;
 }
 
+function formatCardinality(cardinality: LogicalRelationCardinality): string {
+  return `${cardinality.minimum}..${cardinality.maximum}`;
+}
+
+function getCardinalityDescription(cardinality: LogicalRelationCardinality): string {
+  if (cardinality.minimum === 0 && cardinality.maximum === 1) {
+    return 'Cero o uno';
+  }
+
+  if (cardinality.minimum === 1 && cardinality.maximum === 1) {
+    return 'Exactamente uno';
+  }
+
+  if (cardinality.minimum === 0 && cardinality.maximum === 'N') {
+    return 'Cero o muchos';
+  }
+
+  return 'Uno o muchos';
+}
+
+interface CardinalityFieldProps {
+  tableName: string;
+  cardinality: LogicalRelationCardinality;
+  onChange: (cardinality: LogicalRelationCardinality) => void;
+}
+
+function CardinalityField({ tableName, cardinality, onChange }: CardinalityFieldProps) {
+  return (
+    <label className="block rounded-lg border border-border bg-background p-2.5">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <span className="min-w-0 truncate text-xs font-semibold text-text">{tableName}</span>
+
+        <span className="shrink-0 rounded-md bg-brand-primary/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-brand-primary">
+          {formatCardinality(cardinality)}
+        </span>
+      </div>
+
+      <select
+        value={getCardinalityValue(cardinality)}
+        className="w-full rounded-md border border-border bg-surface px-2.5 py-2 text-xs text-text outline-none transition-colors focus:border-brand-primary"
+        onChange={(event) => {
+          onChange(getCardinality(event.target.value as CardinalityValue));
+        }}
+      >
+        {CARDINALITY_OPTIONS.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+
+      <p className="mt-1.5 text-[10px] text-text-muted">{getCardinalityDescription(cardinality)}</p>
+    </label>
+  );
+}
+
 export function LogicalRelationInspector({
   sourceTable,
   referencedTable,
@@ -89,61 +145,49 @@ export function LogicalRelationInspector({
         </header>
 
         <section className="border-b border-border p-3">
-          <p className="mb-3 text-[10px] font-semibold uppercase tracking-wide text-text-muted">
-            Cardinalidad
-          </p>
+          <div className="mb-3">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-text-muted">
+              Cardinalidad
+            </p>
 
-          <div className="space-y-3">
-            <label className="block">
-              <span className="mb-1.5 block text-xs font-medium text-text">{sourceTable.name}</span>
+            <p className="mt-1 text-[10px] leading-relaxed text-text-muted">
+              Define cuántos registros pueden participar en cada extremo de la relación.
+            </p>
+          </div>
 
-              <select
-                value={getCardinalityValue(foreignKey.sourceCardinality)}
-                className="w-full rounded-lg border border-border bg-background px-2.5 py-2 text-xs text-text outline-none focus:border-brand-primary"
-                onChange={(event) => {
-                  onUpdateCardinality(
-                    'source',
-                    getCardinality(event.target.value as CardinalityValue),
-                  );
-                }}
-              >
-                {CARDINALITY_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+          <div className="space-y-2">
+            <CardinalityField
+              tableName={sourceTable.name}
+              cardinality={foreignKey.sourceCardinality}
+              onChange={(cardinality) => {
+                onUpdateCardinality('source', cardinality);
+              }}
+            />
 
-            <label className="block">
-              <span className="mb-1.5 block text-xs font-medium text-text">
-                {referencedTable.name}
-              </span>
+            <div className="flex justify-center">
+              <ArrowRight size={13} className="rotate-90 text-text-muted" aria-hidden="true" />
+            </div>
 
-              <select
-                value={getCardinalityValue(foreignKey.referencedCardinality)}
-                className="w-full rounded-lg border border-border bg-background px-2.5 py-2 text-xs text-text outline-none focus:border-brand-primary"
-                onChange={(event) => {
-                  onUpdateCardinality(
-                    'referenced',
-                    getCardinality(event.target.value as CardinalityValue),
-                  );
-                }}
-              >
-                {CARDINALITY_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <CardinalityField
+              tableName={referencedTable.name}
+              cardinality={foreignKey.referencedCardinality}
+              onChange={(cardinality) => {
+                onUpdateCardinality('referenced', cardinality);
+              }}
+            />
           </div>
         </section>
 
         <section className="border-b border-border p-3">
-          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-text-muted">
-            Columnas
-          </p>
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-text-muted">
+              Clave foránea
+            </p>
+
+            <span className="text-[10px] text-text-muted">
+              {pairs.length} {pairs.length === 1 ? 'columna' : 'columnas'}
+            </span>
+          </div>
 
           <div className="space-y-1.5">
             {pairs.map((pair, index) => (

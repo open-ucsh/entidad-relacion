@@ -129,7 +129,6 @@ export function LogicalCanvas({
         >
           <LogicalRelationsLayer
             tables={tables}
-            positions={positions}
             containerRef={canvasRef}
             zoom={camera.zoom}
             selection={selection}
