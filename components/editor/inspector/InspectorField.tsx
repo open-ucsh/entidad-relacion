@@ -7,9 +7,7 @@ interface InspectorFieldProps extends PropsWithChildren {
 export function InspectorField({ label, children }: InspectorFieldProps) {
   return (
     <section className="space-y-2">
-      <label className="block text-xs font-medium uppercase tracking-wide text-text-muted">
-        {label}
-      </label>
+      <h3 className="text-xs font-medium text-text-muted">{label}</h3>
 
       {children}
     </section>
