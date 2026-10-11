@@ -32,9 +32,7 @@ export function HeaderToolbar({
   onOpenShortcuts,
 }: HeaderToolbarProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
-
   const documents = useDiagramStore((state) => state.documents);
-
   const { showFeedback } = useEditorFeedback();
 
   async function handleImport(file: File) {
@@ -65,33 +63,19 @@ export function HeaderToolbar({
   }
 
   return (
-    <div
-      className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto"
-      style={{ scrollbarWidth: 'none' }}
-    >
+    <div className="flex min-w-0 flex-1 items-center gap-1">
       <button
         type="button"
         onClick={onOpenDocuments}
         aria-haspopup="dialog"
         aria-label="Documentos"
-        className="flex h-8 shrink-0 items-center justify-center gap-2 rounded-md px-2 text-xs font-semibold text-white transition-colors hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 sm:px-3"
+        className="flex h-10 shrink-0 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium text-brand-primary transition-colors hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
       >
-        <FolderOpen size={17} aria-hidden="true" />
-
-        <span className="hidden sm:inline">Documentos</span>
+        <FolderOpen size={18} aria-hidden="true" />
+        <span>Documentos</span>
       </button>
 
-      <div className="hidden sm:block">
-        <HeaderDivider />
-      </div>
-
-      <HeaderIconButton icon={Undo2} label="Deshacer" onClick={onUndo} disabled={!canUndo} />
-
-      <HeaderIconButton icon={Redo2} label="Rehacer" onClick={onRedo} disabled={!canRedo} />
-
-      <div className="hidden sm:block">
-        <HeaderDivider />
-      </div>
+      <HeaderDivider />
 
       <HeaderIconButton
         icon={FileUp}
@@ -117,13 +101,17 @@ export function HeaderToolbar({
         }}
       />
 
-      <div className="hidden sm:block">
-        <HeaderDivider />
-      </div>
-
       <HeaderIconButton icon={History} label="Historial del proyecto" onClick={onOpenHistory} />
 
       <HeaderIconButton icon={CircleHelp} label="Ver atajos de teclado" onClick={onOpenShortcuts} />
+
+      <div className="ml-auto flex shrink-0 items-center gap-1">
+        <HeaderDivider />
+
+        <HeaderIconButton icon={Undo2} label="Deshacer" onClick={onUndo} disabled={!canUndo} />
+
+        <HeaderIconButton icon={Redo2} label="Rehacer" onClick={onRedo} disabled={!canRedo} />
+      </div>
     </div>
   );
 }

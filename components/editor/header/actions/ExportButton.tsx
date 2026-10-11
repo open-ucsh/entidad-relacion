@@ -91,8 +91,9 @@ export function ExportButton({ onExport, onExportJson }: ExportButtonProps) {
         aria-expanded={isOpen}
         aria-haspopup="menu"
         aria-controls={menuId}
-        className="flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all hover:-translate-y-px hover:border-white/30 hover:bg-white/20 hover:shadow-md active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+        className="flex h-10 items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 text-sm font-semibold text-brand-primary transition-colors hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
       >
+        <FileDown size={18} aria-hidden="true" />
         Exportar
         <ChevronDown
           size={14}

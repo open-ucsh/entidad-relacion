@@ -1,3 +1,5 @@
+import { FileText } from 'lucide-react';
+
 import type { ExportFormat } from '../canvas/hooks/useCanvasExport';
 
 import { ExportButton } from './actions/ExportButton';
@@ -38,13 +40,16 @@ export function Header({
   onOpenShortcuts,
 }: HeaderProps) {
   return (
-    <header className="relative z-50 shrink-0 border-b border-white/15 bg-brand-primary shadow-sm">
-      <div className="flex h-14 min-w-0 items-center gap-3 px-3 sm:px-4 lg:h-16 lg:px-6">
-        <div className="hidden shrink-0 lg:block">
-          <HeaderBrand />
-        </div>
+    <header className="relative z-50 shrink-0 border-b border-border bg-background text-text">
+      <div className="flex min-h-20 min-w-0 items-center gap-3 px-3 sm:gap-4 sm:px-6 lg:px-8">
+        <HeaderBrand />
 
-        <div className="hidden h-9 w-px shrink-0 bg-white/15 lg:block" aria-hidden="true" />
+        <span aria-hidden="true" className="h-10 w-px shrink-0 bg-border" />
+
+        <FileText
+          aria-hidden="true"
+          className="hidden size-5 shrink-0 text-brand-primary sm:block"
+        />
 
         <div className="min-w-0 flex-1">
           <ProjectNameEditor name={diagramName} onCommit={onRenameDiagram} />
@@ -68,7 +73,7 @@ export function Header({
         />
       </div>
 
-      <div className="hidden h-11 items-center border-t border-white/10 bg-white/5 px-6 lg:flex">
+      <div className="hidden min-h-12 items-center border-t border-border px-6 lg:flex lg:px-8">
         <HeaderToolbar
           canRedo={canRedo}
           canUndo={canUndo}
@@ -80,11 +85,6 @@ export function Header({
           onOpenShortcuts={onOpenShortcuts}
         />
       </div>
-
-      <div
-        className="absolute inset-x-0 bottom-0 h-0.5 bg-linear-to-r from-accent/0 via-accent to-accent/0"
-        aria-hidden="true"
-      />
     </header>
   );
 }
