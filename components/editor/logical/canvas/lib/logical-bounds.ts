@@ -12,8 +12,8 @@ export interface LogicalBounds {
   height: number;
 }
 
-export const LOGICAL_TABLE_WIDTH = 288;
-export const LOGICAL_TABLE_ESTIMATED_HEIGHT = 360;
+const LOGICAL_TABLE_WIDTH = 288;
+const LOGICAL_TABLE_ESTIMATED_HEIGHT = 360;
 
 export function getLogicalBounds(tables: PositionedLogicalTable[]): LogicalBounds | null {
   if (tables.length === 0) {

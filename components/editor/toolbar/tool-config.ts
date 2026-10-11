@@ -11,7 +11,7 @@ import {
 
 import type { Tool } from '@/domain/diagram/models';
 
-export interface ToolbarTool {
+interface ToolbarTool {
   id: Tool;
   label: string;
   icon: LucideIcon;

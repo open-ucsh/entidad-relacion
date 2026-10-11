@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 
 import type { ElementColor } from '@/state/diagram/diagram-appearance';
 
-import { ELEMENT_COLOR_OPTIONS, type ElementColorOption } from '../element-appearance';
+import { ELEMENT_COLOR_OPTIONS } from '../element-appearance';
 
 interface Option<T extends string | number> {
   label: string;
@@ -32,9 +32,7 @@ interface ColorPickerProps {
 }
 
 export function SectionTitle({ children }: SectionTitleProps) {
-  return (
-    <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted">{children}</h3>
-  );
+  return <h3 className="text-xs font-semibold text-text-muted">{children}</h3>;
 }
 
 export function SegmentedControl<T extends string | number>({
@@ -43,7 +41,7 @@ export function SegmentedControl<T extends string | number>({
   onChange,
 }: SegmentedControlProps<T>) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-1">
       {options.map((option) => {
         const selected = value === option.value;
 
@@ -51,13 +49,14 @@ export function SegmentedControl<T extends string | number>({
           <button
             key={String(option.value)}
             type="button"
+            aria-pressed={selected}
             onClick={() => {
               onChange(option.value);
             }}
-            className={`rounded-md border px-3 py-2 text-sm transition-colors ${
+            className={`min-h-9 flex-1 rounded-lg border px-2 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
               selected
-                ? 'border-brand-primary bg-brand-primary/10 text-brand-primary'
-                : 'border-border bg-background text-text hover:bg-surface-hover'
+                ? 'border-brand-primary/30 bg-brand-primary/10 text-brand-primary'
+                : 'border-border bg-background text-text-muted hover:bg-surface-hover hover:text-text'
             }`}
           >
             {option.label}
@@ -74,28 +73,27 @@ export function ColorPicker({
   onChange,
 }: ColorPickerProps) {
   return (
-    <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label={ariaLabel}>
-      {ELEMENT_COLOR_OPTIONS.map((option: ElementColorOption) => {
+    <div className="flex flex-wrap items-center gap-1" role="group" aria-label={ariaLabel}>
+      {ELEMENT_COLOR_OPTIONS.map((option) => {
         const selected = value === option.value;
 
         return (
           <button
             key={option.value}
             type="button"
-            role="radio"
-            aria-checked={selected}
+            aria-pressed={selected}
             aria-label={option.label}
             title={option.label}
             onClick={() => {
               onChange(option.value);
             }}
-            className={`flex h-10 items-center justify-center rounded-md border transition-colors ${
+            className={`flex size-9 shrink-0 items-center justify-center rounded-lg border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
               selected
-                ? 'border-brand-primary bg-brand-primary/10 ring-2 ring-brand-primary/20'
-                : 'border-border bg-background hover:bg-surface-hover'
+                ? 'border-brand-primary/40 bg-brand-primary/10'
+                : 'border-transparent hover:bg-surface-hover'
             }`}
           >
-            <span aria-hidden="true" className={`h-5 w-5 rounded-full ${option.swatchClassName}`} />
+            <span aria-hidden="true" className={`size-5 rounded-full ${option.swatchClassName}`} />
           </button>
         );
       })}
@@ -112,18 +110,19 @@ export function SwitchControl({ checked, label, onChange }: SwitchControlProps) 
       onClick={() => {
         onChange(!checked);
       }}
-      className="flex w-full items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-sm text-text transition-colors hover:bg-surface-hover"
+      className="flex min-h-10 w-full items-center justify-between gap-2 rounded-lg border border-border bg-background px-2 py-2 text-xs text-text transition-colors hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
     >
-      {label}
+      <span className="min-w-0 text-left">{label}</span>
 
       <span
-        className={`relative h-5 w-9 rounded-full transition-colors ${
-          checked ? 'bg-brand-primary' : 'bg-surface-hover'
+        aria-hidden="true"
+        className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
+          checked ? 'bg-brand-primary' : 'bg-border'
         }`}
       >
         <span
-          className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all ${
-            checked ? 'left-4' : 'left-0.5'
+          className={`absolute left-0.5 top-0.5 size-4 rounded-full bg-white shadow-sm transition-transform ${
+            checked ? 'translate-x-4' : ''
           }`}
         />
       </span>

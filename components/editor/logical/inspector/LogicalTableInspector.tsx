@@ -1,7 +1,7 @@
 'use client';
 
-import { ArrowLeft, Link2, Plus, Table2, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { ArrowLeft, KeyRound, Link2, Plus, Table2, Trash2 } from 'lucide-react';
+import { useRef, useState } from 'react';
 
 import type {
   LogicalColumn,
@@ -10,6 +10,7 @@ import type {
 } from '@/domain/logical/models';
 
 import { ConfirmDialog } from '../../feedback/ConfirmDialog';
+import { useLogicalSelectionStore } from '../logical-selection';
 import { LogicalInspectorColumn } from './LogicalInspectorColumn';
 import { LogicalRelationCreator } from './LogicalRelationCreator';
 
@@ -44,27 +45,55 @@ export function LogicalTableInspector({
   onSelectRelation,
   onRemoveTable,
 }: LogicalTableInspectorProps) {
-  const [name, setName] = useState(table.name);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const nameRef = useRef<HTMLInputElement | null>(null);
+  const cancelNameRef = useRef(false);
+
+  const selection = useLogicalSelectionStore((state) => state.selection);
+  const setSelection = useLogicalSelectionStore((state) => state.setSelection);
+
+  const selectedColumnId =
+    selection?.type === 'table' && selection.tableId === table.id ? selection.columnId : undefined;
+
+  const selectedColumn =
+    table.columns.find((column) => column.id === selectedColumnId) ?? table.columns[0];
 
   const foreignKeyColumnIds = new Set(
     table.foreignKeys.flatMap((foreignKey) => foreignKey.columnIds),
   );
 
+  const outgoingRelations = table.foreignKeys.map((foreignKey) => ({
+    sourceTable: table,
+    foreignKey,
+    referencedTable: tables.find((candidate) => candidate.id === foreignKey.referencedTableId),
+  }));
+
   const incomingRelations = tables.flatMap((sourceTable) =>
     sourceTable.foreignKeys
-      .filter((foreignKey) => foreignKey.referencedTableId === table.id)
+      .filter(
+        (foreignKey) => foreignKey.referencedTableId === table.id && sourceTable.id !== table.id,
+      )
       .map((foreignKey) => ({
         sourceTable,
         foreignKey,
+        referencedTable: table,
       })),
   );
 
-  function commitName() {
-    const nextName = name.trim();
+  const relations = [...outgoingRelations, ...incomingRelations];
+
+  function commitName(value: string) {
+    if (cancelNameRef.current) {
+      cancelNameRef.current = false;
+      return;
+    }
+
+    const nextName = value.trim();
 
     if (!nextName) {
-      setName(table.name);
+      if (nameRef.current) {
+        nameRef.current.value = table.name;
+      }
       return;
     }
 
@@ -73,195 +102,185 @@ export function LogicalTableInspector({
     }
   }
 
-  const relationCount = table.foreignKeys.length + incomingRelations.length;
-
   return (
     <>
-      <div className="h-full overflow-y-auto">
-        <header className="border-b border-border p-3">
+      <div className="min-h-0 overflow-y-auto p-4">
+        <button
+          type="button"
+          onClick={onBack}
+          className="mb-4 flex min-h-8 items-center gap-2 rounded-md text-xs text-text-muted hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40"
+        >
+          <ArrowLeft size={13} aria-hidden="true" />
+          Todas las tablas{' '}
+        </button>
+
+        <div className="mb-5 flex items-start gap-3">
+          <Table2 size={22} className="mt-0.5 shrink-0 text-brand-primary" aria-hidden="true" />
+
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold text-text wrap-anywhere">{table.name}</h2>
+            <p className="mt-1 text-xs text-text-muted">Tabla seleccionada</p>
+          </div>
+        </div>
+
+        <label className="mb-5 block">
+          <span className="mb-2 block text-xs font-semibold text-text">Nombre</span>
+
+          <input
+            key={`${table.id}:${table.name}`}
+            ref={nameRef}
+            defaultValue={table.name}
+            maxLength={80}
+            className="h-10 w-full rounded-lg border border-border bg-background px-3 text-xs text-text outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/10"
+            onBlur={(event) => {
+              commitName(event.currentTarget.value);
+            }}
+            onKeyDown={(event) => {
+              event.stopPropagation();
+
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                event.currentTarget.blur();
+              }
+
+              if (event.key === 'Escape') {
+                event.preventDefault();
+                cancelNameRef.current = true;
+                event.currentTarget.value = table.name;
+                event.currentTarget.blur();
+              }
+            }}
+          />
+        </label>
+
+        <section>
+          <h3 className="mb-2 text-xs font-semibold text-text">
+            Columnas ({table.columns.length})
+          </h3>
+
+          <div className="space-y-1">
+            {table.columns.map((column) => (
+              <button
+                key={column.id}
+                type="button"
+                aria-pressed={selectedColumn?.id === column.id}
+                onClick={() => {
+                  setSelection({
+                    type: 'table',
+                    tableId: table.id,
+                    columnId: column.id,
+                  });
+                }}
+                className={`flex min-h-10 w-full items-center gap-2 rounded-lg border px-2.5 py-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40 ${
+                  selectedColumn?.id === column.id
+                    ? 'border-brand-primary/25 bg-brand-primary/5'
+                    : 'border-transparent hover:bg-surface'
+                }`}
+              >
+                <span className="flex w-5 shrink-0 justify-center">
+                  {column.primaryKey ? (
+                    <KeyRound size={13} className="text-amber-600" aria-hidden="true" />
+                  ) : foreignKeyColumnIds.has(column.id) ? (
+                    <Link2 size={13} className="text-brand-primary" aria-hidden="true" />
+                  ) : (
+                    <span className="size-1 rounded-full bg-border" aria-hidden="true" />
+                  )}
+                </span>
+
+                <span className="min-w-0 flex-1 text-xs text-text wrap-anywhere">
+                  {column.name}
+                </span>
+
+                {column.primaryKey && (
+                  <span className="rounded-md bg-amber-500/10 px-1.5 py-1 text-[9px] font-semibold text-amber-700">
+                    PK
+                  </span>
+                )}
+
+                {foreignKeyColumnIds.has(column.id) && (
+                  <span className="rounded-md bg-brand-primary/10 px-1.5 py-1 text-[9px] font-semibold text-brand-primary">
+                    FK
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+
           <button
             type="button"
-            className="mb-3 flex items-center gap-1.5 rounded-md px-1 py-1 text-xs font-medium text-text-muted transition-colors hover:text-text"
-            onClick={onBack}
+            onClick={onAddColumn}
+            className="mt-3 flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-border text-xs font-medium text-brand-primary hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40"
           >
-            <ArrowLeft size={13} aria-hidden="true" />
-            Modelo lógico
+            <Plus size={14} aria-hidden="true" />
+            Agregar columna
           </button>
+        </section>
 
-          <div className="flex items-center gap-2">
-            <Table2 size={15} className="shrink-0 text-brand-primary" aria-hidden="true" />
-
-            <input
-              value={name}
-              aria-label="Nombre de la tabla"
-              className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-text outline-none"
-              onChange={(event) => {
-                setName(event.target.value);
+        {selectedColumn && (
+          <div className="mt-5 border-t border-border pt-4">
+            <LogicalInspectorColumn
+              key={`${table.id}:${selectedColumn.id}:${selectedColumn.name}`}
+              column={selectedColumn}
+              isForeignKey={foreignKeyColumnIds.has(selectedColumn.id)}
+              onUpdate={(updates) => {
+                onUpdateColumn(selectedColumn.id, updates);
               }}
-              onBlur={commitName}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  event.currentTarget.blur();
-                }
-
-                if (event.key === 'Escape') {
-                  setName(table.name);
-                  event.currentTarget.blur();
-                }
+              onRemove={() => {
+                onRemoveColumn(selectedColumn.id);
               }}
             />
           </div>
+        )}
 
-          <p className="mt-1 pl-6 text-[11px] text-text-muted">
-            {table.columns.length} columnas · {relationCount} relaciones
-          </p>
-        </header>
+        <details className="mt-5 border-t border-border pt-3">
+          <summary className="cursor-pointer rounded-md py-2 text-xs font-semibold text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40">
+            Relaciones ({relations.length})
+          </summary>
 
-        <section className="border-b border-border p-3">
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-text-muted">
-              Columnas
-            </p>
-
-            <button
-              type="button"
-              className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold text-brand-primary transition-colors hover:bg-brand-primary/10"
-              onClick={onAddColumn}
-            >
-              <Plus size={12} aria-hidden="true" />
-              Añadir
-            </button>
-          </div>
-
-          {table.columns.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-border px-3 py-4 text-center">
-              <p className="text-xs text-text-muted">Esta tabla todavía no tiene columnas.</p>
-
+          <div className="mt-2 space-y-2">
+            {relations.map(({ sourceTable, foreignKey, referencedTable }) => (
               <button
+                key={`${sourceTable.id}:${foreignKey.id}`}
                 type="button"
-                className="mt-2 text-xs font-semibold text-brand-primary"
-                onClick={onAddColumn}
+                onClick={() => {
+                  onSelectRelation(sourceTable.id, foreignKey.id);
+                }}
+                className="block w-full rounded-lg border border-border p-2.5 text-left hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40"
               >
-                Añadir primera columna
+                <span className="block text-xs font-medium text-text wrap-anywhere">
+                  {sourceTable.name} → {referencedTable?.name ?? 'Tabla eliminada'}
+                </span>
+
+                <span className="mt-1 block text-[10px] text-text-muted">
+                  {foreignKey.sourceCardinality.minimum}..
+                  {foreignKey.sourceCardinality.maximum}
+                  {' → '}
+                  {foreignKey.referencedCardinality.minimum}..
+                  {foreignKey.referencedCardinality.maximum}
+                </span>
               </button>
-            </div>
-          ) : (
-            <div className="space-y-1.5">
-              {table.columns.map((column) => (
-                <LogicalInspectorColumn
-                  key={`${column.id}:${column.name}`}
-                  column={column}
-                  isForeignKey={foreignKeyColumnIds.has(column.id)}
-                  onUpdate={(updates) => {
-                    onUpdateColumn(column.id, updates);
-                  }}
-                  onRemove={() => {
-                    onRemoveColumn(column.id);
-                  }}
-                />
-              ))}
-            </div>
-          )}
-        </section>
+            ))}
 
-        <section className="border-b border-border p-3">
-          <div className="mb-2 flex items-center gap-2">
-            <Link2 size={13} className="text-text-muted" aria-hidden="true" />
-
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-text-muted">
-              Relaciones
-            </p>
+            <LogicalRelationCreator table={table} tables={tables} onCreate={onCreateRelation} />
           </div>
+        </details>
 
-          {relationCount > 0 && (
-            <div className="mb-3 space-y-1.5">
-              {table.foreignKeys.map((foreignKey) => {
-                const referencedTable = tables.find(
-                  (candidate) => candidate.id === foreignKey.referencedTableId,
-                );
-
-                return (
-                  <button
-                    key={foreignKey.id}
-                    type="button"
-                    className="flex w-full items-center gap-2 rounded-lg border border-border bg-background px-3 py-2.5 text-left transition-colors hover:border-brand-primary/40 hover:bg-surface-hover"
-                    onClick={() => {
-                      onSelectRelation(table.id, foreignKey.id);
-                    }}
-                  >
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-xs font-semibold text-text">
-                        {table.name} → {referencedTable?.name ?? 'Tabla eliminada'}
-                      </span>
-
-                      <span className="mt-0.5 block text-[10px] text-text-muted">
-                        {foreignKey.sourceCardinality.minimum}..
-                        {foreignKey.sourceCardinality.maximum}
-                        {' → '}
-                        {foreignKey.referencedCardinality.minimum}..
-                        {foreignKey.referencedCardinality.maximum}
-                      </span>
-                    </span>
-
-                    <span className="text-xs text-text-muted">›</span>
-                  </button>
-                );
-              })}
-
-              {incomingRelations.map(({ sourceTable, foreignKey }) => (
-                <button
-                  key={`${sourceTable.id}:${foreignKey.id}`}
-                  type="button"
-                  className="flex w-full items-center gap-2 rounded-lg border border-border bg-background px-3 py-2.5 text-left transition-colors hover:border-brand-primary/40 hover:bg-surface-hover"
-                  onClick={() => {
-                    onSelectRelation(sourceTable.id, foreignKey.id);
-                  }}
-                >
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-xs font-semibold text-text">
-                      {sourceTable.name} → {table.name}
-                    </span>
-
-                    <span className="mt-0.5 block text-[10px] text-text-muted">
-                      {foreignKey.sourceCardinality.minimum}..
-                      {foreignKey.sourceCardinality.maximum}
-                      {' → '}
-                      {foreignKey.referencedCardinality.minimum}..
-                      {foreignKey.referencedCardinality.maximum}
-                    </span>
-                  </span>
-
-                  <span className="text-xs text-text-muted">›</span>
-                </button>
-              ))}
-            </div>
-          )}
-
-          <LogicalRelationCreator table={table} tables={tables} onCreate={onCreateRelation} />
-        </section>
-
-        <section className="p-3">
-          <button
-            type="button"
-            className="flex w-full items-center justify-center gap-2 rounded-lg border border-rose-500/25 px-3 py-2 text-xs font-semibold text-rose-600 transition-colors hover:bg-rose-500/10"
-            onClick={() => {
-              setConfirmDelete(true);
-            }}
-          >
-            <Trash2 size={13} aria-hidden="true" />
-            Eliminar tabla
-          </button>
-        </section>
+        <button
+          type="button"
+          onClick={() => {
+            setConfirmDelete(true);
+          }}
+          className="mt-4 flex min-h-9 items-center gap-2 rounded-md px-2 text-xs text-red-600 hover:bg-red-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600/40"
+        >
+          <Trash2 size={13} aria-hidden="true" />
+          Eliminar tabla
+        </button>
       </div>
 
       <ConfirmDialog
         isOpen={confirmDelete}
         title={`Eliminar "${table.name}"`}
-        description={
-          relationCount > 0
-            ? `La tabla tiene ${table.columns.length} columnas y ${relationCount} relaciones. Al eliminarla también se eliminarán las relaciones asociadas.`
-            : `La tabla tiene ${table.columns.length} columnas. Esta acción eliminará la tabla del modelo lógico.`
-        }
+        description={`Se eliminarán la tabla, sus ${table.columns.length} columnas y sus ${relations.length} relaciones asociadas.`}
         confirmLabel="Eliminar tabla"
         onCancel={() => {
           setConfirmDelete(false);

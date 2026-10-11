@@ -1,18 +1,23 @@
 import Image from 'next/image';
+import Link from 'next/link';
 
 import { BRANDING } from '@/config/branding';
 
 export function HeaderBrand() {
   return (
-    <div className="flex min-w-0 items-center gap-4">
+    <Link
+      href="/"
+      aria-label={BRANDING.university}
+      className="flex shrink-0 items-center rounded-md p-1 transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
+    >
       <Image
-        src={BRANDING.logo}
+        src={BRANDING.favicon}
         alt={BRANDING.university}
-        width={56}
-        height={56}
+        width={48}
+        height={48}
         priority
-        className="h-10 w-auto object-contain"
+        className="size-12 object-contain"
       />
-    </div>
+    </Link>
   );
 }

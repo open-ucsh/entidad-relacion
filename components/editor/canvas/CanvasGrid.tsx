@@ -1,5 +1,7 @@
 'use client';
 
+import { useId } from 'react';
+
 import type { CanvasCamera, CanvasSize } from './hooks/useCanvasCamera';
 
 interface CanvasGridProps {
@@ -10,22 +12,19 @@ interface CanvasGridProps {
 const GRID_SIZE = 24;
 
 export function CanvasGrid({ camera, canvasSize }: CanvasGridProps) {
+  const gridId = useId();
+
   return (
     <>
       <defs>
         <pattern
-          id="canvas-grid"
+          id={gridId}
           width={GRID_SIZE}
           height={GRID_SIZE}
           patternUnits="userSpaceOnUse"
           patternTransform={`translate(${camera.x} ${camera.y}) scale(${camera.zoom})`}
         >
-          <path
-            d={`M ${GRID_SIZE} 0 L 0 0 0 ${GRID_SIZE}`}
-            fill="none"
-            stroke="#e8eef5"
-            strokeWidth="1"
-          />
+          <circle cx={GRID_SIZE / 2} cy={GRID_SIZE / 2} r={1} fill="#cbd9e8" />
         </pattern>
       </defs>
 
@@ -33,7 +32,8 @@ export function CanvasGrid({ camera, canvasSize }: CanvasGridProps) {
         data-canvas-grid
         width={canvasSize.width}
         height={canvasSize.height}
-        fill="url(#canvas-grid)"
+        fill={`url(#${gridId})`}
+        pointerEvents="none"
       />
     </>
   );

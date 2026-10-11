@@ -83,7 +83,7 @@ export function LogicalCanvas({
   return (
     <main
       ref={viewportRef}
-      className={`relative h-full min-h-0 overflow-hidden bg-surface ${
+      className={`relative h-full min-h-0 overflow-hidden bg-background ${
         isPanning ? 'cursor-grabbing' : 'cursor-grab'
       }`}
       onWheel={handleWheel}

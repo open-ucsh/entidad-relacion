@@ -1,7 +1,7 @@
 import type { LogicalColumn } from './column';
 import type { LogicalForeignKey } from './foreign-key';
 
-export type LogicalTableSourceType = 'entity' | 'relationship' | 'attribute';
+type LogicalTableSourceType = 'entity' | 'relationship' | 'attribute';
 
 export interface LogicalTable {
   id: string;

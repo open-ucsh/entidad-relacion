@@ -37,6 +37,7 @@ export function useLogicalCamera({
   const didInitialFitRef = useRef(false);
 
   const fitToView = useLogicalFitToView({
+    viewportRef,
     bounds,
     viewportSize,
     setCamera,
@@ -89,6 +90,10 @@ export function useLogicalCamera({
     (event: ReactWheelEvent<HTMLDivElement>) => {
       event.preventDefault();
 
+      if (event.deltaY === 0) {
+        return;
+      }
+
       const viewport = viewportRef.current;
 
       if (!viewport) {
@@ -118,20 +123,24 @@ export function useLogicalCamera({
       };
     }
 
-    if (viewportSize.width <= 1 || viewportSize.height <= 1 || didInitialFitRef.current) {
+    if (
+      !bounds ||
+      viewportSize.width <= 1 ||
+      viewportSize.height <= 1 ||
+      didInitialFitRef.current
+    ) {
       return;
     }
 
-    didInitialFitRef.current = true;
-
     const frame = requestAnimationFrame(() => {
       fitToView();
+      didInitialFitRef.current = true;
     });
 
     return () => {
       cancelAnimationFrame(frame);
     };
-  }, [fitToView, tableCount, viewportSize.height, viewportSize.width]);
+  }, [bounds, fitToView, tableCount, viewportSize.height, viewportSize.width]);
 
   return {
     camera,

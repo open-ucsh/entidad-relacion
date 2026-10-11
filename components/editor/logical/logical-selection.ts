@@ -4,6 +4,7 @@ export type LogicalSelection =
   | {
       type: 'table';
       tableId: string;
+      columnId?: string;
     }
   | {
       type: 'relation';

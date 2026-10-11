@@ -1,4 +1,4 @@
-export type LogicalDiagnosticSeverity = 'warning' | 'error';
+type LogicalDiagnosticSeverity = 'warning' | 'error';
 
 export interface LogicalDiagnostic {
   id: string;

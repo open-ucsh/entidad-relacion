@@ -96,6 +96,7 @@ export function Canvas({ diagram, svgRef }: CanvasProps) {
   useFitOnDocumentChange({
     activeDocumentId,
     diagram,
+    canvasSize,
     fitToDiagram,
   });
 

@@ -135,10 +135,9 @@ export function MobileHeaderMenu({
         aria-expanded={isOpen}
         onClick={() => {
           setIsOpen((current) => !current);
-
           setShowExport(false);
         }}
-        className="flex size-10 items-center justify-center rounded-lg text-white transition-colors active:bg-white/15"
+        className="flex size-11 items-center justify-center rounded-lg text-brand-primary transition-colors hover:bg-surface-hover active:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
       >
         {isOpen ? <X size={21} /> : <MoreVertical size={21} />}
       </button>

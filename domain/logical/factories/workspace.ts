@@ -94,16 +94,14 @@ function createRowPositions(
   ]);
 }
 
-export function createEmptyLogicalModel(): LogicalModel {
+function createEmptyLogicalModel(): LogicalModel {
   return {
     tables: [],
     diagnostics: [],
   };
 }
 
-export function createLogicalTablePositions(
-  model: LogicalModel,
-): Record<string, LogicalTablePosition> {
+function createLogicalTablePositions(model: LogicalModel): Record<string, LogicalTablePosition> {
   const rows = groupTables(model);
 
   const maxWidth = Math.max(0, ...rows.map((row) => getRowWidth(row.length)));

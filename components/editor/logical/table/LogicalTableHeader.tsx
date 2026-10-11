@@ -1,6 +1,6 @@
 'use client';
 
-import { GripHorizontal, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Table2, Trash2 } from 'lucide-react';
 import type { PointerEventHandler } from 'react';
 
 import { LogicalTableNameInput } from './LogicalTableNameInput';
@@ -25,31 +25,44 @@ export function LogicalTableHeader({
   onPointerEnd,
 }: LogicalTableHeaderProps) {
   return (
-    <header className="flex items-center gap-2 border-b border-border bg-brand-primary/5 px-2 py-2">
+    <header className="relative flex min-h-12 items-center gap-2 border-b border-border bg-surface/80 px-3 py-2">
       <button
         type="button"
         aria-label={`Mover tabla ${tableName}`}
-        className="flex size-8 shrink-0 touch-none cursor-grab items-center justify-center rounded-md text-text-muted transition-colors hover:bg-background hover:text-text active:cursor-grabbing"
+        title="Arrastrar para mover la tabla"
+        className="flex size-7 shrink-0 touch-none cursor-grab items-center justify-center rounded-md text-brand-primary transition-colors hover:bg-brand-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40 active:cursor-grabbing"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerEnd}
         onPointerCancel={onPointerEnd}
       >
-        <GripHorizontal size={15} aria-hidden="true" />
+        <Table2 size={17} aria-hidden="true" />
       </button>
 
       <LogicalTableNameInput tableId={tableId} name={tableName} onRename={onRename} />
 
-      <button
-        type="button"
-        aria-label={`Eliminar tabla ${tableName}`}
-        className="flex size-8 shrink-0 items-center justify-center rounded-md text-text-muted transition-colors hover:bg-red-500/10 hover:text-red-600"
-        onClick={() => {
-          onRemove(tableId);
-        }}
-      >
-        <Trash2 size={14} aria-hidden="true" />
-      </button>
+      <details className="relative shrink-0">
+        <summary
+          aria-label={`Acciones de la tabla ${tableName}`}
+          title="Acciones de la tabla"
+          className="flex size-7 cursor-pointer list-none items-center justify-center rounded-md text-text-muted transition-colors hover:bg-surface-hover hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40 [&::-webkit-details-marker]:hidden"
+        >
+          <MoreHorizontal size={17} aria-hidden="true" />
+        </summary>
+
+        <div className="absolute right-0 top-full z-30 mt-1 w-40 rounded-lg border border-border bg-background p-1 shadow-lg">
+          <button
+            type="button"
+            className="flex min-h-9 w-full items-center gap-2 rounded-md px-2 text-left text-xs font-medium text-red-600 transition-colors hover:bg-red-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600/40"
+            onClick={() => {
+              onRemove(tableId);
+            }}
+          >
+            <Trash2 size={13} aria-hidden="true" />
+            Eliminar tabla
+          </button>
+        </div>
+      </details>
     </header>
   );
 }

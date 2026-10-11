@@ -12,6 +12,9 @@ interface LogicalZoomControlsProps {
   onReset: () => void;
 }
 
+const BUTTON_CLASS =
+  'flex size-10 shrink-0 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-primary disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-transparent';
+
 export function LogicalZoomControls({
   zoom,
   onZoomIn,
@@ -23,20 +26,24 @@ export function LogicalZoomControls({
 
   return (
     <div
-      className="absolute bottom-5 left-5 z-40 flex items-center gap-2"
+      className="absolute left-4 top-4 z-30 flex items-center gap-2 lg:bottom-4 lg:top-auto"
       onPointerDown={(event) => {
         event.stopPropagation();
       }}
+      onWheel={(event) => {
+        event.stopPropagation();
+      }}
     >
-      <div className="flex h-10 items-center rounded-xl border border-border bg-background shadow-sm">
+      <div className="flex h-12 items-center gap-0.5 rounded-xl border border-border bg-background p-1 shadow-sm">
         <button
           type="button"
           aria-label="Alejar"
+          title="Alejar"
           disabled={zoom <= MIN_LOGICAL_ZOOM}
           onClick={onZoomOut}
-          className="flex size-10 items-center justify-center rounded-l-xl text-text-muted transition-colors hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-35"
+          className={BUTTON_CLASS}
         >
-          <Minus size={15} aria-hidden="true" />
+          <Minus size={17} aria-hidden="true" />
         </button>
 
         <span className="w-12 text-center text-xs font-medium tabular-nums text-text">
@@ -46,23 +53,24 @@ export function LogicalZoomControls({
         <button
           type="button"
           aria-label="Acercar"
+          title="Acercar"
           disabled={zoom >= MAX_LOGICAL_ZOOM}
           onClick={onZoomIn}
-          className="flex size-10 items-center justify-center rounded-r-xl text-text-muted transition-colors hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-35"
+          className={BUTTON_CLASS}
         >
-          <Plus size={15} aria-hidden="true" />
+          <Plus size={17} aria-hidden="true" />
         </button>
       </div>
 
-      <div className="flex h-10 items-center rounded-xl border border-border bg-background p-1 shadow-sm">
+      <div className="flex h-12 items-center gap-0.5 rounded-xl border border-border bg-background p-1 shadow-sm">
         <button
           type="button"
           aria-label="Ajustar modelo a la vista"
           title="Ajustar modelo a la vista"
           onClick={onFit}
-          className="flex size-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-hover"
+          className={BUTTON_CLASS}
         >
-          <Maximize2 size={15} aria-hidden="true" />
+          <Maximize2 size={17} aria-hidden="true" />
         </button>
 
         <button
@@ -70,9 +78,9 @@ export function LogicalZoomControls({
           aria-label="Restablecer vista"
           title="Restablecer vista"
           onClick={onReset}
-          className="flex size-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-hover"
+          className={BUTTON_CLASS}
         >
-          <RotateCcw size={15} aria-hidden="true" />
+          <RotateCcw size={17} aria-hidden="true" />
         </button>
       </div>
     </div>

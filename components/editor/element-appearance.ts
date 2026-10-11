@@ -15,7 +15,7 @@ export const ELEMENT_COLOR_OPTIONS = [
   {
     value: 'neutral',
     label: 'Predeterminado',
-    swatchClassName: 'bg-neutral-500',
+    swatchClassName: 'bg-brand-primary',
   },
   {
     value: 'blue',
@@ -46,28 +46,28 @@ export const ELEMENT_COLOR_OPTIONS = [
 
 const ELEMENT_APPEARANCES: Record<ElementColor, ElementAppearance> = {
   neutral: {
-    stroke: 'var(--color-border)',
-    fill: 'var(--color-background)',
+    stroke: '#004574',
+    fill: '#f0f6fa',
   },
   blue: {
-    stroke: 'var(--color-blue-600)',
-    fill: 'color-mix(in srgb, var(--color-blue-500) 10%, var(--color-background))',
+    stroke: '#2563eb',
+    fill: '#eff6ff',
   },
   emerald: {
-    stroke: 'var(--color-emerald-600)',
-    fill: 'color-mix(in srgb, var(--color-emerald-500) 10%, var(--color-background))',
+    stroke: '#059669',
+    fill: '#ecfdf5',
   },
   violet: {
-    stroke: 'var(--color-violet-600)',
-    fill: 'color-mix(in srgb, var(--color-violet-500) 10%, var(--color-background))',
+    stroke: '#7c3aed',
+    fill: '#f5f3ff',
   },
   orange: {
-    stroke: 'var(--color-orange-600)',
-    fill: 'color-mix(in srgb, var(--color-orange-500) 10%, var(--color-background))',
+    stroke: '#ea580c',
+    fill: '#fff7ed',
   },
   rose: {
-    stroke: 'var(--color-rose-600)',
-    fill: 'color-mix(in srgb, var(--color-rose-500) 10%, var(--color-background))',
+    stroke: '#e11d48',
+    fill: '#fff1f2',
   },
 };
 

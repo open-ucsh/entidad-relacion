@@ -1,5 +1,5 @@
-export type LogicalRelationMinimum = 0 | 1;
-export type LogicalRelationMaximum = 1 | 'N';
+type LogicalRelationMinimum = 0 | 1;
+type LogicalRelationMaximum = 1 | 'N';
 
 export interface LogicalRelationCardinality {
   minimum: LogicalRelationMinimum;

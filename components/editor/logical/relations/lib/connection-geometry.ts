@@ -10,9 +10,9 @@ export interface TableElements {
   column: HTMLElement | null;
 }
 
-export const CONNECTION_OFFSET = 28;
+const CONNECTION_OFFSET = 28;
 
-export function escapeSelector(value: string): string {
+function escapeSelector(value: string): string {
   if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') {
     return CSS.escape(value);
   }
@@ -156,7 +156,7 @@ export function getConnectionPoint(
   };
 }
 
-export function offsetPoint(point: Point, side: Side, distance: number): Point {
+function offsetPoint(point: Point, side: Side, distance: number): Point {
   const direction = getSideDirection(side);
 
   return {

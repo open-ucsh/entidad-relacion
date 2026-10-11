@@ -1,6 +1,6 @@
 import type { LogicalModel, LogicalTable, LogicalWorkspace } from '@/domain/logical/models';
 
-export function createManualLogicalWorkspace(
+function createManualLogicalWorkspace(
   workspace: LogicalWorkspace,
   model: LogicalModel,
 ): LogicalWorkspace {

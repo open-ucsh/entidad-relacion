@@ -5,7 +5,7 @@ import type { DiagramDocument } from './diagram-document';
 
 export const MAX_DOCUMENTS = 4;
 
-export function hasDiagramContent(diagram: Diagram): boolean {
+function hasDiagramContent(diagram: Diagram): boolean {
   return getDiagramElements(diagram).length > 0;
 }
 

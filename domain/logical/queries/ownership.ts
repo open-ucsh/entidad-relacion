@@ -5,7 +5,7 @@ export interface RelationshipParticipant {
   connection: Connection;
 }
 
-export function getOwnedAttributes(diagram: Diagram, ownerId: string): Attribute[] {
+function getOwnedAttributes(diagram: Diagram, ownerId: string): Attribute[] {
   const attributeIds = new Set<string>();
 
   for (const connection of diagram.connections) {

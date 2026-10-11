@@ -1,7 +1,5 @@
 import { Plus } from 'lucide-react';
 
-import { getIsaHierarchy } from '@/domain/diagram/queries/isa';
-
 import type {
   AttributeKeyType,
   Diagram,
@@ -9,11 +7,11 @@ import type {
   EntityKind,
   RelationshipKind,
 } from '@/domain/diagram/models';
-
+import { getIsaHierarchy } from '@/domain/diagram/queries/isa';
 import type { ElementColor } from '@/state/diagram/diagram-appearance';
 
+import { ColorPicker, SegmentedControl, SwitchControl } from './InspectorControls';
 import { InspectorField } from './InspectorField';
-import { ColorPicker, SectionTitle, SegmentedControl, SwitchControl } from './InspectorControls';
 import { IsaHierarchySummary } from './IsaHierarchySummary';
 
 const ENTITY_OPTIONS = [
@@ -24,8 +22,8 @@ const ENTITY_OPTIONS = [
 
 const ATTRIBUTE_KEY_OPTIONS = [
   { label: 'Normal', value: 'normal' },
-  { label: 'Clave primaria', value: 'primary' },
-  { label: 'Clave parcial', value: 'partial' },
+  { label: 'Primaria', value: 'primary' },
+  { label: 'Parcial', value: 'partial' },
 ] satisfies ReadonlyArray<{ label: string; value: AttributeKeyType }>;
 
 const RELATIONSHIP_KIND_OPTIONS = [
@@ -55,7 +53,7 @@ function AddAttributeButton({
       onClick={() => {
         onAddAttribute(parentId);
       }}
-      className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-brand-primary/40 bg-brand-primary/5 px-3 py-2.5 text-sm font-medium text-brand-primary transition-colors hover:bg-brand-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40"
+      className="flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-background px-3 py-2 text-xs font-medium text-brand-primary transition-colors hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
     >
       <Plus size={16} aria-hidden="true" />
       Agregar atributo
@@ -69,18 +67,14 @@ function AppearanceControls({
   setElementColor,
 }: Pick<InspectorElementContentProps, 'element' | 'color' | 'setElementColor'>) {
   return (
-    <>
-      <SectionTitle>Apariencia</SectionTitle>
-
-      <InspectorField label="Color">
-        <ColorPicker
-          value={color}
-          onChange={(nextColor) => {
-            setElementColor(element.id, nextColor);
-          }}
-        />
-      </InspectorField>
-    </>
+    <InspectorField label="Color">
+      <ColorPicker
+        value={color}
+        onChange={(nextColor) => {
+          setElementColor(element.id, nextColor);
+        }}
+      />
+    </InspectorField>
   );
 }
 
@@ -95,8 +89,6 @@ export function InspectorElementContent({
   if (element.type === 'entity') {
     return (
       <>
-        <SectionTitle>Clasificación</SectionTitle>
-
         <InspectorField label="Tipo de entidad">
           <SegmentedControl
             value={element.kind}
@@ -109,11 +101,7 @@ export function InspectorElementContent({
 
         <AppearanceControls element={element} color={color} setElementColor={setElementColor} />
 
-        <SectionTitle>Atributos</SectionTitle>
-
-        <InspectorField label="Añadir a esta entidad">
-          <AddAttributeButton parentId={element.id} onAddAttribute={onAddAttribute} />
-        </InspectorField>
+        <AddAttributeButton parentId={element.id} onAddAttribute={onAddAttribute} />
       </>
     );
   }
@@ -121,8 +109,6 @@ export function InspectorElementContent({
   if (element.type === 'attribute') {
     return (
       <>
-        <SectionTitle>Clave y restricciones</SectionTitle>
-
         <InspectorField label="Tipo de clave">
           <SegmentedControl
             value={element.keyType}
@@ -134,7 +120,7 @@ export function InspectorElementContent({
         </InspectorField>
 
         <InspectorField label="Propiedades">
-          <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-2">
             <SwitchControl
               checked={element.unique}
               label="Único"
@@ -185,8 +171,6 @@ export function InspectorElementContent({
   if (element.type === 'relationship') {
     return (
       <>
-        <SectionTitle>Clasificación</SectionTitle>
-
         <InspectorField label="Tipo de relación">
           <SegmentedControl
             value={element.kind}
@@ -199,11 +183,7 @@ export function InspectorElementContent({
 
         <AppearanceControls element={element} color={color} setElementColor={setElementColor} />
 
-        <SectionTitle>Atributos</SectionTitle>
-
-        <InspectorField label="Añadir a esta relación">
-          <AddAttributeButton parentId={element.id} onAddAttribute={onAddAttribute} />
-        </InspectorField>
+        <AddAttributeButton parentId={element.id} onAddAttribute={onAddAttribute} />
       </>
     );
   }
