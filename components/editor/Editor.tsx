@@ -11,6 +11,7 @@ import { useCanvasExport } from './canvas/hooks/useCanvasExport';
 import { DocumentGallery } from './documents/DocumentGallery';
 import styles from './Editor.module.css';
 import { EditorFeedbackProvider } from './feedback/EditorFeedbackProvider';
+import { HeaderToolbar } from './header/actions/HeaderToolbar';
 import { Header } from './header/Header';
 import { KeyboardShortcutsDialog } from './header/KeyboardShortcutsDialog';
 import { useDiagramFile } from './hooks/useDiagramFile';
@@ -42,6 +43,14 @@ export function Editor() {
     appearance,
     onImportDiagram: importDiagram,
   });
+
+  function handleOpenDocuments() {
+    setIsDocumentGalleryOpen(true);
+  }
+
+  function handleOpenShortcuts() {
+    setIsShortcutsOpen(true);
+  }
 
   function handleOpenHistory() {
     setActiveRightPanel('history');
@@ -75,17 +84,13 @@ export function Editor() {
           onRedo={redo}
           onOpenHistory={handleOpenHistory}
           onOpenMobileHistory={handleOpenMobileHistory}
-          onOpenShortcuts={() => {
-            setIsShortcutsOpen(true);
-          }}
+          onOpenShortcuts={handleOpenShortcuts}
           onExport={(format) => {
             void exportDiagram(format);
           }}
           onExportJson={exportJson}
           onImportJson={importJson}
-          onOpenDocuments={() => {
-            setIsDocumentGalleryOpen(true);
-          }}
+          onOpenDocuments={handleOpenDocuments}
         />
 
         <main className={styles.workspace}>
@@ -98,18 +103,27 @@ export function Editor() {
           </div>
 
           <div className={styles.panelLauncher}>
-            <button
-              type="button"
-              aria-label={isDesktopPanelOpen ? 'Cerrar propiedades' : 'Abrir propiedades'}
-              aria-expanded={isDesktopPanelOpen}
-              onClick={() => {
-                setActiveRightPanel('inspector');
-                setIsDesktopPanelOpen((open) => !open);
-              }}
-              className="flex size-11 items-center justify-center rounded-xl border border-border bg-background text-brand-primary shadow-sm transition-colors hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
-            >
-              <SlidersHorizontal size={19} aria-hidden="true" />
-            </button>
+            <div className="flex items-center gap-2">
+              <HeaderToolbar
+                onImportJson={importJson}
+                onOpenHistory={handleOpenHistory}
+                onOpenDocuments={handleOpenDocuments}
+                onOpenShortcuts={handleOpenShortcuts}
+              />
+
+              <button
+                type="button"
+                aria-label={isDesktopPanelOpen ? 'Cerrar propiedades' : 'Abrir propiedades'}
+                aria-expanded={isDesktopPanelOpen}
+                onClick={() => {
+                  setActiveRightPanel('inspector');
+                  setIsDesktopPanelOpen((open) => !open);
+                }}
+                className="flex size-11 items-center justify-center rounded-xl border border-border bg-background text-brand-primary shadow-sm transition-colors hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
+              >
+                <SlidersHorizontal size={19} aria-hidden="true" />
+              </button>
+            </div>
           </div>
 
           {isMobilePanelOpen && (

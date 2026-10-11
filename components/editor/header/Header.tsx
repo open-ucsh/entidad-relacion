@@ -1,9 +1,10 @@
-import { FileText } from 'lucide-react';
+import { FileText, Redo2, Undo2 } from 'lucide-react';
 
 import type { ExportFormat } from '../canvas/hooks/useCanvasExport';
 
 import { ExportButton } from './actions/ExportButton';
-import { HeaderToolbar } from './actions/HeaderToolbar';
+import { HeaderDivider } from './actions/HeaderDivider';
+import { HeaderIconButton } from './actions/HeaderIconButton';
 import { MobileHeaderMenu } from './actions/MobileHeaderMenu';
 import { HeaderBrand } from './HeaderBrand';
 import { ProjectNameEditor } from './ProjectNameEditor';
@@ -30,7 +31,6 @@ export function Header({
   canUndo,
   onUndo,
   onRedo,
-  onOpenHistory,
   onOpenMobileHistory,
   onRenameDiagram,
   onExport,
@@ -55,8 +55,14 @@ export function Header({
           <ProjectNameEditor name={diagramName} onCommit={onRenameDiagram} />
         </div>
 
-        <div className="hidden shrink-0 lg:block">
+        <div className="hidden shrink-0 items-center gap-1 lg:flex">
           <ExportButton onExport={onExport} onExportJson={onExportJson} />
+
+          <HeaderDivider />
+
+          <HeaderIconButton icon={Undo2} label="Deshacer" onClick={onUndo} disabled={!canUndo} />
+
+          <HeaderIconButton icon={Redo2} label="Rehacer" onClick={onRedo} disabled={!canRedo} />
         </div>
 
         <MobileHeaderMenu
@@ -68,19 +74,6 @@ export function Header({
           onExport={onExport}
           onExportJson={onExportJson}
           onOpenHistory={onOpenMobileHistory}
-          onOpenDocuments={onOpenDocuments}
-          onOpenShortcuts={onOpenShortcuts}
-        />
-      </div>
-
-      <div className="hidden min-h-12 items-center border-t border-border px-6 lg:flex lg:px-8">
-        <HeaderToolbar
-          canRedo={canRedo}
-          canUndo={canUndo}
-          onUndo={onUndo}
-          onRedo={onRedo}
-          onImportJson={onImportJson}
-          onOpenHistory={onOpenHistory}
           onOpenDocuments={onOpenDocuments}
           onOpenShortcuts={onOpenShortcuts}
         />

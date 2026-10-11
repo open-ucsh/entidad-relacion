@@ -24,7 +24,7 @@
 
 .panelLauncher {
   position: absolute;
-  z-index: 20;
+  z-index: 35;
   top: 1rem;
   left: 1rem;
 }
