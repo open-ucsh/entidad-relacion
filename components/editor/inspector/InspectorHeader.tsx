@@ -1,7 +1,6 @@
 'use client';
 
-import { X } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 
 import type { DiagramElement } from '@/domain/diagram/models';
 
@@ -17,9 +16,15 @@ export function InspectorHeader({ element, updateElement }: InspectorHeaderProps
   const Icon = config.icon;
 
   const [draftName, setDraftName] = useState(element.name);
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  const cancelCommitRef = useRef(false);
+  const inputId = useId();
 
   function commitName() {
+    if (cancelCommitRef.current) {
+      cancelCommitRef.current = false;
+      return;
+    }
+
     const name = draftName.trim();
 
     if (!name) {
@@ -27,67 +32,58 @@ export function InspectorHeader({ element, updateElement }: InspectorHeaderProps
       return;
     }
 
+    setDraftName(name);
+
     if (name !== element.name) {
       updateElement(element.id, { name });
     }
   }
 
-  function clearName() {
-    setDraftName('');
-    inputRef.current?.focus();
-  }
-
   return (
-    <div className="flex items-start gap-3">
-      <div
-        className={`flex size-10 shrink-0 items-center justify-center rounded-lg ring-1 ${config.bg} ${config.ring}`}
-      >
-        <Icon size={19} className={config.text} aria-hidden="true" />
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-brand-primary/10 text-brand-primary">
+          <Icon size={17} strokeWidth={1.7} aria-hidden="true" />
+        </span>
+
+        <p className="text-sm font-semibold text-brand-primary">{config.label}</p>
       </div>
 
-      <div className="min-w-0 flex-1 pt-0.5">
-        <p className={`text-xs font-semibold uppercase tracking-wider ${config.text}`}>
-          {config.label}
-        </p>
+      <div className="space-y-2">
+        <label htmlFor={inputId} className="block text-xs font-medium text-text-muted">
+          Nombre
+        </label>
 
-        <div className="relative mt-0.5 flex items-center">
-          <input
-            ref={inputRef}
-            type="text"
-            value={draftName}
-            maxLength={80}
-            onChange={(event) => {
-              setDraftName(event.target.value);
-            }}
-            onBlur={commitName}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') {
-                event.currentTarget.blur();
-              }
+        <input
+          id={inputId}
+          type="text"
+          value={draftName}
+          maxLength={80}
+          autoComplete="off"
+          onFocus={() => {
+            cancelCommitRef.current = false;
+          }}
+          onChange={(event) => {
+            setDraftName(event.target.value);
+          }}
+          onBlur={commitName}
+          onKeyDown={(event) => {
+            event.stopPropagation();
 
-              if (event.key === 'Escape') {
-                setDraftName(element.name);
-                event.currentTarget.blur();
-              }
-            }}
-            className="w-full truncate rounded-md bg-transparent py-0.5 pr-6 text-base font-semibold text-text outline-none transition focus-visible:bg-background focus-visible:px-2 focus-visible:ring-2 focus-visible:ring-brand-primary/40"
-          />
+            if (event.key === 'Enter') {
+              event.preventDefault();
+              event.currentTarget.blur();
+            }
 
-          {draftName && (
-            <button
-              type="button"
-              tabIndex={-1}
-              onMouseDown={(event) => {
-                event.preventDefault();
-              }}
-              onClick={clearName}
-              className="absolute right-1 flex size-4 shrink-0 items-center justify-center rounded text-text-muted transition-colors hover:text-text"
-              aria-label="Borrar nombre"
-            >
-              <X size={14} strokeWidth={2.5} />
-            </button>
-          )}
-        </div>
+            if (event.key === 'Escape') {
+              event.preventDefault();
+              cancelCommitRef.current = true;
+              setDraftName(element.name);
+              event.currentTarget.blur();
+            }
+          }}
+          className="h-10 w-full min-w-0 rounded-lg border border-border bg-background px-3 text-base text-text outline-none transition-colors focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/10"
+        />
       </div>
     </div>
   );
