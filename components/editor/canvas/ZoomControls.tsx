@@ -1,6 +1,6 @@
 'use client';
 
-import { type KeyboardEvent, type ReactNode } from 'react';
+import type { KeyboardEvent, ReactNode } from 'react';
 import { Maximize2, Minus, Plus, RotateCcw } from 'lucide-react';
 
 interface CanvasSize {
@@ -29,17 +29,19 @@ interface IconButtonProps {
   children: ReactNode;
 }
 
-const BUTTON = 32;
+const BUTTON = 40;
 const PAD = 4;
 const GAP = 2;
 const PERCENT_W = 48;
 const PILL_GAP = 8;
-const MARGIN = 20;
+const MARGIN = 16;
 
 function IconButton({ x, y, size, label, disabled = false, onClick, children }: IconButtonProps) {
-  const activate = () => {
-    if (!disabled) onClick();
-  };
+  function activate() {
+    if (!disabled) {
+      onClick();
+    }
+  }
 
   return (
     <g
@@ -67,7 +69,7 @@ function IconButton({ x, y, size, label, disabled = false, onClick, children }: 
       <rect
         width={size}
         height={size}
-        rx={7}
+        rx={8}
         className={
           disabled
             ? 'fill-transparent'
@@ -75,7 +77,9 @@ function IconButton({ x, y, size, label, disabled = false, onClick, children }: 
         }
       />
 
-      <g className={disabled ? 'opacity-35' : undefined}>{children}</g>
+      <g pointerEvents="none" className={disabled ? 'opacity-35' : undefined}>
+        {children}
+      </g>
     </g>
   );
 }
@@ -88,8 +92,6 @@ function Pill({ width, height }: { width: number; height: number }) {
       rx={12}
       fill="var(--color-background)"
       stroke="var(--color-border)"
-      strokeOpacity={0.7}
-      className="drop-shadow-[0_1px_2px_rgba(15,23,42,0.06)]"
     />
   );
 }
@@ -105,27 +107,19 @@ export function ZoomControls({
   canZoomOut,
 }: ZoomControlsProps) {
   const height = BUTTON + PAD * 2;
-
   const zoomPillWidth = PAD * 2 + BUTTON * 2 + PERCENT_W + GAP * 2;
   const actionsPillWidth = PAD * 2 + BUTTON * 2 + GAP;
 
-  const x = MARGIN;
-  const y = canvasSize.height - height - MARGIN;
+  const iconProps = {
+    size: 17,
+    color: 'var(--color-text-muted)',
+    'aria-hidden': true,
+  } as const;
 
-  const iconProps = { size: 15, color: 'var(--color-text-muted)', 'aria-hidden': true } as const;
   const iconOffset = (BUTTON - iconProps.size) / 2;
 
-  return (
-    <g
-      data-export-exclude
-      transform={`translate(${x} ${y})`}
-      onPointerDown={(event) => {
-        event.stopPropagation();
-      }}
-      onClick={(event) => {
-        event.stopPropagation();
-      }}
-    >
+  const controls = (
+    <>
       <g>
         <Pill width={zoomPillWidth} height={height} />
 
@@ -144,6 +138,7 @@ export function ZoomControls({
           x={PAD + BUTTON + GAP + PERCENT_W / 2}
           y={height / 2 + 4}
           textAnchor="middle"
+          pointerEvents="none"
           className="fill-text text-xs font-medium tabular-nums"
         >
           {zoomPercentage}%
@@ -183,6 +178,29 @@ export function ZoomControls({
         >
           <RotateCcw x={iconOffset} y={iconOffset} {...iconProps} />
         </IconButton>
+      </g>
+    </>
+  );
+
+  return (
+    <g
+      data-export-exclude
+      onPointerDown={(event) => {
+        event.stopPropagation();
+      }}
+      onClick={(event) => {
+        event.stopPropagation();
+      }}
+    >
+      <g
+        className="hidden lg:block"
+        transform={`translate(${MARGIN} ${Math.max(MARGIN, canvasSize.height - height - MARGIN)})`}
+      >
+        {controls}
+      </g>
+
+      <g className="lg:hidden" transform={`translate(${MARGIN} ${MARGIN})`}>
+        {controls}
       </g>
     </g>
   );

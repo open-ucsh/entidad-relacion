@@ -146,9 +146,11 @@ export function Editor() {
               onClose={handleClosePanel}
             />
           </div>
-        </main>
 
-        <MobileToolbar onOpenInspector={handleOpenMobileInspector} />
+          <div className={styles.mobileToolbarSlot}>
+            <MobileToolbar onOpenInspector={handleOpenMobileInspector} />
+          </div>
+        </main>
 
         <DocumentGallery
           isOpen={isDocumentGalleryOpen}

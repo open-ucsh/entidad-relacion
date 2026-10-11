@@ -128,3 +128,20 @@
     transition: none;
   }
 }
+
+.mobileToolbarSlot {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .mobileToolbarSlot {
+    position: absolute;
+    z-index: 40;
+    right: 0.75rem;
+    bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    left: 0.75rem;
+    display: block;
+    max-width: 24rem;
+    margin-inline: auto;
+  }
+}
