@@ -23,31 +23,20 @@ type MobilePanel = 'inspector' | null;
 
 export function Editor() {
   const diagram = useDiagramStore(selectActiveDiagram);
-
   const setDiagramName = useDiagramStore((state) => state.setDiagramName);
-
   const importDiagram = useDiagramStore((state) => state.importDiagram);
-
   const undo = useDiagramStore((state) => state.undo);
-
   const redo = useDiagramStore((state) => state.redo);
-
   const appearance = useDiagramStore((state) => state.appearance);
-
   const canUndo = useDiagramStore(selectCanUndo);
-
   const canRedo = useDiagramStore(selectCanRedo);
 
   const [activeRightPanel, setActiveRightPanel] = useState<RightPanelTab>('inspector');
-
   const [mobilePanel, setMobilePanel] = useState<MobilePanel>(null);
-
   const [isDocumentGalleryOpen, setIsDocumentGalleryOpen] = useState(false);
-
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
 
   const svgRef = useRef<SVGSVGElement | null>(null);
-
   const { exportDiagram } = useCanvasExport(svgRef, diagram);
 
   const { exportJson, importJson } = useDiagramFile({
@@ -56,14 +45,7 @@ export function Editor() {
     onImportDiagram: importDiagram,
   });
 
-  const {
-    isToolbarOpen,
-    isInspectorOpen,
-    workspaceColumns,
-    toggleToolbar,
-    toggleInspector,
-    openInspector,
-  } = useEditorPanels();
+  const { isInspectorOpen, toggleInspector, openInspector } = useEditorPanels();
 
   function handleOpenHistory() {
     openInspector();
@@ -114,16 +96,16 @@ export function Editor() {
             className={styles.workspace}
             style={
               {
-                '--editor-workspace-columns': workspaceColumns,
+                '--editor-workspace-columns': `minmax(0, 1fr) ${isInspectorOpen ? '320px' : '0px'}`,
               } as CSSProperties
             }
           >
-            <div className={styles.toolbarSlot} data-desktop-open={isToolbarOpen}>
-              <Toolbar />
-            </div>
-
             <div className={styles.canvasSlot}>
               <Canvas diagram={diagram} svgRef={svgRef} />
+
+              <div className={styles.floatingToolbar}>
+                <Toolbar />
+              </div>
             </div>
 
             <div
@@ -145,8 +127,6 @@ export function Editor() {
           )}
 
           <div className={styles.desktopPanelToggles}>
-            <EditorSidePanelToggle side="left" isOpen={isToolbarOpen} onToggle={toggleToolbar} />
-
             <EditorSidePanelToggle
               side="right"
               isOpen={isInspectorOpen}

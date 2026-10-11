@@ -9,21 +9,27 @@
   overflow: hidden;
 }
 
-.toolbarSlot,
 .canvasSlot,
 .rightPanelSlot {
   min-width: 0;
   min-height: 0;
 }
 
-.toolbarSlot,
+.canvasSlot {
+  position: relative;
+  z-index: 0;
+}
+
 .rightPanelSlot {
   overflow: hidden;
 }
 
-.canvasSlot {
-  position: relative;
-  z-index: 0;
+.floatingToolbar {
+  position: absolute;
+  z-index: 20;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .desktopPanelToggles {
@@ -42,13 +48,13 @@
     flex: 1;
   }
 
-  .toolbarSlot {
-    display: none;
-  }
-
   .canvasSlot {
     position: absolute;
     inset: 0;
+  }
+
+  .floatingToolbar {
+    display: none;
   }
 
   .rightPanelSlot {
@@ -89,7 +95,6 @@
 }
 
 @media (min-width: 1024px) {
-  .toolbarSlot[data-desktop-open='false'],
   .rightPanelSlot[data-desktop-open='false'] {
     overflow: hidden;
   }
