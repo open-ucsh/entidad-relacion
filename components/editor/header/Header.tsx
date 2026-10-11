@@ -1,7 +1,10 @@
+import { FileText, Redo2, Undo2 } from 'lucide-react';
+
 import type { ExportFormat } from '../canvas/hooks/useCanvasExport';
 
 import { ExportButton } from './actions/ExportButton';
-import { HeaderToolbar } from './actions/HeaderToolbar';
+import { HeaderDivider } from './actions/HeaderDivider';
+import { HeaderIconButton } from './actions/HeaderIconButton';
 import { MobileHeaderMenu } from './actions/MobileHeaderMenu';
 import { HeaderBrand } from './HeaderBrand';
 import { ProjectNameEditor } from './ProjectNameEditor';
@@ -28,7 +31,6 @@ export function Header({
   canUndo,
   onUndo,
   onRedo,
-  onOpenHistory,
   onOpenMobileHistory,
   onRenameDiagram,
   onExport,
@@ -38,20 +40,29 @@ export function Header({
   onOpenShortcuts,
 }: HeaderProps) {
   return (
-    <header className="relative z-50 shrink-0 border-b border-white/15 bg-brand-primary shadow-sm">
-      <div className="flex h-14 min-w-0 items-center gap-3 px-3 sm:px-4 lg:h-16 lg:px-6">
-        <div className="hidden shrink-0 lg:block">
-          <HeaderBrand />
-        </div>
+    <header className="relative z-50 shrink-0 border-b border-border bg-background text-text">
+      <div className="flex min-h-20 min-w-0 items-center gap-3 px-3 sm:gap-4 sm:px-6 lg:px-8">
+        <HeaderBrand />
 
-        <div className="hidden h-9 w-px shrink-0 bg-white/15 lg:block" aria-hidden="true" />
+        <span aria-hidden="true" className="h-10 w-px shrink-0 bg-border" />
+
+        <FileText
+          aria-hidden="true"
+          className="hidden size-5 shrink-0 text-brand-primary sm:block"
+        />
 
         <div className="min-w-0 flex-1">
           <ProjectNameEditor name={diagramName} onCommit={onRenameDiagram} />
         </div>
 
-        <div className="hidden shrink-0 lg:block">
+        <div className="hidden shrink-0 items-center gap-1 lg:flex">
           <ExportButton onExport={onExport} onExportJson={onExportJson} />
+
+          <HeaderDivider />
+
+          <HeaderIconButton icon={Undo2} label="Deshacer" onClick={onUndo} disabled={!canUndo} />
+
+          <HeaderIconButton icon={Redo2} label="Rehacer" onClick={onRedo} disabled={!canRedo} />
         </div>
 
         <MobileHeaderMenu
@@ -67,24 +78,6 @@ export function Header({
           onOpenShortcuts={onOpenShortcuts}
         />
       </div>
-
-      <div className="hidden h-11 items-center border-t border-white/10 bg-white/5 px-6 lg:flex">
-        <HeaderToolbar
-          canRedo={canRedo}
-          canUndo={canUndo}
-          onUndo={onUndo}
-          onRedo={onRedo}
-          onImportJson={onImportJson}
-          onOpenHistory={onOpenHistory}
-          onOpenDocuments={onOpenDocuments}
-          onOpenShortcuts={onOpenShortcuts}
-        />
-      </div>
-
-      <div
-        className="absolute inset-x-0 bottom-0 h-0.5 bg-linear-to-r from-accent/0 via-accent to-accent/0"
-        aria-hidden="true"
-      />
     </header>
   );
 }

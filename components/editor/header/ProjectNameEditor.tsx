@@ -1,6 +1,6 @@
 'use client';
 
-import { FileText, Pencil } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 interface ProjectNameEditorProps {
@@ -12,6 +12,7 @@ export function ProjectNameEditor({ name, onCommit }: ProjectNameEditorProps) {
   const [draftName, setDraftName] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const editingRef = useRef(false);
 
   useEffect(() => {
     if (isEditing) {
@@ -21,15 +22,27 @@ export function ProjectNameEditor({ name, onCommit }: ProjectNameEditorProps) {
   }, [isEditing]);
 
   function startEditing() {
-    setDraftName(name);
+    draftNameReset();
+    editingRef.current = true;
     setIsEditing(true);
   }
 
+  function draftNameReset() {
+    setDraftName(name);
+  }
+
   function cancelEditing() {
+    editingRef.current = false;
     setIsEditing(false);
   }
 
   function saveEditing() {
+    if (!editingRef.current) {
+      return;
+    }
+
+    editingRef.current = false;
+
     const nextName = draftName.trim();
 
     if (nextName && nextName !== name) {
@@ -41,30 +54,33 @@ export function ProjectNameEditor({ name, onCommit }: ProjectNameEditorProps) {
 
   if (isEditing) {
     return (
-      <div className="flex items-center gap-2">
-        <FileText size={15} className="shrink-0 text-white/60" aria-hidden="true" />
+      <input
+        ref={inputRef}
+        type="text"
+        value={draftName}
+        maxLength={80}
+        autoComplete="off"
+        spellCheck={false}
+        onChange={(event) => {
+          setDraftName(event.target.value);
+        }}
+        onBlur={saveEditing}
+        onKeyDown={(event) => {
+          event.stopPropagation();
 
-        <input
-          ref={inputRef}
-          value={draftName}
-          maxLength={80}
-          onChange={(event) => {
-            setDraftName(event.target.value);
-          }}
-          onBlur={saveEditing}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') {
-              event.currentTarget.blur();
-            }
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            saveEditing();
+          }
 
-            if (event.key === 'Escape') {
-              cancelEditing();
-            }
-          }}
-          aria-label="Nombre del proyecto"
-          className="w-52 rounded-md border border-white/25 bg-white/10 px-2 py-1 text-sm font-medium text-white outline-none focus:border-white/60 focus:ring-2 focus:ring-white/20"
-        />
-      </div>
+          if (event.key === 'Escape') {
+            event.preventDefault();
+            cancelEditing();
+          }
+        }}
+        aria-label="Nombre del proyecto"
+        className="block h-7 w-full max-w-sm rounded-md border border-brand-primary/30 bg-surface px-2 text-sm text-text outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/10"
+      />
     );
   }
 
@@ -73,16 +89,15 @@ export function ProjectNameEditor({ name, onCommit }: ProjectNameEditorProps) {
       type="button"
       onClick={startEditing}
       title="Cambiar nombre del proyecto"
-      className="group flex max-w-52 items-center gap-2 rounded-md px-1 py-0.5 text-left transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+      aria-label={`Cambiar nombre del proyecto: ${name}`}
+      className="group flex max-w-full items-center gap-2 rounded-md py-0.5 text-left transition-colors hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
     >
-      <FileText size={15} className="shrink-0 text-white/60" aria-hidden="true" />
-
-      <span className="truncate text-sm font-medium text-white">{name}</span>
+      <span className="min-w-0 truncate text-sm leading-5 text-text-muted">{name}</span>
 
       <Pencil
         size={13}
-        className="shrink-0 text-white/50 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
         aria-hidden="true"
+        className="shrink-0 text-text-muted opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
       />
     </button>
   );

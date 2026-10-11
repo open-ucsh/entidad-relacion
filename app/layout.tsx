@@ -1,10 +1,16 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Ubuntu } from 'next/font/google';
 import type { ReactNode } from 'react';
 
 import { BRANDING } from '@/config/branding';
 
 import './globals.css';
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+};
 
 const ubuntu = Ubuntu({
   subsets: ['latin'],
@@ -30,7 +36,7 @@ interface RootLayoutProps {
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="es" className={`${ubuntu.variable} h-full`}>
-      <body className="h-full overflow-hidden">{children}</body>
+      <body className="h-dvh overflow-hidden">{children}</body>
     </html>
   );
 }

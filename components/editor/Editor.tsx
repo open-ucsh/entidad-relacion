@@ -1,6 +1,7 @@
 'use client';
 
-import { useRef, useState, type CSSProperties } from 'react';
+import { SlidersHorizontal } from 'lucide-react';
+import { useRef, useState } from 'react';
 
 import { selectActiveDiagram, selectCanRedo, selectCanUndo } from '@/state/diagram/selectors';
 import { useDiagramStore } from '@/state/diagram/store';
@@ -9,45 +10,32 @@ import { Canvas } from './canvas/Canvas';
 import { useCanvasExport } from './canvas/hooks/useCanvasExport';
 import { DocumentGallery } from './documents/DocumentGallery';
 import styles from './Editor.module.css';
-import { EditorSidePanelToggle } from './EditorSidePanelToggle';
 import { EditorFeedbackProvider } from './feedback/EditorFeedbackProvider';
+import { HeaderToolbar } from './header/actions/HeaderToolbar';
 import { Header } from './header/Header';
 import { KeyboardShortcutsDialog } from './header/KeyboardShortcutsDialog';
 import { useDiagramFile } from './hooks/useDiagramFile';
-import { useEditorPanels } from './hooks/useEditorPanels';
 import { EditorRightPanel, type RightPanelTab } from './right-panel/EditorRightPanel';
 import { MobileToolbar } from './toolbar/MobileToolbar';
 import { Toolbar } from './toolbar/Toolbar';
 
-type MobilePanel = 'inspector' | null;
-
 export function Editor() {
   const diagram = useDiagramStore(selectActiveDiagram);
-
   const setDiagramName = useDiagramStore((state) => state.setDiagramName);
-
   const importDiagram = useDiagramStore((state) => state.importDiagram);
-
   const undo = useDiagramStore((state) => state.undo);
-
   const redo = useDiagramStore((state) => state.redo);
-
   const appearance = useDiagramStore((state) => state.appearance);
-
   const canUndo = useDiagramStore(selectCanUndo);
-
   const canRedo = useDiagramStore(selectCanRedo);
 
   const [activeRightPanel, setActiveRightPanel] = useState<RightPanelTab>('inspector');
-
-  const [mobilePanel, setMobilePanel] = useState<MobilePanel>(null);
-
+  const [isDesktopPanelOpen, setIsDesktopPanelOpen] = useState(true);
+  const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false);
   const [isDocumentGalleryOpen, setIsDocumentGalleryOpen] = useState(false);
-
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
 
   const svgRef = useRef<SVGSVGElement | null>(null);
-
   const { exportDiagram } = useCanvasExport(svgRef, diagram);
 
   const { exportJson, importJson } = useDiagramFile({
@@ -56,32 +44,32 @@ export function Editor() {
     onImportDiagram: importDiagram,
   });
 
-  const {
-    isToolbarOpen,
-    isInspectorOpen,
-    workspaceColumns,
-    toggleToolbar,
-    toggleInspector,
-    openInspector,
-  } = useEditorPanels();
+  function handleOpenDocuments() {
+    setIsDocumentGalleryOpen(true);
+  }
+
+  function handleOpenShortcuts() {
+    setIsShortcutsOpen(true);
+  }
 
   function handleOpenHistory() {
-    openInspector();
     setActiveRightPanel('history');
+    setIsDesktopPanelOpen(true);
   }
 
   function handleOpenMobileHistory() {
     setActiveRightPanel('history');
-    setMobilePanel('inspector');
+    setIsMobilePanelOpen(true);
   }
 
   function handleOpenMobileInspector() {
     setActiveRightPanel('inspector');
-    setMobilePanel('inspector');
+    setIsMobilePanelOpen(true);
   }
 
-  function handleCloseMobilePanel() {
-    setMobilePanel(null);
+  function handleClosePanel() {
+    setIsDesktopPanelOpen(false);
+    setIsMobilePanelOpen(false);
   }
 
   return (
@@ -96,66 +84,73 @@ export function Editor() {
           onRedo={redo}
           onOpenHistory={handleOpenHistory}
           onOpenMobileHistory={handleOpenMobileHistory}
-          onOpenShortcuts={() => {
-            setIsShortcutsOpen(true);
-          }}
+          onOpenShortcuts={handleOpenShortcuts}
           onExport={(format) => {
             void exportDiagram(format);
           }}
           onExportJson={exportJson}
           onImportJson={importJson}
-          onOpenDocuments={() => {
-            setIsDocumentGalleryOpen(true);
-          }}
+          onOpenDocuments={handleOpenDocuments}
         />
 
-        <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div
-            className={styles.workspace}
-            style={
-              {
-                '--editor-workspace-columns': workspaceColumns,
-              } as CSSProperties
-            }
-          >
-            <div className={styles.toolbarSlot} data-desktop-open={isToolbarOpen}>
-              <Toolbar />
-            </div>
+        <main className={styles.workspace}>
+          <div className={styles.canvasSlot}>
+            <Canvas diagram={diagram} svgRef={svgRef} />
+          </div>
 
-            <div className={styles.canvasSlot}>
-              <Canvas diagram={diagram} svgRef={svgRef} />
-            </div>
+          <div className={styles.floatingToolbar}>
+            <Toolbar />
+          </div>
 
-            <div
-              className={styles.rightPanelSlot}
-              data-desktop-open={isInspectorOpen}
-              data-mobile-open={mobilePanel === 'inspector'}
-            >
-              <EditorRightPanel activeTab={activeRightPanel} onChangeTab={setActiveRightPanel} />
+          <div className={styles.panelLauncher}>
+            <div className="flex items-center gap-2">
+              <HeaderToolbar
+                onImportJson={importJson}
+                onOpenHistory={handleOpenHistory}
+                onOpenDocuments={handleOpenDocuments}
+                onOpenShortcuts={handleOpenShortcuts}
+              />
+
+              <button
+                type="button"
+                aria-label={isDesktopPanelOpen ? 'Cerrar propiedades' : 'Abrir propiedades'}
+                aria-expanded={isDesktopPanelOpen}
+                onClick={() => {
+                  setActiveRightPanel('inspector');
+                  setIsDesktopPanelOpen((open) => !open);
+                }}
+                className="flex size-11 items-center justify-center rounded-xl border border-border bg-background text-brand-primary shadow-sm transition-colors hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
+              >
+                <SlidersHorizontal size={19} aria-hidden="true" />
+              </button>
             </div>
           </div>
 
-          {mobilePanel !== null && (
+          {isMobilePanelOpen && (
             <button
               type="button"
               aria-label="Cerrar panel"
               className={styles.mobileBackdrop}
-              onClick={handleCloseMobilePanel}
+              onClick={handleClosePanel}
             />
           )}
 
-          <div className={styles.desktopPanelToggles}>
-            <EditorSidePanelToggle side="left" isOpen={isToolbarOpen} onToggle={toggleToolbar} />
-
-            <EditorSidePanelToggle
-              side="right"
-              isOpen={isInspectorOpen}
-              onToggle={toggleInspector}
+          <div
+            className={styles.rightPanelSlot}
+            data-desktop-open={isDesktopPanelOpen}
+            data-mobile-open={isMobilePanelOpen}
+          >
+            <EditorRightPanel
+              activeTab={activeRightPanel}
+              onChangeTab={setActiveRightPanel}
+              onClose={handleClosePanel}
             />
           </div>
-        </main>
 
-        <MobileToolbar onOpenInspector={handleOpenMobileInspector} />
+          <div className={styles.mobileToolbarSlot}>
+            <MobileToolbar onOpenInspector={handleOpenMobileInspector} />
+          </div>
+        </main>
 
         <DocumentGallery
           isOpen={isDocumentGalleryOpen}

@@ -1,33 +1,67 @@
 .workspace {
   position: relative;
-  display: grid;
   min-height: 0;
-  height: 100%;
   width: 100%;
   flex: 1;
-  grid-template-columns: var(--editor-workspace-columns);
-  overflow: hidden;
-}
-
-.toolbarSlot,
-.canvasSlot,
-.rightPanelSlot {
-  min-width: 0;
-  min-height: 0;
-}
-
-.toolbarSlot,
-.rightPanelSlot {
   overflow: hidden;
 }
 
 .canvasSlot {
-  position: relative;
+  position: absolute;
   z-index: 0;
+  inset: 0;
+  min-width: 0;
+  min-height: 0;
 }
 
-.desktopPanelToggles {
-  display: block;
+.floatingToolbar {
+  position: absolute;
+  z-index: 20;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.panelLauncher {
+  position: absolute;
+  z-index: 35;
+  top: 1rem;
+  left: 1rem;
+}
+
+.rightPanelSlot {
+  position: absolute;
+  z-index: 25;
+  top: 6rem;
+  bottom: 6rem;
+  left: 1rem;
+  display: flex;
+  flex-direction: column;
+  width: 19rem;
+  min-height: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.rightPanelSlot[data-desktop-open='true'] {
+  visibility: visible;
+}
+
+.rightPanelSlot > aside {
+  height: auto;
+  max-height: 100%;
+  min-height: 0;
+  flex: 0 1 auto;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 0.875rem;
+  background: var(--color-background);
+  box-shadow: 0 4px 16px rgb(15 23 42 / 6%);
+  pointer-events: none;
+}
+
+.rightPanelSlot[data-desktop-open='true'] > aside {
+  pointer-events: auto;
 }
 
 .mobileBackdrop {
@@ -35,46 +69,48 @@
 }
 
 @media (max-width: 1023px) {
-  .workspace {
-    display: block;
-    position: relative;
-    min-height: 0;
-    flex: 1;
-  }
-
-  .toolbarSlot {
+  .floatingToolbar,
+  .panelLauncher {
     display: none;
   }
 
-  .canvasSlot {
-    position: absolute;
-    inset: 0;
-  }
-
-  .rightPanelSlot {
-    position: absolute;
+  .rightPanelSlot,
+  .rightPanelSlot[data-desktop-open='true'] {
     z-index: 50;
-    top: 0;
+    top: auto;
     right: 0;
     bottom: 0;
-    width: min(88vw, 22rem);
-    border-left: 1px solid var(--color-border);
-    background: var(--color-background);
-    box-shadow: -12px 0 32px rgb(15 23 42 / 12%);
-    transform: translateX(100%);
+    left: 0;
+    width: 100%;
+    height: min(65%, 32rem);
+    max-height: calc(100% - 1rem);
+    transform: translateY(100%);
     visibility: hidden;
+    pointer-events: none;
     transition:
       transform 180ms ease,
       visibility 180ms ease;
   }
 
-  .rightPanelSlot[data-mobile-open='true'] {
-    transform: translateX(0);
-    visibility: visible;
+  .rightPanelSlot > aside {
+    height: 100%;
+    flex: 1;
+    border-radius: 1rem 1rem 0 0;
+    box-shadow: 0 -8px 28px rgb(15 23 42 / 10%);
   }
 
-  .desktopPanelToggles {
-    display: none;
+  .rightPanelSlot[data-desktop-open='true'] > aside {
+    pointer-events: none;
+  }
+
+  .rightPanelSlot[data-mobile-open='true'] {
+    transform: translateY(0);
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .rightPanelSlot[data-mobile-open='true'] > aside {
+    pointer-events: auto;
   }
 
   .mobileBackdrop {
@@ -83,14 +119,29 @@
     z-index: 45;
     inset: 0;
     border: 0;
-    background: rgb(15 23 42 / 20%);
-    backdrop-filter: blur(1px);
+    background: rgb(15 23 42 / 15%);
   }
 }
 
-@media (min-width: 1024px) {
-  .toolbarSlot[data-desktop-open='false'],
-  .rightPanelSlot[data-desktop-open='false'] {
-    overflow: hidden;
+@media (prefers-reduced-motion: reduce) {
+  .rightPanelSlot {
+    transition: none;
+  }
+}
+
+.mobileToolbarSlot {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .mobileToolbarSlot {
+    position: absolute;
+    z-index: 40;
+    right: 0.75rem;
+    bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    left: 0.75rem;
+    display: block;
+    max-width: 24rem;
+    margin-inline: auto;
   }
 }

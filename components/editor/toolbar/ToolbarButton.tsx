@@ -1,10 +1,8 @@
 import type { DragEvent } from 'react';
-
 import type { LucideIcon } from 'lucide-react';
 
-import type { Tool } from '@/domain/diagram/models';
-
 import { isDraggableEditorTool, setDraggedEditorTool } from '@/components/editor/editor-tool-drag';
+import type { Tool } from '@/domain/diagram/models';
 
 interface ToolbarButtonProps {
   tool: Tool;
@@ -35,39 +33,25 @@ export function ToolbarButton({
       draggable={draggable}
       onDragStart={draggable ? handleDragStart : undefined}
       onClick={onClick}
-      title={`${label} (${shortcut})`}
-      className={`group relative flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-xl border transition-all duration-150 active:opacity-90 ${
+      aria-label={`${label} (${shortcut})`}
+      aria-pressed={active}
+      className={`group relative flex size-11 shrink-0 items-center justify-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
         active
-          ? 'border-brand-primary bg-brand-primary/10'
-          : 'border-border bg-background hover:border-brand-primary/25 hover:bg-surface-hover hover:shadow-sm'
+          ? 'bg-brand-primary/10 text-brand-primary'
+          : 'text-text-muted hover:bg-surface-hover hover:text-brand-primary'
       } ${draggable ? 'cursor-grab active:cursor-grabbing' : ''}`}
     >
-      <span
-        className={`absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded px-1 text-xs font-semibold leading-none transition-opacity duration-150 ${
-          active
-            ? 'bg-brand-primary text-white opacity-100'
-            : 'bg-surface text-text-muted opacity-0 group-hover:opacity-100'
-        }`}
-      >
-        {shortcut}
-      </span>
-
-      <Icon
-        size={20}
-        strokeWidth={1.6}
-        className={
-          active
-            ? 'text-brand-primary'
-            : 'text-text-muted transition-colors group-hover:text-brand-primary'
-        }
-      />
+      <Icon size={21} strokeWidth={1.7} aria-hidden="true" />
 
       <span
-        className={`px-1 text-center text-xs font-medium leading-tight ${
-          active ? 'text-brand-primary' : 'text-text'
-        }`}
+        aria-hidden="true"
+        className="pointer-events-none absolute left-1/2 top-full z-30 mt-3 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-lg border border-border bg-background px-3 py-2 text-xs font-medium text-text opacity-0 shadow-sm transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
       >
         {label}
+
+        <span className="rounded border border-border bg-surface px-1.5 py-0.5 text-text-muted">
+          {shortcut}
+        </span>
       </span>
     </button>
   );
