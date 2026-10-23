@@ -11,6 +11,8 @@ import type {
   Relationship,
 } from '@/domain/diagram/models';
 
+import { hasValidAttributeHierarchy } from './attributes';
+
 type RecordValue = Record<string, unknown>;
 
 function isRecord(value: unknown): value is RecordValue {
@@ -138,6 +140,7 @@ function hasValidConnections(
   connections: Connection[],
 ): boolean {
   const elementById = new Map(elements.map((element) => [element.id, element]));
+
   const connectionKeys = new Set<string>();
   const isaSupertypeIds = new Set<string>();
 
@@ -170,12 +173,17 @@ function hasValidConnections(
         (target.type === 'entity' || target.type === 'relationship')) ||
       (target.type === 'attribute' && (source.type === 'entity' || source.type === 'relationship'));
 
+    const isCompositeAttribute =
+      source.type === 'attribute' && source.composite && target.type === 'attribute';
+
     const isSupertypeConnection = source.type === 'entity' && target.type === 'isa';
+
     const isSubtypeConnection = source.type === 'isa' && target.type === 'entity';
 
     if (
       !isEntityRelationship &&
       !isAttributeOwner &&
+      !isCompositeAttribute &&
       !isSupertypeConnection &&
       !isSubtypeConnection
     ) {
@@ -232,11 +240,22 @@ export function isValidDiagram(value: unknown): value is Diagram {
     return false;
   }
 
+  const diagram: Diagram = {
+    entities,
+    relationships,
+    attributes,
+    isas,
+    connections,
+    metadata,
+    activity,
+  };
+
   const elements = [...entities, ...relationships, ...attributes, ...isas];
 
   return (
     hasUniqueIds(elements) &&
     hasUniqueIds(connections) &&
-    hasValidConnections(elements, connections)
+    hasValidConnections(elements, connections) &&
+    hasValidAttributeHierarchy(diagram)
   );
 }

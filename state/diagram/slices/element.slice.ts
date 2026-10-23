@@ -1,7 +1,7 @@
 import { createConnection } from '@/domain/diagram/factories/connection';
 import { createAttribute } from '@/domain/diagram/factories/element';
-
 import { findDiagramElement, getDiagramElements } from '@/domain/diagram/queries/elements';
+import { hasValidAttributeHierarchy } from '@/domain/diagram/validation/attributes';
 
 import { appendDiagramActivity } from '../diagram-activity';
 import {
@@ -11,23 +11,20 @@ import {
 } from '../diagram-activity-details';
 import { getElementColor } from '../diagram-appearance';
 import { replaceActiveDiagram } from '../diagram-documents';
-
-import { createAlignmentUpdates, createDistributionUpdates } from '../lib/element-arrangement';
-import { findConnectedAttributePosition } from '../lib/element-placement';
-
 import {
   duplicateDiagramElements,
   moveDiagramElements,
   removeDiagramElements,
   updateDiagram,
 } from '../diagram-mutations';
-
 import type {
   DiagramStoreSlice,
   ElementAlignment,
   ElementDistribution,
   ElementSlice,
 } from '../diagram-store.types';
+import { createAlignmentUpdates, createDistributionUpdates } from '../lib/element-arrangement';
+import { findConnectedAttributePosition } from '../lib/element-placement';
 
 function getSelectedDiagramElements(
   selectedElementIds: string[],
@@ -107,11 +104,23 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
     set((state) => {
       const parent = findDiagramElement(state.diagram, parentId);
 
-      if (!parent || parent.type === 'attribute') {
+      if (!parent || parent.type === 'isa' || (parent.type === 'attribute' && !parent.composite)) {
         return state;
       }
 
-      const position = findConnectedAttributePosition(state.diagram, parentId);
+      const attributeIds = new Set(state.diagram.attributes.map((attribute) => attribute.id));
+
+      const childCount = state.diagram.connections.filter(
+        (connection) => connection.fromId === parent.id && attributeIds.has(connection.toId),
+      ).length;
+
+      const position =
+        parent.type === 'attribute'
+          ? {
+              x: parent.position.x + 160,
+              y: parent.position.y + childCount * 80,
+            }
+          : findConnectedAttributePosition(state.diagram, parentId);
 
       if (!position) {
         return state;
@@ -120,14 +129,22 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
       const attribute = createAttribute(position);
       const connection = createConnection(parent.id, attribute.id);
 
+      const nextDiagram = {
+        ...state.diagram,
+        attributes: [...state.diagram.attributes, attribute],
+        connections: [...state.diagram.connections, connection],
+      };
+
+      if (!hasValidAttributeHierarchy(nextDiagram)) {
+        return state;
+      }
+
       const diagram = appendDiagramActivity(
-        {
-          ...state.diagram,
-          attributes: [...state.diagram.attributes, attribute],
-          connections: [...state.diagram.connections, connection],
-        },
+        nextDiagram,
         'element-created',
-        `Se agregó el atributo “${attribute.name}” a “${parent.name}”.`,
+        parent.type === 'attribute'
+          ? `Se agregó el componente “${attribute.name}” a “${parent.name}”.`
+          : `Se agregó el atributo “${attribute.name}” a “${parent.name}”.`,
         { id: attribute.id, kind: 'element' },
       );
 
@@ -147,19 +164,39 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
         return state;
       }
 
-      if (typeof updates.name === 'string' && updates.name.trim() === element.name) {
+      const normalizedUpdates =
+        typeof updates.name === 'string'
+          ? {
+              ...updates,
+              name: updates.name.trim(),
+            }
+          : updates;
+
+      if (typeof normalizedUpdates.name === 'string' && normalizedUpdates.name.length === 0) {
         return state;
       }
 
-      const updatedDiagram = updateDiagram(state.diagram, id, updates);
-      const renamed = typeof updates.name === 'string';
+      const updatedDiagram = updateDiagram(state.diagram, id, normalizedUpdates);
+
+      const updatedElement = findDiagramElement(updatedDiagram, id);
+
+      if (
+        !updatedElement ||
+        JSON.stringify(updatedElement) === JSON.stringify(element) ||
+        !hasValidAttributeHierarchy(updatedDiagram)
+      ) {
+        return state;
+      }
+
+      const renamed =
+        typeof normalizedUpdates.name === 'string' && normalizedUpdates.name !== element.name;
 
       const diagram = appendDiagramActivity(
         updatedDiagram,
         renamed ? 'element-renamed' : 'element-updated',
         renamed
-          ? `Se renombró “${element.name}” a “${updates.name}”.`
-          : getElementUpdateDetails(element, updates),
+          ? `Se renombró “${element.name}” a “${updatedElement.name}”.`
+          : getElementUpdateDetails(element, normalizedUpdates),
         { id: element.id, kind: 'element' },
       );
 
@@ -321,7 +358,9 @@ export const createElementSlice: DiagramStoreSlice<ElementSlice> = (set, get) =>
         }.`,
       );
 
-      const elementColors = { ...state.appearance.elementColors };
+      const elementColors = {
+        ...state.appearance.elementColors,
+      };
 
       Object.entries(duplicatedIdBySourceId).forEach(([sourceId, duplicatedId]) => {
         const color = state.appearance.elementColors[sourceId];
