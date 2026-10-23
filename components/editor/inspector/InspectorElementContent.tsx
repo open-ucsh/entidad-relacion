@@ -7,7 +7,9 @@ import type {
   EntityKind,
   RelationshipKind,
 } from '@/domain/diagram/models';
+import { getAttributeChildren } from '@/domain/diagram/queries/attributes';
 import { getIsaHierarchy } from '@/domain/diagram/queries/isa';
+
 import type { ElementColor } from '@/state/diagram/diagram-appearance';
 
 import { ColorPicker, SegmentedControl, SwitchControl } from './InspectorControls';
@@ -18,18 +20,27 @@ const ENTITY_OPTIONS = [
   { label: 'Regular', value: 'regular' },
   { label: 'Débil', value: 'weak' },
   { label: 'Asociativa', value: 'associative' },
-] satisfies ReadonlyArray<{ label: string; value: EntityKind }>;
+] satisfies ReadonlyArray<{
+  label: string;
+  value: EntityKind;
+}>;
 
 const ATTRIBUTE_KEY_OPTIONS = [
   { label: 'Normal', value: 'normal' },
   { label: 'Primaria', value: 'primary' },
   { label: 'Parcial', value: 'partial' },
-] satisfies ReadonlyArray<{ label: string; value: AttributeKeyType }>;
+] satisfies ReadonlyArray<{
+  label: string;
+  value: AttributeKeyType;
+}>;
 
 const RELATIONSHIP_KIND_OPTIONS = [
   { label: 'Regular', value: 'regular' },
   { label: 'Identificadora', value: 'identifying' },
-] satisfies ReadonlyArray<{ label: string; value: RelationshipKind }>;
+] satisfies ReadonlyArray<{
+  label: string;
+  value: RelationshipKind;
+}>;
 
 interface InspectorElementContentProps {
   diagram: Diagram;
@@ -40,13 +51,17 @@ interface InspectorElementContentProps {
   onAddAttribute: (parentId: string) => void;
 }
 
+interface AddAttributeButtonProps {
+  parentId: string;
+  onAddAttribute: (parentId: string) => void;
+  label?: string;
+}
+
 function AddAttributeButton({
   parentId,
   onAddAttribute,
-}: {
-  parentId: string;
-  onAddAttribute: (parentId: string) => void;
-}) {
+  label = 'Agregar atributo',
+}: AddAttributeButtonProps) {
   return (
     <button
       type="button"
@@ -56,7 +71,7 @@ function AddAttributeButton({
       className="flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-background px-3 py-2 text-xs font-medium text-brand-primary transition-colors hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
     >
       <Plus size={16} aria-hidden="true" />
-      Agregar atributo
+      {label}
     </button>
   );
 }
@@ -99,6 +114,13 @@ export function InspectorElementContent({
           />
         </InspectorField>
 
+        {element.kind === 'weak' && (
+          <p className="rounded-md border border-border bg-surface px-3 py-2 text-xs leading-5 text-text-muted">
+            Una entidad débil se identifica mediante la clave de su propietario y una clave parcial.
+            Conéctala a su propietario mediante una relación identificadora.
+          </p>
+        )}
+
         <AppearanceControls element={element} color={color} setElementColor={setElementColor} />
 
         <AddAttributeButton parentId={element.id} onAddAttribute={onAddAttribute} />
@@ -107,6 +129,8 @@ export function InspectorElementContent({
   }
 
   if (element.type === 'attribute') {
+    const children = getAttributeChildren(diagram, element.id);
+
     return (
       <>
         <InspectorField label="Tipo de clave">
@@ -118,6 +142,13 @@ export function InspectorElementContent({
             }}
           />
         </InspectorField>
+
+        {element.keyType === 'partial' && (
+          <p className="rounded-md border border-border bg-surface px-3 py-2 text-xs leading-5 text-text-muted">
+            La clave parcial distingue las instancias de una entidad débil dentro de un mismo
+            propietario.
+          </p>
+        )}
 
         <InspectorField label="Propiedades">
           <div className="grid grid-cols-2 gap-2">
@@ -148,6 +179,7 @@ export function InspectorElementContent({
             <SwitchControl
               checked={element.composite}
               label="Compuesto"
+              disabled={children.length > 0}
               onChange={(composite) => {
                 updateElement(element.id, { composite });
               }}
@@ -162,6 +194,55 @@ export function InspectorElementContent({
             />
           </div>
         </InspectorField>
+
+        {element.derived && (
+          <p className="rounded-md border border-border bg-surface px-3 py-2 text-xs leading-5 text-text-muted">
+            Un atributo derivado se calcula a partir de otros datos. Se representa con una elipse
+            discontinua y no se almacena como columna en la transformación actual.
+          </p>
+        )}
+
+        {element.multivalued && (
+          <p className="rounded-md border border-border bg-surface px-3 py-2 text-xs leading-5 text-text-muted">
+            Un atributo multivaluado permite varios valores para una misma instancia y se representa
+            con una doble elipse.
+          </p>
+        )}
+
+        {element.composite && (
+          <InspectorField label="Componentes">
+            {children.length > 0 ? (
+              <>
+                <ul className="space-y-1">
+                  {children.map((child) => (
+                    <li
+                      key={child.id}
+                      className="rounded-md border border-border bg-surface px-3 py-2 text-xs text-text"
+                    >
+                      {child.name}
+                    </li>
+                  ))}
+                </ul>
+
+                <p className="text-xs leading-5 text-text-muted">
+                  Elimina las conexiones con los componentes antes de desactivar la propiedad de
+                  atributo compuesto.
+                </p>
+              </>
+            ) : (
+              <p className="text-xs leading-5 text-text-muted">
+                Agrega sus componentes. Por ejemplo, «Dirección» puede contener «Calle», «Número» y
+                «Comuna».
+              </p>
+            )}
+
+            <AddAttributeButton
+              parentId={element.id}
+              onAddAttribute={onAddAttribute}
+              label="Agregar componente"
+            />
+          </InspectorField>
+        )}
 
         <AppearanceControls element={element} color={color} setElementColor={setElementColor} />
       </>
@@ -180,6 +261,13 @@ export function InspectorElementContent({
             }}
           />
         </InspectorField>
+
+        {element.kind === 'identifying' && (
+          <p className="rounded-md border border-border bg-surface px-3 py-2 text-xs leading-5 text-text-muted">
+            Una relación identificadora vincula una entidad débil con su propietario. La clave del
+            propietario forma parte de la clave primaria de la entidad débil.
+          </p>
+        )}
 
         <AppearanceControls element={element} color={color} setElementColor={setElementColor} />
 

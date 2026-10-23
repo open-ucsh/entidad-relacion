@@ -1,6 +1,6 @@
 'use client';
 
-import { KeyRound, Link2 } from 'lucide-react';
+import { Columns2, KeyRound, Link2 } from 'lucide-react';
 
 import type { LogicalColumn, LogicalTable } from '@/domain/logical/models';
 
@@ -15,58 +15,35 @@ interface LogicalColumnRowProps {
 }
 
 export function LogicalColumnRow({ column, table, isForeignKey }: LogicalColumnRowProps) {
+  const selection = useLogicalSelectionStore((state) => state.selection);
   const setSelection = useLogicalSelectionStore((state) => state.setSelection);
+
+  const selected =
+    selection?.type === 'table' &&
+    selection.tableId === table.id &&
+    selection.columnId === column.id;
 
   return (
     <div data-logical-column-id={column.id}>
       <button
         type="button"
-        aria-label={`Ver propiedades de ${column.name}`}
+        aria-label={`Propiedades de ${column.name}${column.primaryKey ? ', clave primaria' : ''}${isForeignKey ? ', clave foránea' : ''}`}
+        aria-pressed={selected}
         onClick={() => {
-          setSelection({
-            type: 'table',
-            tableId: table.id,
-            columnId: column.id,
-          });
+          setSelection({ type: 'table', tableId: table.id, columnId: column.id });
         }}
-        className="flex min-h-10 w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-primary/40"
+        className={`flex min-h-10 w-full items-center gap-2.5 px-3 py-2 text-left text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-primary ${
+          selected ? 'bg-brand-primary/10 text-brand-primary' : 'text-text hover:bg-surface-hover'
+        }`}
       >
-        <span className="flex w-7 shrink-0 items-center justify-center gap-1">
-          {column.primaryKey && (
-            <KeyRound size={13} className="text-amber-600" aria-hidden="true" />
-          )}
-
-          {isForeignKey && <Link2 size={13} className="text-brand-primary" aria-hidden="true" />}
-
-          {!column.primaryKey && !isForeignKey && (
-            <span className="size-1 rounded-full bg-border" aria-hidden="true" />
-          )}
+        <span className="flex w-6 shrink-0 items-center gap-1 text-brand-primary">
+          {column.primaryKey && <KeyRound size={13} aria-hidden="true" />}
+          {isForeignKey && <Link2 size={12} aria-hidden="true" />}
+          {!column.primaryKey && !isForeignKey && <Columns2 size={12} aria-hidden="true" />}
         </span>
-
-        <span className="min-w-0 flex-1 text-xs font-medium leading-5 text-text wrap-anywhere">
-          {column.name}
-        </span>
-
-        {(column.primaryKey || isForeignKey) && (
-          <span className="flex shrink-0 items-center gap-1">
-            {column.primaryKey && (
-              <span
-                aria-label="Clave primaria"
-                className="rounded-md bg-amber-500/10 px-1.5 py-1 text-[9px] font-semibold text-amber-700"
-              >
-                PK
-              </span>
-            )}
-
-            {isForeignKey && (
-              <span
-                aria-label="Clave foránea"
-                className="rounded-md bg-brand-primary/10 px-1.5 py-1 text-[9px] font-semibold text-brand-primary"
-              >
-                FK
-              </span>
-            )}
-          </span>
+        <span className="min-w-0 flex-1 wrap-anywhere">{column.name}</span>
+        {selected && (
+          <span className="size-1.5 shrink-0 rounded-full bg-brand-primary" aria-hidden="true" />
         )}
       </button>
     </div>

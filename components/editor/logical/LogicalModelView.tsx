@@ -1,38 +1,25 @@
 'use client';
 
-import type { Diagram } from '@/domain/diagram/models';
+import type { RefObject } from 'react';
 import { useDiagramStore } from '@/state/diagram/store';
 
 import { LogicalCanvas } from './canvas/LogicalCanvas';
 import { useLogicalSelectionStore } from './logical-selection';
 
-interface LogicalModelViewProps {
-  diagram: Diagram;
-}
-
-export function LogicalModelView({ diagram }: LogicalModelViewProps) {
+export function LogicalModelView({ exportRef }: { exportRef?: RefObject<HTMLDivElement | null> }) {
   const workspace = useDiagramStore((state) => state.logicalWorkspace);
 
-  const generateLogicalModel = useDiagramStore((state) => state.generateLogicalModel);
-
-  const addLogicalTable = useDiagramStore((state) => state.addLogicalTable);
-
   const selection = useLogicalSelectionStore((state) => state.selection);
-
   const setSelection = useLogicalSelectionStore((state) => state.setSelection);
 
-  const hasConceptualModel = diagram.entities.length > 0 || diagram.relationships.length > 0;
-
   return (
-    <LogicalCanvas
-      tables={workspace.model.tables}
-      positions={workspace.positions}
-      diagnostics={workspace.model.diagnostics}
-      canGenerateFromEr={hasConceptualModel}
-      selection={selection}
-      onSelectionChange={setSelection}
-      onCreateTable={addLogicalTable}
-      onGenerateFromEr={generateLogicalModel}
-    />
+    <div ref={exportRef} className="h-full min-h-0">
+      <LogicalCanvas
+        tables={workspace.model.tables}
+        positions={workspace.positions}
+        selection={selection}
+        onSelectionChange={setSelection}
+      />
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { Trash2 } from 'lucide-react';
+import { Link2, Trash2 } from 'lucide-react';
 import { useRef, useState } from 'react';
 
 import type { LogicalColumn } from '@/domain/logical/models';
@@ -34,48 +34,53 @@ export function LogicalInspectorColumn({
       return;
     }
 
+    setName(nextName);
+
     if (nextName !== column.name) {
       onUpdate({ name: nextName });
     }
   }
 
-  function renderSwitch(label: string, checked: boolean, onChange: () => void, disabled = false) {
-    return (
-      <button
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        disabled={disabled}
-        onClick={onChange}
-        className="flex min-h-10 w-full items-center justify-between gap-3 rounded-md text-left text-xs text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40 disabled:cursor-not-allowed disabled:opacity-40"
-      >
-        <span>{label}</span>
-
-        <span
-          aria-hidden="true"
-          className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
-            checked ? 'bg-brand-primary' : 'bg-border'
-          }`}
-        >
-          <span
-            className={`absolute top-0.5 size-4 rounded-full bg-white shadow-sm transition-transform ${
-              checked ? 'translate-x-4' : 'translate-x-0.5'
-            }`}
-          />
-        </span>
-      </button>
-    );
-  }
+  const options = [
+    {
+      label: 'Clave primaria',
+      abbreviation: 'PK',
+      checked: column.primaryKey,
+      disabled: false,
+      onChange: () => {
+        onUpdate({ primaryKey: !column.primaryKey });
+      },
+    },
+    {
+      label: 'Valor único',
+      abbreviation: 'UQ',
+      checked: column.unique,
+      disabled: false,
+      onChange: () => {
+        onUpdate({ unique: !column.unique });
+      },
+    },
+    {
+      label: 'Permitir NULL',
+      abbreviation: '',
+      checked: column.nullable,
+      disabled: column.primaryKey,
+      onChange: () => {
+        onUpdate({ nullable: !column.nullable });
+      },
+    },
+  ];
 
   return (
-    <section className="space-y-3">
+    <section aria-label={`Propiedades de ${column.name}`}>
       <label className="block">
-        <span className="mb-2 block text-xs font-semibold text-text">Campo seleccionado</span>
-
+        <span className="mb-2 block text-[10px] font-semibold uppercase tracking-wide text-text-muted">
+          Nombre de columna
+        </span>
         <input
           value={name}
           maxLength={80}
-          className="h-10 w-full rounded-lg border border-border bg-background px-3 text-xs text-text outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/10"
+          className="h-9 w-full rounded-md border border-border bg-background px-2.5 text-xs text-text outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/10"
           onChange={(event) => {
             setName(event.target.value);
           }}
@@ -86,9 +91,7 @@ export function LogicalInspectorColumn({
             if (event.key === 'Enter') {
               event.preventDefault();
               event.currentTarget.blur();
-            }
-
-            if (event.key === 'Escape') {
+            } else if (event.key === 'Escape') {
               event.preventDefault();
               cancelRef.current = true;
               setName(column.name);
@@ -98,40 +101,40 @@ export function LogicalInspectorColumn({
         />
       </label>
 
-      <div>
-        {renderSwitch('Clave primaria (PK)', column.primaryKey, () => {
-          const primaryKey = !column.primaryKey;
-
-          onUpdate({
-            primaryKey,
-            nullable: primaryKey ? false : column.nullable,
-          });
-        })}
-
-        {renderSwitch('Único (UQ)', column.unique, () => {
-          onUpdate({ unique: !column.unique });
-        })}
-
-        {renderSwitch(
-          'Permitir NULL',
-          column.nullable,
-          () => {
-            onUpdate({ nullable: !column.nullable });
-          },
-          column.primaryKey,
-        )}
+      <div className="mt-2">
+        {options.map((option) => (
+          <label
+            key={option.label}
+            className={`flex min-h-9 items-center gap-2.5 rounded-md px-1 text-xs ${
+              option.disabled ? 'cursor-not-allowed text-text-muted' : 'cursor-pointer text-text'
+            }`}
+          >
+            <input
+              type="checkbox"
+              checked={option.checked}
+              disabled={option.disabled}
+              onChange={option.onChange}
+              className="size-4 shrink-0 accent-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
+            />
+            <span className="flex-1">{option.label}</span>
+            <span aria-hidden="true" className="text-[9px] text-text-muted">
+              {option.abbreviation}
+            </span>
+          </label>
+        ))}
       </div>
 
       {isForeignKey && (
-        <p className="text-xs leading-5 text-text-muted">
-          Este campo participa en una clave foránea.
+        <p className="mt-2 flex items-center gap-1.5 text-[10px] text-text-muted">
+          <Link2 size={12} aria-hidden="true" />
+          Parte de una clave foránea
         </p>
       )}
 
       <button
         type="button"
         onClick={onRemove}
-        className="flex min-h-9 items-center gap-2 rounded-md px-2 text-xs text-red-600 transition-colors hover:bg-red-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600/40"
+        className="mt-2 flex min-h-9 items-center gap-2 rounded-md px-1 text-xs text-red-600 hover:bg-red-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600"
       >
         <Trash2 size={13} aria-hidden="true" />
         Eliminar columna

@@ -17,6 +17,8 @@ import { KeyboardShortcutsDialog } from './header/KeyboardShortcutsDialog';
 import { useDiagramFile } from './hooks/useDiagramFile';
 import { useEditorHistoryKeyboard } from './hooks/useEditorHistoryKeyboard';
 import { LogicalModelView } from './logical/LogicalModelView';
+import { renderLogicalModelToCanvas } from './logical/export/renderLogicalModel';
+import { LogicalToolbar } from './logical/LogicalToolbar';
 import type { ModelView } from './logical/ModelViewSwitcher';
 import { EditorRightPanel, type RightPanelTab } from './right-panel/EditorRightPanel';
 import { MobileToolbar } from './toolbar/MobileToolbar';
@@ -43,7 +45,23 @@ export function Editor() {
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
 
   const svgRef = useRef<SVGSVGElement | null>(null);
-  const { exportDiagram } = useCanvasExport(svgRef, diagram);
+  const logicalExportRef = useRef<HTMLDivElement | null>(null);
+
+  const { exportDiagram, isExporting, exportError } = useCanvasExport(
+    svgRef,
+    diagram,
+    modelView === 'logical'
+      ? async () => {
+          const root = logicalExportRef.current;
+
+          if (!root) {
+            throw new Error('La vista lógica no está disponible.');
+          }
+
+          return renderLogicalModelToCanvas(root, logicalWorkspace);
+        }
+      : undefined,
+  );
 
   const { exportJson, importJson } = useDiagramFile({
     diagram,
@@ -75,16 +93,6 @@ export function Editor() {
     setIsMobilePanelOpen(true);
   }
 
-  function handleInspectLogicalTable() {
-    setActiveRightPanel('inspector');
-
-    if (window.matchMedia('(min-width: 1024px)').matches) {
-      setIsDesktopPanelOpen(true);
-    } else {
-      setIsMobilePanelOpen(true);
-    }
-  }
-
   function handleClosePanel() {
     setIsDesktopPanelOpen(false);
     setIsMobilePanelOpen(false);
@@ -94,6 +102,10 @@ export function Editor() {
     setModelView(view);
     setActiveRightPanel('inspector');
     setIsMobilePanelOpen(false);
+
+    if (view === 'logical') {
+      setIsDesktopPanelOpen(true);
+    }
   }
 
   return (
@@ -120,16 +132,33 @@ export function Editor() {
         />
 
         <main className={styles.workspace}>
+          {(isExporting || exportError) && (
+            <div
+              role={exportError ? 'alert' : 'status'}
+              className="pointer-events-none absolute right-4 top-4 z-50 max-w-xs rounded-lg border border-border bg-background px-3 py-2 text-xs text-text shadow-sm"
+            >
+              {exportError ? exportError.message : 'Preparando exportación…'}
+            </div>
+          )}
           <div className={styles.canvasSlot}>
             {modelView === 'conceptual' ? (
               <Canvas diagram={diagram} svgRef={svgRef} />
             ) : (
-              <LogicalModelView diagram={diagram} />
+              <LogicalModelView exportRef={logicalExportRef} />
             )}
           </div>
 
           <div className={styles.floatingToolbar}>
-            <Toolbar modelView={modelView} onInspectTable={handleInspectLogicalTable} />
+            {modelView === 'conceptual' ? (
+              <Toolbar />
+            ) : (
+              <LogicalToolbar
+                onOpenProperties={() => {
+                  setActiveRightPanel('inspector');
+                  setIsDesktopPanelOpen(true);
+                }}
+              />
+            )}
           </div>
 
           <div className={styles.panelLauncher}>
@@ -183,17 +212,17 @@ export function Editor() {
             {modelView === 'conceptual' ? (
               <MobileToolbar onOpenInspector={handleOpenMobileInspector} />
             ) : (
-              <div className="flex flex-col gap-2">
+              <div className="space-y-1.5">
                 <button
                   type="button"
+                  aria-expanded={isMobilePanelOpen}
                   onClick={handleOpenMobileInspector}
-                  className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 text-sm font-medium text-brand-primary shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+                  className="flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-border bg-background text-xs font-medium text-brand-primary shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
                 >
-                  <SlidersHorizontal size={17} aria-hidden="true" />
+                  <SlidersHorizontal size={15} aria-hidden="true" />
                   Propiedades
                 </button>
-
-                <Toolbar modelView={modelView} onInspectTable={handleInspectLogicalTable} />
+                <LogicalToolbar onOpenProperties={handleOpenMobileInspector} />
               </div>
             )}
           </div>

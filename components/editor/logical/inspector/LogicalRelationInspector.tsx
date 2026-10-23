@@ -26,6 +26,14 @@ interface LogicalRelationInspectorProps {
   onRemove: () => void;
 }
 
+interface CardinalityFieldProps {
+  tableName: string;
+  cardinality: LogicalRelationCardinality;
+  onChange: (cardinality: LogicalRelationCardinality) => void;
+  singleOnly?: boolean;
+  requiredOnly?: boolean;
+}
+
 function formatCardinality(cardinality: LogicalRelationCardinality): string {
   return `${cardinality.minimum}..${cardinality.maximum}`;
 }
@@ -46,13 +54,13 @@ function getCardinalityDescription(cardinality: LogicalRelationCardinality): str
   return 'Uno o muchos';
 }
 
-interface CardinalityFieldProps {
-  tableName: string;
-  cardinality: LogicalRelationCardinality;
-  onChange: (cardinality: LogicalRelationCardinality) => void;
-}
-
-function CardinalityField({ tableName, cardinality, onChange }: CardinalityFieldProps) {
+function CardinalityField({
+  tableName,
+  cardinality,
+  onChange,
+  singleOnly = false,
+  requiredOnly = false,
+}: CardinalityFieldProps) {
   return (
     <label className="block rounded-lg border border-border bg-background p-2.5">
       <div className="mb-2 flex items-center justify-between gap-2">
@@ -67,17 +75,42 @@ function CardinalityField({ tableName, cardinality, onChange }: CardinalityField
         value={getCardinalityValue(cardinality)}
         className="w-full rounded-md border border-border bg-surface px-2.5 py-2 text-xs text-text outline-none transition-colors focus:border-brand-primary"
         onChange={(event) => {
-          onChange(getCardinality(event.target.value as CardinalityValue));
+          const value = getCardinality(event.target.value as CardinalityValue);
+
+          if ((singleOnly && value.maximum !== 1) || (requiredOnly && value.minimum === 0)) {
+            return;
+          }
+
+          onChange(value);
         }}
       >
-        {CARDINALITY_OPTIONS.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
+        {CARDINALITY_OPTIONS.map((option) => {
+          const value = getCardinality(option.value);
+
+          const disabled =
+            (singleOnly && value.maximum !== 1) || (requiredOnly && value.minimum === 0);
+
+          return (
+            <option key={option.value} value={option.value} disabled={disabled}>
+              {option.label}
+            </option>
+          );
+        })}
       </select>
 
       <p className="mt-1.5 text-[10px] text-text-muted">{getCardinalityDescription(cardinality)}</p>
+
+      {singleOnly && (
+        <p className="mt-1 text-[10px] leading-relaxed text-text-muted">
+          Una clave foránea referencia como máximo una fila.
+        </p>
+      )}
+
+      {requiredOnly && (
+        <p className="mt-1 text-[10px] leading-relaxed text-text-muted">
+          Esta relación es obligatoria porque sus columnas forman parte de la clave primaria.
+        </p>
+      )}
     </label>
   );
 }
@@ -99,6 +132,10 @@ export function LogicalRelationInspector({
       (column) => column.id === foreignKey.referencedColumnIds[index],
     ),
   }));
+
+  const foreignKeyContainsPrimaryKey = sourceTable.columns.some(
+    (column) => column.primaryKey && foreignKey.columnIds.includes(column.id),
+  );
 
   return (
     <>
@@ -171,6 +208,8 @@ export function LogicalRelationInspector({
             <CardinalityField
               tableName={referencedTable.name}
               cardinality={foreignKey.referencedCardinality}
+              singleOnly
+              requiredOnly={foreignKeyContainsPrimaryKey}
               onChange={(cardinality) => {
                 onUpdateCardinality('referenced', cardinality);
               }}
@@ -192,7 +231,7 @@ export function LogicalRelationInspector({
           <div className="space-y-1.5">
             {pairs.map((pair, index) => (
               <div
-                key={`${foreignKey.id}:${index}`}
+                key={foreignKey.columnIds[index]}
                 className="rounded-lg border border-border bg-background p-2.5"
               >
                 <div className="flex items-center gap-2 text-xs">
@@ -230,7 +269,7 @@ export function LogicalRelationInspector({
       <ConfirmDialog
         isOpen={confirmDelete}
         title="Eliminar relación"
-        description={`Se eliminará la relación entre "${sourceTable.name}" y "${referencedTable.name}", junto con las columnas foráneas generadas por ella.`}
+        description={`Se eliminará la relación entre "${sourceTable.name}" y "${referencedTable.name}". Las columnas y sus restricciones se conservarán.`}
         confirmLabel="Eliminar relación"
         onCancel={() => {
           setConfirmDelete(false);

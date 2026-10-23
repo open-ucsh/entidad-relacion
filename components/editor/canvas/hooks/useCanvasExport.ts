@@ -20,23 +20,26 @@ interface UseCanvasExportResult {
 export function useCanvasExport(
   svgRef: RefObject<SVGSVGElement | null>,
   diagram: Diagram,
+  renderCanvas?: () => Promise<HTMLCanvasElement>,
 ): UseCanvasExportResult {
   const [isExporting, setIsExporting] = useState(false);
   const [exportError, setExportError] = useState<Error | null>(null);
 
   const exportDiagram = useCallback(
     async (format: ExportFormat) => {
-      const svg = svgRef.current;
-
-      if (!svg) {
-        return;
-      }
-
       setIsExporting(true);
       setExportError(null);
 
       try {
-        const canvas = await renderDiagramToCanvas(svg, diagram);
+        const svg = svgRef.current;
+
+        if (!renderCanvas && !svg) {
+          throw new Error('El canvas de la vista actual no está disponible.');
+        }
+
+        const canvas = renderCanvas
+          ? await renderCanvas()
+          : await renderDiagramToCanvas(svg as SVGSVGElement, diagram);
         const fileBaseName = createDownloadFileBaseName(diagram.metadata.name);
 
         if (format === 'pdf') {
@@ -64,7 +67,7 @@ export function useCanvasExport(
         setIsExporting(false);
       }
     },
-    [diagram, svgRef],
+    [diagram, svgRef, renderCanvas],
   );
 
   return {

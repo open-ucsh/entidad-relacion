@@ -2,7 +2,7 @@
 
 import { type RefObject, useCallback, useLayoutEffect, useState } from 'react';
 
-import type { LogicalTable } from '@/domain/logical/models';
+import type { LogicalTable, LogicalTablePosition } from '@/domain/logical/models';
 
 import type { LogicalSelection } from '../logical-selection';
 import { calculateRelationLines, type RelationLine } from './lib/relation-lines';
@@ -10,6 +10,7 @@ import { LogicalRelationPath } from './LogicalRelationPath';
 
 interface LogicalRelationsLayerProps {
   tables: LogicalTable[];
+  positions: Record<string, LogicalTablePosition>;
   containerRef: RefObject<HTMLDivElement | null>;
   zoom: number;
   selection: LogicalSelection;
@@ -18,6 +19,7 @@ interface LogicalRelationsLayerProps {
 
 export function LogicalRelationsLayer({
   tables,
+  positions,
   containerRef,
   zoom,
   selection,
@@ -40,7 +42,7 @@ export function LogicalRelationsLayer({
         zoom,
       }),
     );
-  }, [containerRef, tables, zoom]);
+  }, [containerRef, tables, zoom, positions]);
 
   useLayoutEffect(() => {
     const frame = requestAnimationFrame(calculateLines);
