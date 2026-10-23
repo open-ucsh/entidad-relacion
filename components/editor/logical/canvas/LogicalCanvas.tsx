@@ -2,11 +2,7 @@
 
 import { useMemo, useRef } from 'react';
 
-import type {
-  LogicalDiagnostic,
-  LogicalTable,
-  LogicalTablePosition,
-} from '@/domain/logical/models';
+import type { LogicalTable, LogicalTablePosition } from '@/domain/logical/models';
 
 import type { LogicalSelection } from '../logical-selection';
 import { LogicalRelationsLayer } from '../relations/LogicalRelationsLayer';
@@ -15,19 +11,13 @@ import { useLogicalCamera } from './hooks/useLogicalCamera';
 import { useLogicalCanvasPan } from './hooks/useLogicalCanvasPan';
 import { useLogicalCanvasSize } from './hooks/useLogicalCanvasSize';
 import { getLogicalBounds, type PositionedLogicalTable } from './lib/logical-bounds';
-import { LogicalCanvasEmptyState } from './LogicalCanvasEmptyState';
-import { LogicalDiagnostics } from './LogicalDiagnostics';
 import { LogicalZoomControls } from './LogicalZoomControls';
 
 interface LogicalCanvasProps {
   tables: LogicalTable[];
   positions: Record<string, LogicalTablePosition>;
-  diagnostics: LogicalDiagnostic[];
-  canGenerateFromEr: boolean;
   selection: LogicalSelection;
   onSelectionChange: (selection: LogicalSelection) => void;
-  onCreateTable: () => void;
-  onGenerateFromEr: () => void;
 }
 
 const DEFAULT_POSITION: LogicalTablePosition = {
@@ -38,15 +28,10 @@ const DEFAULT_POSITION: LogicalTablePosition = {
 export function LogicalCanvas({
   tables,
   positions,
-  diagnostics,
-  canGenerateFromEr,
   selection,
   onSelectionChange,
-  onCreateTable,
-  onGenerateFromEr,
 }: LogicalCanvasProps) {
   const viewportRef = useRef<HTMLDivElement | null>(null);
-
   const canvasRef = useRef<HTMLDivElement | null>(null);
 
   const positionedTables = useMemo<PositionedLogicalTable[]>(
@@ -62,7 +47,7 @@ export function LogicalCanvas({
 
   const viewportSize = useLogicalCanvasSize(viewportRef);
 
-  const { camera, setCamera, fitToView, zoomIn, zoomOut, resetView, resetInitialFit, handleWheel } =
+  const { camera, setCamera, fitToView, zoomIn, zoomOut, resetView, handleWheel } =
     useLogicalCamera({
       viewportRef,
       viewportSize,
@@ -73,12 +58,6 @@ export function LogicalCanvas({
   const { isPanning, startPan, pan, stopPan } = useLogicalCanvasPan({
     setCamera,
   });
-
-  function generateFromEr() {
-    resetInitialFit();
-    onSelectionChange(null);
-    onGenerateFromEr();
-  }
 
   return (
     <main
@@ -111,15 +90,11 @@ export function LogicalCanvas({
         }}
       />
 
-      {tables.length === 0 ? (
-        <LogicalCanvasEmptyState
-          canGenerateFromEr={canGenerateFromEr}
-          onCreateTable={onCreateTable}
-          onGenerateFromEr={generateFromEr}
-        />
-      ) : (
+      {tables.length > 0 && (
         <div
           ref={canvasRef}
+          data-logical-world
+          data-logical-zoom={camera.zoom}
           className="absolute left-0 top-0 origin-top-left"
           style={{
             width: 1,
@@ -129,6 +104,7 @@ export function LogicalCanvas({
         >
           <LogicalRelationsLayer
             tables={tables}
+            positions={positions}
             containerRef={canvasRef}
             zoom={camera.zoom}
             selection={selection}
@@ -168,8 +144,6 @@ export function LogicalCanvas({
           onReset={resetView}
         />
       )}
-
-      <LogicalDiagnostics diagnostics={diagnostics} />
     </main>
   );
 }

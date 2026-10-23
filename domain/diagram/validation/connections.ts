@@ -8,6 +8,8 @@ import type {
 
 import { findDiagramElement } from '@/domain/diagram/queries/elements';
 
+import { hasValidAttributeHierarchy } from './attributes';
+
 function isEntityRelationshipPair(source: DiagramElement, target: DiagramElement): boolean {
   return (
     (source.type === 'entity' && target.type === 'relationship') ||
@@ -27,6 +29,10 @@ function isEntityIsaPair(source: DiagramElement, target: DiagramElement): boolea
     (source.type === 'entity' && target.type === 'isa') ||
     (source.type === 'isa' && target.type === 'entity')
   );
+}
+
+function isCompositeAttributePair(source: DiagramElement, target: DiagramElement): boolean {
+  return source.type === 'attribute' && source.composite && target.type === 'attribute';
 }
 
 export function getIsaConnectionRole(
@@ -52,7 +58,8 @@ export function canConnectDiagramElements(source: DiagramElement, target: Diagra
   return (
     isEntityRelationshipPair(source, target) ||
     isAttributeOwnerPair(source, target) ||
-    isEntityIsaPair(source, target)
+    isEntityIsaPair(source, target) ||
+    isCompositeAttributePair(source, target)
   );
 }
 
@@ -91,14 +98,33 @@ export function canCreateConnection(diagram: Diagram, sourceId: string, targetId
     !source ||
     !target ||
     !canConnectDiagramElements(source, target) ||
-    hasDiagramConnection(diagram, sourceId, targetId)
+    hasDiagramConnection(diagram, sourceId, targetId) ||
+    hasDiagramConnection(diagram, targetId, sourceId)
   ) {
     return false;
   }
 
   const isaRole = getIsaConnectionRole(source, target);
 
-  return isaRole !== 'supertype' || !hasIsaSupertypeConnection(diagram, target.id);
+  if (isaRole === 'supertype' && hasIsaSupertypeConnection(diagram, target.id)) {
+    return false;
+  }
+
+  return hasValidAttributeHierarchy({
+    ...diagram,
+    connections: [
+      ...diagram.connections,
+      {
+        id: '__connection-validation-preview__',
+        type: 'connection',
+        fromId: sourceId,
+        toId: targetId,
+        minimum: 'unspecified',
+        maximum: 'unspecified',
+        isaRole,
+      },
+    ],
+  });
 }
 
 export function hasValidIsaConnectionRole(diagram: Diagram, connection: Connection): boolean {

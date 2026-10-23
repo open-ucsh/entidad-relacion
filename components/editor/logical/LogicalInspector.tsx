@@ -1,8 +1,7 @@
 'use client';
 
-import { Table2 } from 'lucide-react';
-
 import { useDiagramStore } from '@/state/diagram/store';
+import { LogicalColumnProperties } from './LogicalColumnProperties';
 
 import { LogicalModelSummary } from './inspector/LogicalModelSummary';
 import { LogicalRelationInspector } from './inspector/LogicalRelationInspector';
@@ -13,19 +12,14 @@ export function LogicalInspector() {
   const workspace = useDiagramStore((state) => state.logicalWorkspace);
 
   const addLogicalTable = useDiagramStore((state) => state.addLogicalTable);
-
   const removeLogicalTable = useDiagramStore((state) => state.removeLogicalTable);
-
   const renameLogicalTable = useDiagramStore((state) => state.renameLogicalTable);
 
   const addLogicalColumn = useDiagramStore((state) => state.addLogicalColumn);
-
   const updateLogicalColumn = useDiagramStore((state) => state.updateLogicalColumn);
-
   const removeLogicalColumn = useDiagramStore((state) => state.removeLogicalColumn);
 
   const addLogicalForeignKey = useDiagramStore((state) => state.addLogicalForeignKey);
-
   const removeLogicalForeignKey = useDiagramStore((state) => state.removeLogicalForeignKey);
 
   const updateLogicalForeignKeyCardinality = useDiagramStore(
@@ -33,43 +27,49 @@ export function LogicalInspector() {
   );
 
   const selection = useLogicalSelectionStore((state) => state.selection);
-
   const setSelection = useLogicalSelectionStore((state) => state.setSelection);
 
   const tables = workspace.model.tables;
 
-  if (tables.length === 0) {
-    return (
-      <div className="flex h-full flex-col items-center justify-center px-6 text-center">
-        <div className="mb-3 flex size-10 items-center justify-center rounded-lg border border-border bg-background text-text-muted">
-          <Table2 size={18} aria-hidden="true" />
-        </div>
-
-        <p className="text-sm font-semibold text-text">Sin modelo lógico</p>
-
-        <p className="mt-1 max-w-52 text-xs leading-relaxed text-text-muted">
-          Crea una tabla o genera el modelo desde el diagrama ER.
-        </p>
-
-        <button
-          type="button"
-          className="mt-4 rounded-lg bg-brand-primary px-3 py-2 text-xs font-semibold text-white"
-          onClick={() => {
-            addLogicalTable();
-          }}
-        >
-          Crear tabla
-        </button>
-      </div>
+  function handleCreateTable() {
+    const previousIds = new Set(
+      useDiagramStore.getState().logicalWorkspace.model.tables.map((table) => table.id),
     );
+
+    addLogicalTable();
+
+    const createdTable = useDiagramStore
+      .getState()
+      .logicalWorkspace.model.tables.find((table) => !previousIds.has(table.id));
+
+    if (createdTable) {
+      setSelection({
+        type: 'table',
+        tableId: createdTable.id,
+      });
+    }
   }
 
   if (selection?.type === 'table') {
     const table = tables.find((candidate) => candidate.id === selection.tableId);
 
     if (table) {
+      const column = table.columns.find((candidate) => candidate.id === selection.columnId);
+
+      if (column) {
+        return (
+          <LogicalColumnProperties
+            key={`${table.id}:${column.id}`}
+            table={table}
+            column={column}
+            tables={tables}
+          />
+        );
+      }
+
       return (
         <LogicalTableInspector
+          key={table.id}
           table={table}
           tables={tables}
           onBack={() => {
@@ -120,6 +120,7 @@ export function LogicalInspector() {
     if (sourceTable && foreignKey && referencedTable) {
       return (
         <LogicalRelationInspector
+          key={`${sourceTable.id}:${foreignKey.id}`}
           sourceTable={sourceTable}
           referencedTable={referencedTable}
           foreignKey={foreignKey}
@@ -147,16 +148,13 @@ export function LogicalInspector() {
   return (
     <LogicalModelSummary
       tables={tables}
-      origin={workspace.origin}
       onSelectTable={(tableId) => {
         setSelection({
           type: 'table',
           tableId,
         });
       }}
-      onCreateTable={() => {
-        addLogicalTable();
-      }}
+      onCreateTable={handleCreateTable}
     />
   );
 }

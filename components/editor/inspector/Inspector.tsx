@@ -76,6 +76,7 @@ export function Inspector({ showPanelHeader = true }: InspectorProps) {
             <InspectorConnectionHeader connection={connection} />
 
             <InspectorConnectionContent
+              diagram={diagram}
               connection={connection}
               updateConnection={updateConnection}
             />

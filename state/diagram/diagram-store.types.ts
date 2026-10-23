@@ -114,7 +114,6 @@ export interface ConnectionSlice {
 }
 
 export interface LogicalSlice {
-  generateLogicalModel: () => void;
   createManualLogicalModel: () => void;
 
   addLogicalTable: (name?: string) => void;

@@ -30,7 +30,28 @@ export function LogicalRelationPath({
   const strokeWidth = selected ? 2.5 : hovered ? 2 : 1.5;
 
   return (
-    <g opacity={opacity} className="transition-opacity duration-150">
+    <g
+      opacity={opacity}
+      role="button"
+      tabIndex={0}
+      aria-label="Seleccionar relación entre tablas"
+      aria-pressed={selected}
+      className="outline-none transition-opacity duration-150"
+      onFocus={() => {
+        onHoverChange(true);
+      }}
+      onBlur={() => {
+        onHoverChange(false);
+      }}
+      onKeyDown={(event) => {
+        event.stopPropagation();
+
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onSelect();
+        }
+      }}
+    >
       <path
         d={path}
         fill="none"

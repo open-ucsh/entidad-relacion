@@ -1,6 +1,5 @@
 import { createLogicalWorkspace } from '@/domain/logical/factories';
 import type { LogicalWorkspace } from '@/domain/logical/models';
-import { transformDiagramToLogicalModel } from '@/domain/logical/transform';
 
 import { replaceActiveDiagram } from '../diagram-documents';
 import type { DiagramStoreSlice, LogicalSlice } from '../diagram-store.types';
@@ -20,20 +19,10 @@ import {
 } from '../logical/logical-operations';
 
 export const createLogicalSlice: DiagramStoreSlice<LogicalSlice> = (set) => ({
-  generateLogicalModel: () => {
-    set((state) => {
-      const model = transformDiagramToLogicalModel(state.diagram);
-
-      return replaceActiveDiagram(state, state.diagram, {
-        logicalWorkspace: createLogicalWorkspace('generated', model),
-      });
-    });
-  },
-
   createManualLogicalModel: () => {
     set((state) =>
       replaceActiveDiagram(state, state.diagram, {
-        logicalWorkspace: createLogicalWorkspace('manual'),
+        logicalWorkspace: createLogicalWorkspace(),
       }),
     );
   },

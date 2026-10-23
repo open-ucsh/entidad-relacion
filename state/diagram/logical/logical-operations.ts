@@ -353,13 +353,12 @@ export function removeForeignKey(
     (table) => table.id === foreignKey.referencedTableId,
   );
 
-  const foreignColumnIds = new Set(foreignKey.columnIds);
-
+  // Quitar una relación conserva sus columnas, incluidas las que
+  // forman parte de la PK o participan en otras relaciones.
   const tables = workspace.model.tables.map((table) =>
     table.id === sourceTableId
       ? {
           ...table,
-          columns: table.columns.filter((column) => !foreignColumnIds.has(column.id)),
           foreignKeys: table.foreignKeys.filter((candidate) => candidate.id !== foreignKeyId),
         }
       : table,
@@ -373,7 +372,6 @@ export function removeForeignKey(
     },
   };
 }
-
 export function updateForeignKeyCardinality(
   workspace: LogicalWorkspace,
   sourceTableId: string,
@@ -389,6 +387,27 @@ export function updateForeignKeyCardinality(
     return null;
   }
 
+  if (side === 'referenced' && cardinality.maximum !== 1) {
+    return null;
+  }
+
+  const foreignColumns = sourceTable.columns.filter((column) =>
+    foreignKey.columnIds.includes(column.id),
+  );
+
+  if (foreignColumns.length !== foreignKey.columnIds.length) {
+    return null;
+  }
+
+  // Una columna de la PK nunca puede convertirse en opcional.
+  if (
+    side === 'referenced' &&
+    cardinality.minimum === 0 &&
+    foreignColumns.some((column) => column.primaryKey)
+  ) {
+    return null;
+  }
+
   const currentCardinality =
     side === 'source' ? foreignKey.sourceCardinality : foreignKey.referencedCardinality;
 
@@ -399,9 +418,14 @@ export function updateForeignKeyCardinality(
     return null;
   }
 
-  const referencedTable = workspace.model.tables.find(
-    (table) => table.id === foreignKey.referencedTableId,
-  );
+  const nextForeignKey = {
+    ...foreignKey,
+    sourceCardinality: side === 'source' ? { ...cardinality } : foreignKey.sourceCardinality,
+    referencedCardinality:
+      side === 'referenced' ? { ...cardinality } : foreignKey.referencedCardinality,
+  };
+
+  const foreignColumnIds = new Set(foreignKey.columnIds);
 
   const tables = workspace.model.tables.map((table) => {
     if (table.id !== sourceTableId) {
@@ -410,31 +434,41 @@ export function updateForeignKeyCardinality(
 
     return {
       ...table,
-      foreignKeys: table.foreignKeys.map((candidate) => {
-        if (candidate.id !== foreignKeyId) {
-          return candidate;
+      columns: table.columns.map((column) => {
+        if (!foreignColumnIds.has(column.id)) {
+          return column;
         }
 
-        return side === 'source'
-          ? {
-              ...candidate,
-              sourceCardinality: cardinality,
-            }
-          : {
-              ...candidate,
-              referencedCardinality: cardinality,
-            };
+        return {
+          ...column,
+          nullable: column.primaryKey ? false : nextForeignKey.referencedCardinality.minimum === 0,
+          unique:
+            side === 'source'
+              ? nextForeignKey.sourceCardinality.maximum === 1 && foreignKey.columnIds.length === 1
+              : column.unique,
+        };
       }),
+      foreignKeys: table.foreignKeys.map((candidate) =>
+        candidate.id === foreignKeyId ? nextForeignKey : candidate,
+      ),
     };
   });
+
+  const referencedTable = workspace.model.tables.find(
+    (table) => table.id === foreignKey.referencedTableId,
+  );
+
+  const tableName =
+    side === 'source' ? sourceTable.name : (referencedTable?.name ?? 'referenciada');
 
   return {
     workspace: replaceLogicalTables(workspace, tables),
     activity: {
       type: 'connection-updated',
-      details: `Cambió la cardinalidad ${
-        side === 'source' ? sourceTable.name : (referencedTable?.name ?? 'referenciada')
-      } de ${formatLogicalCardinality(currentCardinality)} a ${formatLogicalCardinality(cardinality)}`,
+      details:
+        `Cambió la cardinalidad ${tableName} de ` +
+        `${formatLogicalCardinality(currentCardinality)} a ` +
+        formatLogicalCardinality(cardinality),
     },
   };
 }

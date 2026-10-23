@@ -53,7 +53,7 @@ export function LogicalTableCard({
     <article
       data-logical-table-id={table.id}
       className={`absolute z-20 w-72 rounded-xl border bg-background shadow-sm transition-[border-color,box-shadow] ${
-        selected ? 'border-brand-primary shadow-md ring-2 ring-brand-primary/15' : 'border-border'
+        selected ? 'border-brand-primary ring-1 ring-brand-primary/10' : 'border-border'
       }`}
       style={{
         left: position.x,

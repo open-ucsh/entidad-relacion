@@ -99,10 +99,21 @@ export function CanvasLayers({
       <g id="connections-layer">
         {diagram.connections.map((connection) => {
           const endpoints = getConnectionEndpoints(diagram, connection);
+          const source = findDiagramElement(diagram, connection.fromId);
+          const target = findDiagramElement(diagram, connection.toId);
 
-          if (!endpoints) {
+          if (!endpoints || !source || !target) {
             return null;
           }
+
+          const isEntityRelationship =
+            (source.type === 'entity' && target.type === 'relationship') ||
+            (source.type === 'relationship' && target.type === 'entity');
+
+          const cardinalityLabel =
+            isEntityRelationship && connection.isaRole === 'none'
+              ? formatConnectionCardinality(connection)
+              : null;
 
           return (
             <ConnectionShape
@@ -111,7 +122,8 @@ export function CanvasLayers({
               to={endpoints.to}
               selected={selectedElementIds.includes(connection.id)}
               insertionTarget={connectionInsertionTargetId === connection.id}
-              cardinalityLabel={formatConnectionCardinality(connection)}
+              cardinalityLabel={cardinalityLabel}
+              cardinalityEnd={source.type === 'entity' ? 'from' : 'to'}
               onClick={(event) => {
                 handleConnectionClick(event, connection.id);
               }}

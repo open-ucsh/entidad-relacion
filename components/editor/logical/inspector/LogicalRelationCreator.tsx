@@ -50,6 +50,8 @@ export function LogicalRelationCreator({ table, tables, onCreate }: LogicalRelat
       candidate.id !== table.id && candidate.columns.some((column) => column.primaryKey),
   );
 
+  const canCreateRelation = availableTables.some((candidate) => candidate.id === referencedTableId);
+
   if (availableTables.length === 0) {
     return (
       <div className="rounded-lg border border-dashed border-border p-3">
@@ -132,11 +134,13 @@ export function LogicalRelationCreator({ table, tables, onCreate }: LogicalRelat
                 setReferencedCardinality(getCardinality(event.target.value as CardinalityValue));
               }}
             >
-              {CARDINALITY_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
+              {CARDINALITY_OPTIONS.filter((option) => option.cardinality.maximum === 1).map(
+                (option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ),
+              )}
             </select>
           </label>
         </div>
@@ -144,10 +148,10 @@ export function LogicalRelationCreator({ table, tables, onCreate }: LogicalRelat
 
       <button
         type="button"
-        disabled={!referencedTableId}
+        disabled={!canCreateRelation}
         className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand-primary px-3 py-2 text-xs font-semibold text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
         onClick={() => {
-          if (!referencedTableId) {
+          if (!canCreateRelation) {
             return;
           }
 

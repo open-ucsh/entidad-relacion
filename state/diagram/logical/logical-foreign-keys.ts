@@ -34,6 +34,10 @@ export function createLogicalForeignKey(
   referencedTable: LogicalTable,
   cardinalities: LogicalForeignKeyCardinalities = DEFAULT_CARDINALITIES,
 ): CreatedLogicalForeignKey | null {
+  if (cardinalities.referenced.maximum !== 1) {
+    return null;
+  }
+
   const referencedColumns = referencedTable.columns.filter((column) => column.primaryKey);
 
   if (referencedColumns.length === 0) {
@@ -42,9 +46,11 @@ export function createLogicalForeignKey(
 
   const usedNames = new Set(sourceTable.columns.map((column) => column.name.trim().toLowerCase()));
 
-  const foreignColumns = referencedColumns.map((column) =>
-    createForeignKeyColumn(referencedTable, column, usedNames),
-  );
+  const foreignColumns = referencedColumns.map((column) => ({
+    ...createForeignKeyColumn(referencedTable, column, usedNames),
+    nullable: cardinalities.referenced.minimum === 0,
+    unique: cardinalities.source.maximum === 1 && referencedColumns.length === 1,
+  }));
 
   const foreignKey: LogicalForeignKey = {
     id: createId('logical-foreign-key'),
@@ -52,8 +58,8 @@ export function createLogicalForeignKey(
     referencedTableId: referencedTable.id,
     referencedColumnIds: referencedColumns.map((column) => column.id),
     sourceRelationshipId: null,
-    sourceCardinality: cardinalities.source,
-    referencedCardinality: cardinalities.referenced,
+    sourceCardinality: { ...cardinalities.source },
+    referencedCardinality: { ...cardinalities.referenced },
   };
 
   return {
@@ -74,13 +80,10 @@ export function removeForeignKeysReferencingTable(
     return table;
   }
 
-  const removedColumnIds = new Set(
-    removedForeignKeys.flatMap((foreignKey) => foreignKey.columnIds),
-  );
-
+  // Eliminar la referencia conserva las columnas y sus restricciones.
+  // Su eliminación debe ser una acción explícita del usuario.
   return {
     ...table,
-    columns: table.columns.filter((column) => !removedColumnIds.has(column.id)),
     foreignKeys: table.foreignKeys.filter(
       (foreignKey) => foreignKey.referencedTableId !== referencedTableId,
     ),
