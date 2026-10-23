@@ -18,6 +18,7 @@ interface SegmentedControlProps<T extends string | number> {
 interface SwitchControlProps {
   checked: boolean;
   label: string;
+  disabled?: boolean;
   onChange: (checked: boolean) => void;
 }
 
@@ -101,16 +102,17 @@ export function ColorPicker({
   );
 }
 
-export function SwitchControl({ checked, label, onChange }: SwitchControlProps) {
+export function SwitchControl({ checked, label, disabled = false, onChange }: SwitchControlProps) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={checked}
+      disabled={disabled}
       onClick={() => {
         onChange(!checked);
       }}
-      className="flex min-h-10 w-full items-center justify-between gap-2 rounded-lg border border-border bg-background px-2 py-2 text-xs text-text transition-colors hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+      className="flex min-h-10 w-full items-center justify-between gap-2 rounded-lg border border-border bg-background px-2 py-2 text-xs text-text transition-colors hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-background"
     >
       <span className="min-w-0 text-left">{label}</span>
 
